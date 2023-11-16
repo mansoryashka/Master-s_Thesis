@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 L = 1.0
-N = 20
+N = 1000
 
 mesh = dolfin.IntervalMesh(N, -1, L)
 
@@ -37,6 +37,7 @@ fig.savefig("psi.png")
 
 psi = Psi(eps[0, 0])
 X = dolfin.SpatialCoordinate(mesh)
+X = dolfin.Expression(("x[0]",), degree=1)
 f = X
 t = 0.0
 
@@ -55,7 +56,7 @@ ds = dolfin.ds(domain=mesh, subdomain_data=ffun)
 dx = dolfin.dx(domain=mesh)
 
 
-bc = dolfin.DirichletBC(V, dolfin.Constant([0.0]), left)
+bc = dolfin.DirichletBC(V, dolfin.Constant([0.0]), ffun, left_marker)
 
 energy = psi * dx - dolfin.inner(f, u) * dx
 
@@ -63,11 +64,33 @@ virtual_work = dolfin.derivative(energy, u, v) + t * dolfin.inner(u, v) * ds(
     right_marker
 )
 
+# for param in dolfin.parameters:
+#     print(param)
+#     try:
+#         for p in dolfin.parameters[param]:
+#             # print(p)
+#             if len(dolfin.parameters[param]) > 1:
+#                 print(f'    - {p}')
+#     except TypeError:
+#         continue
+
+# dolfin.info(dolfin.NonlinearVariationalSolver.default_parameters(), True)
+
+dolfin.info(dolfin.LinearVariationalSolver.default_parameters(), True)
+# dolfin.solve(virtual_work == 0, u, bcs=bc, solver_parameters={'absolute_tolerance': 1e-9})
 dolfin.solve(virtual_work == 0, u, bcs=bc)
 
 
 x = np.linspace(-1, L, 20)
-us = [u(xi) for xi in x]
+us = np.array([u(xi) for xi in x])
 fig, ax = plt.subplots()
 ax.plot(x, us)
 fig.savefig("u.png")
+
+
+dx = x[1] - x[0]
+epsilon = np.zeros(len(us))
+epsilon[:-1] = (us[:-1] - us[1:])/dx
+energy = Psi(epsilon)
+# print(np.sum(energy)*dx) # - x*us)*dx)
+print(dolfin.assemble(Psi(eps[0,0])*dolfin.dx))
