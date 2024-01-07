@@ -52,7 +52,8 @@ F = dolfin.grad(u) + dolfin.Identity(3)
 J = dolfin.det(F)
 I1 = dolfin.tr(F.T * F)
 
-psi = 1/2*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 1/2*mu*(I1 - 3)
+# psi = 1/2*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 1/2*mu*(I1 - 3)
+psi = 1/2*lmbd*dolfin.tr(F)**2 + mu*dolfin.tr(F.T*F) # + 1/2*mu*(I1 - 3)
 
 # dolfin.info(dolfin.LinearVariationalSolver.default_parameters(), True)
 
@@ -66,7 +67,7 @@ dolfin.solve(total_virtual_work == 0, u, bc,
 # dolfin.solve(a == L, u, bcs=bc,
             # solver_parameters={"linear_solver": "mumps"})
 
-dolfin.File('3dbeam.pvd') << u
+dolfin.File('3dbeam_tr.pvd') << u
 
 
 x = np.linspace(0, l, 4*N)

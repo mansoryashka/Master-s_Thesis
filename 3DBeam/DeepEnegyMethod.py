@@ -102,10 +102,11 @@ class DeepEnergyMethod:
         self.model = model
         self.energy = energy
     
-    def train_model(self, data, dirichlet, neumann, LHD, lr=0.3, max_it=20):
+    def train_model(self, data, dirichlet, neumann, LHD, lr=0.5, max_it=20, epochs=20):
         # data
         x = torch.from_numpy(data).float()
         x.requires_grad_(True)
+        optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr, max_iter=max_it)
 
         # boundary
         dirBC_coords = torch.from_numpy(dirichlet['coords']).float()
@@ -116,10 +117,9 @@ class DeepEnergyMethod:
         neuBC_coords.requires_grad_(True)
         neuBC_values = torch.from_numpy(neumann['values']).float()
 
-        optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr)
-        # loss = []
+        self.losses = {}
         start_time = time.time()
-        for i in range(max_it):
+        for i in range(epochs):
             def closure():
                 # internal loss
                 u_pred = self.getU(self.model, x)
@@ -145,15 +145,18 @@ class DeepEnergyMethod:
 
                 optimizer.zero_grad()
                 loss.backward()
+                
+                if self.losses.get(i):
+                    self.losses[i] += loss.item() / max_it
+                else:
+                    self.losses[i] = loss.item() / max_it
 
-                print(f'Iter: {i+1:d}, Energy: {energy_loss.item():10.5f}')
                 #       + f'loss: {loss.item():10.5f}')
+                print(f'Iter: {i+1:d}, Energy: {energy_loss.item():10.5f}')
                 return loss
 
             optimizer.step(closure)
         # return self.model
-
-
 
     def getU(self, model, x):
         u = model(x)
@@ -256,41 +259,43 @@ def L2norm(U):
     return L2norm
 
 if __name__ == '__main__':
-    domain, dirichlet, neumann = domain(l, h ,d)
+
     # x = np.linspace(0, l, int(4*N))
     # y = np.linspace(0, h, N)
     # z = np.linspace(0, d, N)
     
+    u_fem = np.load('u_fem.npy')
+    # print(u_fem.shape)
+    # print(f'FEM: {L2norm(u_fem):8.5f} \n')
+    # exit()
     x = rng.random(size=4*N)
     y = rng.random(size=N)
     z = rng.random(size=N)
     x = l*np.sort(x); y = h*np.sort(y); z = d*np.sort(z)
     
 
-    u_fem = np.load('u_fem.npy')
-
-    # print(u_fem.shape)
-    # fig = plt.figure(figsize=(4,4))
-    # ax = fig.add_subplot(111, projection='3d')
-    # ax.scatter(u_fem[0], u_fem[1], u_fem[2], s=0.002)
-
-    # print(f'FEM: {L2norm(u_fem):8.5f} \n')
-    # exit()
+    # for N in range(10, 35, 5):
+    domain, dirichlet, neumann = domain(l, h ,d)
 
     model = MultiLayerNet(3, 30, 3)
     DemBeam = DeepEnergyMethod(model, Psi, 3)
 
-    DemBeam.train_model(domain, dirichlet, neumann, [l, h, d], max_it=20)
-
+    DemBeam.train_model(domain, dirichlet, neumann, [l, h, d], epochs=4)
+    print(DemBeam.losses)
     U = DemBeam.evaluate_model(x, y, z)
     
-    # ax.scatter(U[0], U[1], U[2], s=0.002, c='tab:red')
     Udem = np.array(U).copy()
-    np.save('u_dem', Udem)
-    write_vtk_v2('output/NeoHook3D', x, y, z, U)
+
+    # np.save('u_dem', Udem)
+    # write_vtk_v2('output/NeoHook3D', x, y, z, U)
+
     # print(f'\nDEM: {L2norm(Udem):8.5f}   FEM: {L2norm(u_fem):8.5f} \n')
     # print((L2norm(Udem) - L2norm(u_fem))/(L2norm(u_fem)))
 
 
     
+    # fig = plt.figure(figsize=(4,4))
+    # ax = fig.add_subplot(111, projection='3d')
+    # ax.scatter(u_fem[0], u_fem[1], u_fem[2], s=0.002)
+    # ax.scatter(U[0], U[1], U[2], s=0.002, c='tab:red')
     # plt.show()
