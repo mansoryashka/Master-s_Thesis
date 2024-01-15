@@ -9,6 +9,9 @@ matplotlib.rcParams['figure.dpi'] = 350
 # np.random.seed(2023)
 torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
+dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+# code to run on ML node with no hangup :
+# CUDA_VISIBLE_DEVICES=x TMP=./tmp nohup python yourscript.py > out1.log 2> error1.log &
 
 N = 25
 x0 = 0
@@ -66,6 +69,7 @@ def domain(l, h, d, N=25):
     ax.set_zlabel('z')
     ax.view_init(elev=20, azim=-75)
     # plt.show()
+    plt.close()
     # exit()
 
     dirichlet = {
@@ -99,23 +103,22 @@ class MultiLayerNet(nn.Module):
 
 class DeepEnergyMethod:
     def __init__(self, model, energy, dim):
-        self.model = model
+        self.model = model.to(dev)
         self.energy = energy
-    
     def train_model(self, data, dirichlet, neumann, LHD, lr=0.5, max_it=20, epochs=20):
         # data
-        x = torch.from_numpy(data).float()
+        x = torch.from_numpy(data).float().to(dev)
         x.requires_grad_(True)
         optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr, max_iter=max_it)
 
         # boundary
-        dirBC_coords = torch.from_numpy(dirichlet['coords']).float()
+        dirBC_coords = torch.from_numpy(dirichlet['coords']).float().to(dev)
         dirBC_coords.requires_grad_(True)
-        dirBC_values = torch.from_numpy(dirichlet['values']).float()
+        dirBC_values = torch.from_numpy(dirichlet['values']).float().to(dev)
 
-        neuBC_coords = torch.from_numpy(neumann['coords']).float()
+        neuBC_coords = torch.from_numpy(neumann['coords']).float().to(dev)
         neuBC_coords.requires_grad_(True)
-        neuBC_values = torch.from_numpy(neumann['values']).float()
+        neuBC_values = torch.from_numpy(neumann['values']).float().to(dev)
 
         self.losses = {}
         start_time = time.time()
@@ -146,20 +149,20 @@ class DeepEnergyMethod:
                 optimizer.zero_grad()
                 loss.backward()
                 
-                if self.losses.get(i):
-                    self.losses[i] += loss.item() / max_it
+                if self.losses.get(i+1):
+                    self.losses[i+1] += loss.item() / max_it
                 else:
-                    self.losses[i] = loss.item() / max_it
+                    self.losses[i+1] = loss.item() / max_it
 
                 #       + f'loss: {loss.item():10.5f}')
-                print(f'Iter: {i+1:d}, Energy: {energy_loss.item():10.5f}')
+                # print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}')
                 return loss
 
             optimizer.step(closure)
         # return self.model
 
     def getU(self, model, x):
-        u = model(x)
+        u = model(x).to(dev)
         Ux, Uy, Uz = x[:, 0] * u.T.unsqueeze(1)
         u_pred = torch.cat((Ux.T, Uy.T, Uz.T), dim=-1)
         return u_pred
@@ -173,7 +176,7 @@ class DeepEnergyMethod:
         y1D = yGrid.flatten()
         z1D = zGrid.flatten()
         xyz = np.concatenate((np.array([x1D]).T, np.array([y1D]).T, np.array([z1D]).T), axis=-1)
-        xyz_tensor = torch.from_numpy(xyz).float()
+        xyz_tensor = torch.from_numpy(xyz).float().to(dev)
         xyz_tensor.requires_grad_(True)
         # u_pred_torch = self.model(xyz_tensor)
         u_pred_torch = self.getU(self.model, xyz_tensor)
@@ -188,9 +191,9 @@ lmbd =  E * nu / ((1 + nu)*(1 - 2*nu))
 mu = E / (2*(1 + nu))
 
 def Psi(u, x):
-    duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1), create_graph=True, retain_graph=True)[0]
-    duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1), create_graph=True, retain_graph=True)[0]
-    duzdxyz = grad(u[:, 2].unsqueeze(1), x, torch.ones(x.shape[0], 1), create_graph=True, retain_graph=True)[0]
+    duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
+    duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
+    duzdxyz = grad(u[:, 2].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
 
     Fxx = duxdxyz[:, 0].unsqueeze(1) + 1
     Fxy = duxdxyz[:, 1].unsqueeze(1) + 0
@@ -272,28 +275,61 @@ if __name__ == '__main__':
     y = rng.random(size=N)
     z = rng.random(size=N)
     x = l*np.sort(x); y = h*np.sort(y); z = d*np.sort(z)
-    
 
-    # for N in range(10, 35, 5):
-    domain, dirichlet, neumann = domain(l, h ,d)
-
-    model = MultiLayerNet(3, 30, 3)
-    DemBeam = DeepEnergyMethod(model, Psi, 3)
-
-    DemBeam.train_model(domain, dirichlet, neumann, [l, h, d], epochs=4)
-    print(DemBeam.losses)
-    U = DemBeam.evaluate_model(x, y, z)
-    
-    Udem = np.array(U).copy()
-
-    # np.save('u_dem', Udem)
-    # write_vtk_v2('output/NeoHook3D', x, y, z, U)
-
-    # print(f'\nDEM: {L2norm(Udem):8.5f}   FEM: {L2norm(u_fem):8.5f} \n')
-    # print((L2norm(Udem) - L2norm(u_fem))/(L2norm(u_fem)))
+    N_ar = np.array([10, 15, 20, 25, 30])
+    hidden_dim = np.array([10, 20, 30, 40, 50])
+    max_epoch = 40
+    losses = np.zeros((len(N_ar), len(hidden_dim)))
+    L2norms = np.zeros((len(N_ar), len(hidden_dim)))
+    tot_losses = []
+    best_norm = np.inf
 
 
-    
+    num_experiments = 10
+    for i in range(len(N_ar)):
+        for j in range(len(hidden_dim)):
+            for _ in range(num_experiments):
+                dom, dirichlet, neumann = domain(l, h ,d, N_ar[i])
+
+                model = MultiLayerNet(3, hidden_dim[j], 3)
+                DemBeam = DeepEnergyMethod(model, Psi, 3)
+
+                DemBeam.train_model(dom, dirichlet, neumann, [l, h, d], epochs=max_epoch)
+                # print(DemBeam.losses[max_epoch])
+                U = DemBeam.evaluate_model(x, y, z)
+
+                Udem = np.array(U).copy()
+                np.save(f'stored_arrays/u_dem_{i}{j}', Udem)
+
+                error_norm = (L2norm(Udem) - L2norm(u_fem))/L2norm(u_fem)
+
+                if abs(error_norm) < abs(best_norm):
+                    best_norm = error_norm
+                    Ubest = U
+                    print(f"Best N: {N_ar[i]:2d}, nr. neurons: {hidden_dim[j]:2d}")
+
+                tot_losses.append(DemBeam.losses)
+                losses[i, j] += DemBeam.losses[max_epoch]
+                L2norms[i, j] += error_norm
+
+            print(f"N: {N_ar[i]}, nr. hidden neurons: {hidden_dim[j]}")
+            print(f'\nDEM: {L2norm(Udem):8.5f}   FEM: {L2norm(u_fem):8.5f}')
+            print(f'L2norm = {error_norm:.5f}\n')
+
+    losses /= num_experiments
+    L2norms /= num_experiments
+
+    print('losses')
+    print(losses)
+    print('L2norms')
+    print(L2norms)
+    np.save('stored_arrays/3Dlosses', losses)
+    np.save('stored_arraysL2norms', L2norms)
+    tot_losses = np.array(tot_losses)
+    np.save('stored_arrays/tot_losses', tot_losses)
+    write_vtk_v2('output/NeoHook3D', x, y, z, Ubest)
+
+
     # fig = plt.figure(figsize=(4,4))
     # ax = fig.add_subplot(111, projection='3d')
     # ax.scatter(u_fem[0], u_fem[1], u_fem[2], s=0.002)

@@ -48,6 +48,7 @@ f = dolfin.Constant((0.0, -5.0, 0.0))
 
 F = dolfin.grad(u) + dolfin.Identity(3)
 # a = dolfin.inner(sigma(F), epsilon(v))*dolfin.dx
+
 a = dolfin.inner(ufl.nabla_div(sigma(uh)), v)*dolfin.dx
 L = dolfin.dot(f, v)*ds(1) # + dolfin.dot(dolfin.Constant((0, 0, 0)), v)*dolfin.ds
 
