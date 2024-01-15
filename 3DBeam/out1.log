@@ -1,0 +1,168 @@
+Best N: 10, nr. neurons: 10
+Best N: 10, nr. neurons: 10
+N: 10, nr. hidden neurons: 10
+
+DEM:  1.01199   FEM:  1.15976
+L2norm = -0.12742
+
+Best N: 10, nr. neurons: 20
+Best N: 10, nr. neurons: 20
+N: 10, nr. hidden neurons: 20
+
+DEM:  1.02489   FEM:  1.15976
+L2norm = -0.11629
+
+N: 10, nr. hidden neurons: 30
+
+DEM:  1.02823   FEM:  1.15976
+L2norm = -0.11341
+
+N: 10, nr. hidden neurons: 40
+
+DEM:  1.02869   FEM:  1.15976
+L2norm = -0.11302
+
+N: 10, nr. hidden neurons: 50
+
+DEM:  1.02834   FEM:  1.15976
+L2norm = -0.11332
+
+Best N: 15, nr. neurons: 10
+Best N: 15, nr. neurons: 10
+N: 15, nr. hidden neurons: 10
+
+DEM:  1.05521   FEM:  1.15976
+L2norm = -0.09015
+
+Best N: 15, nr. neurons: 20
+Best N: 15, nr. neurons: 20
+N: 15, nr. hidden neurons: 20
+
+DEM:  1.08123   FEM:  1.15976
+L2norm = -0.06771
+
+N: 15, nr. hidden neurons: 30
+
+DEM:  1.08050   FEM:  1.15976
+L2norm = -0.06835
+
+N: 15, nr. hidden neurons: 40
+
+DEM:  1.07938   FEM:  1.15976
+L2norm = -0.06931
+
+N: 15, nr. hidden neurons: 50
+
+DEM:  1.07844   FEM:  1.15976
+L2norm = -0.07012
+
+Best N: 20, nr. neurons: 10
+Best N: 20, nr. neurons: 10
+Best N: 20, nr. neurons: 10
+Best N: 20, nr. neurons: 10
+N: 20, nr. hidden neurons: 10
+
+DEM:  1.10178   FEM:  1.15976
+L2norm = -0.05000
+
+Best N: 20, nr. neurons: 20
+N: 20, nr. hidden neurons: 20
+
+DEM:  1.10712   FEM:  1.15976
+L2norm = -0.04540
+
+Best N: 20, nr. neurons: 30
+N: 20, nr. hidden neurons: 30
+
+DEM:  1.10747   FEM:  1.15976
+L2norm = -0.04509
+
+Best N: 20, nr. neurons: 40
+N: 20, nr. hidden neurons: 40
+
+DEM:  1.10809   FEM:  1.15976
+L2norm = -0.04456
+
+N: 20, nr. hidden neurons: 50
+
+DEM:  1.10584   FEM:  1.15976
+L2norm = -0.04650
+
+Best N: 25, nr. neurons: 10
+Best N: 25, nr. neurons: 10
+Best N: 25, nr. neurons: 10
+Best N: 25, nr. neurons: 10
+N: 25, nr. hidden neurons: 10
+
+DEM:  1.11885   FEM:  1.15976
+L2norm = -0.03528
+
+Best N: 25, nr. neurons: 20
+Best N: 25, nr. neurons: 20
+Best N: 25, nr. neurons: 20
+Best N: 25, nr. neurons: 20
+N: 25, nr. hidden neurons: 20
+
+DEM:  1.13033   FEM:  1.15976
+L2norm = -0.02538
+
+N: 25, nr. hidden neurons: 30
+
+DEM:  1.12829   FEM:  1.15976
+L2norm = -0.02714
+
+N: 25, nr. hidden neurons: 40
+
+DEM:  1.12763   FEM:  1.15976
+L2norm = -0.02771
+
+N: 25, nr. hidden neurons: 50
+
+DEM:  1.12867   FEM:  1.15976
+L2norm = -0.02681
+
+Best N: 30, nr. neurons: 10
+Best N: 30, nr. neurons: 10
+Best N: 30, nr. neurons: 10
+N: 30, nr. hidden neurons: 10
+
+DEM:  1.13519   FEM:  1.15976
+L2norm = -0.02119
+
+Best N: 30, nr. neurons: 20
+Best N: 30, nr. neurons: 20
+Best N: 30, nr. neurons: 20
+Best N: 30, nr. neurons: 20
+Best N: 30, nr. neurons: 20
+N: 30, nr. hidden neurons: 20
+
+DEM:  1.13675   FEM:  1.15976
+L2norm = -0.01984
+
+N: 30, nr. hidden neurons: 30
+
+DEM:  1.13933   FEM:  1.15976
+L2norm = -0.01762
+
+N: 30, nr. hidden neurons: 40
+
+DEM:  1.13901   FEM:  1.15976
+L2norm = -0.01790
+
+N: 30, nr. hidden neurons: 50
+
+DEM:  1.14103   FEM:  1.15976
+L2norm = -0.01615
+
+losses
+[[-0.12055142 -0.14716305 -0.14825837 -0.14881997 -0.1473417 ]
+ [-0.26074235 -0.29116797 -0.29076792 -0.2907014  -0.29242079]
+ [-0.34871912 -0.36832622 -0.37061487 -0.37042738 -0.36899542]
+ [-0.39306922 -0.4158531  -0.41856361 -0.41891055 -0.41818534]
+ [-0.43480738 -0.45105326 -0.45105694 -0.45112348 -0.45176363]]
+L2norms
+[[-0.12419114 -0.11439859 -0.11462998 -0.1142101  -0.11489875]
+ [-0.08056406 -0.06895131 -0.06875636 -0.06956257 -0.06969505]
+ [-0.05173542 -0.04462307 -0.04368052 -0.04434358 -0.04393926]
+ [-0.03701065 -0.02946167 -0.0283372  -0.02826385 -0.02789837]
+ [-0.02339327 -0.01796142 -0.01790473 -0.01814292 -0.01772936]]

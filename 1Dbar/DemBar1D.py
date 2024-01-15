@@ -78,10 +78,10 @@ def train_model(data, max_it=20, j=-1):
                 loss = energy_loss
                 optimizer.zero_grad()
                 loss.backward()
+            print(f'Iter: {i+1:d}, Loss: {energy_loss.item():.5f}')
             return loss
         optimizer.step(closure)
 
-        # print(f'Iter: {i+1:d}, Loss: {energy_loss.item():.5f}')
 
     elapsed = time.time() - start_time
     return model, elapsed, j
@@ -153,7 +153,7 @@ if __name__ == '__main__':
         if loss < best_loss:
             best_loss = loss
             best_pred = u_pred
-            print(f'best loss: ', N, i)
+            # print(f'best loss: ', N, i)
         i+=1
 
     l1 = sorted(times.items())
