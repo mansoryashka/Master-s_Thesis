@@ -18,7 +18,7 @@ mu = E / (2*(1 + nu))
 mesh = dolfin.BoxMesh(dolfin.Point(0, 0, 0), dolfin.Point(l, h, d), 4*N, N, N)
 
 V = dolfin.VectorFunctionSpace(mesh, 'P', 1)
-# u = dolfin.TrialFunction(V)
+uh = dolfin.TrialFunction(V)
 u = dolfin.Function(V)
 v = dolfin.TestFunction(V)
 
@@ -40,34 +40,39 @@ def epsilon(u):
 
 def sigma(u):
     return lmbd*dolfin.tr(epsilon(u))*dolfin.Identity(3) + 2*mu*epsilon(u)
+# def sigma(F):
+#     return dolfin.det(F)*mu * F * F.T + dolfin.det(F)*(lmbd*dolfin.ln(dolfin.det(F)) - mu)*dolfin.Identity(3)
 
 # equations for the PDE
 f = dolfin.Constant((0.0, -5.0, 0.0))
 
-a = dolfin.inner(sigma(u), epsilon(v))*dolfin.dx
+F = dolfin.grad(u) + dolfin.Identity(3)
+# a = dolfin.inner(sigma(F), epsilon(v))*dolfin.dx
+a = dolfin.inner(ufl.nabla_div(sigma(uh)), v)*dolfin.dx
 L = dolfin.dot(f, v)*ds(1) # + dolfin.dot(dolfin.Constant((0, 0, 0)), v)*dolfin.ds
 
 
-F = dolfin.grad(u) + dolfin.Identity(3)
-J = dolfin.det(F)
-I1 = dolfin.tr(F.T * F)
+#J = dolfin.det(F)
+#C =F.T * F
+#I1 = dolfin.tr(C)
+#E = 0.5 * (C - dolfin.Identity(3))
 
 # psi = 1/2*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 1/2*mu*(I1 - 3)
-psi = 1/2*lmbd*dolfin.tr(F)**2 + mu*dolfin.tr(F.T*F) # + 1/2*mu*(I1 - 3)
+#psi = 1/2*lmbd*dolfin.tr(E)**2 + mu*dolfin.tr(E*E) # + 1/2*mu*(I1 - 3)
 
 # dolfin.info(dolfin.LinearVariationalSolver.default_parameters(), True)
 
-energy = psi*dolfin.dx(domain=mesh) - dolfin.dot(f, u)*ds(1)
-total_virtual_work = dolfin.derivative(energy, u, v)
+#energy = psi*dolfin.dx(domain=mesh) - dolfin.dot(f, v)*ds(1)
+#total_virtual_work = dolfin.derivative(energy, u, v)
 
-dolfin.solve(total_virtual_work == 0, u, bc,
-             solver_parameters={'newton_solver':
-                                {'absolute_tolerance': 1e-6,
-                                'linear_solver': 'mumps'}})
-# dolfin.solve(a == L, u, bcs=bc,
-            # solver_parameters={"linear_solver": "mumps"})
+# dolfin.solve(total_virtual_work == 0, u, bc,
+#              solver_parameters={'newton_solver':
+#                                 {'absolute_tolerance': 1e-6,
+#                                 'linear_solver': 'mumps'}})
+dolfin.solve(a == L, u, bcs=bc,
+            solver_parameters={"linear_solver": "mumps"})
 
-dolfin.File('3dbeam_tr.pvd') << u
+dolfin.File('output/3dbeam_lin.pvd') << u
 
 
 x = np.linspace(0, l, 4*N)
