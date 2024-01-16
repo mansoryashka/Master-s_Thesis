@@ -4,11 +4,14 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.autograd import grad
+
 import matplotlib
+matplotlib.rcParams['figure.dpi'] = 350
+
 import sys
 sys.path.insert(0, "..")
 from DEM import DeepEnergyMethod
-matplotlib.rcParams['figure.dpi'] = 350
+
 # np.random.seed(2023)
 torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
@@ -327,7 +330,7 @@ if __name__ == '__main__':
     print('L2norms')
     print(L2norms)
     np.save('stored_arrays/3Dlosses', losses)
-    np.save('stored_arraysL2norms', L2norms)
+    np.save('stored_arrays/L2norms', L2norms)
     tot_losses = np.array(tot_losses)
     np.save('stored_arrays/tot_losses', tot_losses)
     write_vtk_v2('output/NeoHook3D', x, y, z, Ubest)

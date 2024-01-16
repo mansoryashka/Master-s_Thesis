@@ -34,19 +34,20 @@ def boundary(x, on_boundary):
 
 bc = dolfin.DirichletBC(V, dolfin.Constant((0.0, 0.0, 0.0)), boundary)
 
-# define epsilon and sigma
-def epsilon(u):
-    return 0.5*(ufl.nabla_grad(u) + ufl.nabla_grad(u).T)
+F = dolfin.grad(u) + dolfin.Identity(3)
+J = dolfin.det(F)
+B = F * F.T
+# # define epsilon and sigma
+# def epsilon(u):
+#     return 0.5*(ufl.nabla_grad(u) + ufl.nabla_grad(u).T)
 
 def sigma(u):
-    return lmbd*dolfin.tr(epsilon(u))*dolfin.Identity(3) + 2*mu*epsilon(u)
-# def sigma(F):
-#     return dolfin.det(F)*mu * F * F.T + dolfin.det(F)*(lmbd*dolfin.ln(dolfin.det(F)) - mu)*dolfin.Identity(3)
+    # return lmbd*dolfin.tr(epsilon(u))*dolfin.Identity(3) + 2*mu*epsilon(u)
+    return J**-1 * mu * B + 1/J * (lmbd * dolfin.ln(J) - mu) * dolfin.Identity(3)
 
 # equations for the PDE
 f = dolfin.Constant((0.0, -5.0, 0.0))
 
-F = dolfin.grad(u) + dolfin.Identity(3)
 # a = dolfin.inner(sigma(F), epsilon(v))*dolfin.dx
 
 a = dolfin.inner(ufl.nabla_div(sigma(uh)), v)*dolfin.dx
