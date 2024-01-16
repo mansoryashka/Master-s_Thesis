@@ -5,10 +5,16 @@ import torch
 from torch import nn
 from torch.autograd import grad
 import matplotlib
+import sys
+sys.path.insert(0, "..")
+from DEM import DeepEnergyMethod
 matplotlib.rcParams['figure.dpi'] = 350
 # np.random.seed(2023)
 torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
+dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+# code to run on ML node with no hangup :
+# CUDA_VISIBLE_DEVICES=x TMP=./tmp nohup python yourscript.py > out1.log 2> error1.log &
 
 N = 25
 x0 = 0
@@ -66,6 +72,7 @@ def domain(l, h, d, N=25):
     ax.set_zlabel('z')
     ax.view_init(elev=20, azim=-75)
     # plt.show()
+    plt.close()
     # exit()
 
     dirichlet = {
@@ -97,77 +104,100 @@ class MultiLayerNet(nn.Module):
         x = self.l4(x)
         return x
 
-def train_model(data, dbc, nbc, LHD, lr=0.5, max_it=20):
-    # data
-    model = MultiLayerNet(3, 30, 3)
-    x = torch.from_numpy(data).float()
-    x.requires_grad_(True)
+# class DeepEnergyMethod:
+#     def __init__(self, model, energy, dim):
+#         self.model = model.to(dev)
+#         self.energy = energy
+#     def train_model(self, data, dirichlet, neumann, LHD, lr=0.5, max_it=20, epochs=20):
+#         # data
+#         x = torch.from_numpy(data).float().to(dev)
+#         x.requires_grad_(True)
+#         optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr, max_iter=max_it)
 
-    # boundary
-    dirBC_coords = torch.from_numpy(dbc['coords']).float()
-    dirBC_coords.requires_grad_(True)
-    dirBC_values = torch.from_numpy(dbc['values']).float()
+#         # boundary
+#         dirBC_coords = torch.from_numpy(dirichlet['coords']).float().to(dev)
+#         dirBC_coords.requires_grad_(True)
+#         dirBC_values = torch.from_numpy(dirichlet['values']).float().to(dev)
 
-    neuBC_coords = torch.from_numpy(nbc['coords']).float()
-    neuBC_coords.requires_grad_(True)
-    neuBC_values = torch.from_numpy(nbc['values']).float()
+#         neuBC_coords = torch.from_numpy(neumann['coords']).float().to(dev)
+#         neuBC_coords.requires_grad_(True)
+#         neuBC_values = torch.from_numpy(neumann['values']).float().to(dev)
 
-    optimizer = torch.optim.LBFGS(model.parameters(), lr=lr)
-    # loss = []
-    start_time = time.time()
-    for i in range(max_it):
-        def closure():
-            # internal loss
-            u_pred = getU(model, x)
-            u_pred.double()
-            
-            IntEnergy = Psi(u_pred, x)
-            internal_loss = LHD[0]*LHD[1]*LHD[2]*penalty(IntEnergy)
+#         self.losses = {}
+#         start_time = time.time()
+#         for i in range(epochs):
+#             def closure():
+#                 # internal loss
+#                 u_pred = self.getU(self.model, x)
+#                 u_pred.double()
 
-            # boundary loss
-            dir_pred = getU(model, dirBC_coords)
-            bc_dir = LHD[1]*LHD[2]*loss_squared_sum(dir_pred, dirBC_values)
-            boundary_loss = torch.sum(bc_dir)
-            
-            # external loss
-            neu_pred = getU(model, neuBC_coords)
-            bc_neu = torch.matmul((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
-            external_loss = LHD[1]*LHD[2]*penalty(bc_neu)
-            # print(neu_pred.shape, neuBC_coords.shape, neuBC_values.shape)
-            # print(bc_neu.shape); exit()
-            energy_loss = internal_loss - torch.sum(external_loss)
-            loss = internal_loss - torch.sum(external_loss) + boundary_loss
-            
-            optimizer.zero_grad()
-            loss.backward()
+#                 IntEnergy = self.energy(u_pred, x)
+#                 internal_loss = LHD[0]*LHD[1]*LHD[2]*penalty(IntEnergy)
 
-            print(f'Iter: {i+1:d}, Energy: {energy_loss.item():10.5f}, loss: {loss.item():10.5f}')
-            return loss
-    
-        optimizer.step(closure)
+#                 # boundary loss
+#                 dir_pred = self.getU(self.model, dirBC_coords)
+#                 # print(torch.norm(dir_pred))
+#                 bc_dir = LHD[1]*LHD[2]*loss_squared_sum(dir_pred, dirBC_values)
+#                 boundary_loss = torch.sum(bc_dir)
 
-    return model
+#                 # external loss
+#                 neu_pred = self.getU(self.model, neuBC_coords)
+#                 bc_neu = torch.matmul((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
+#                 external_loss = LHD[1]*LHD[2]*penalty(bc_neu)
+#                 # print(neu_pred.shape, neuBC_coords.shape, neuBC_values.shape)
+#                 # print(bc_neu.shape); exit()
+#                 energy_loss = internal_loss - torch.sum(external_loss)
+#                 loss = internal_loss - torch.sum(external_loss) + boundary_loss
 
+#                 optimizer.zero_grad()
+#                 loss.backward()
+                
+#                 if self.losses.get(i+1):
+#                     self.losses[i+1] += loss.item() / max_it
+#                 else:
+#                     self.losses[i+1] = loss.item() / max_it
 
-def lmbda(E, nu):
-    return E * nu / ((1 + nu)*(1 - 2*nu))
+#                 #       + f'loss: {loss.item():10.5f}')
+#                 # print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}')
+#                 return loss
 
-def MU(E, nu):
-    return E / (2*(1 + nu))
+#             optimizer.step(closure)
+#         # return self.model
 
-lmbd = lmbda(E, nu)
-mu = MU(E, nu)
+#     def getU(self, model, x):
+#         u = model(x).to(dev)
+#         Ux, Uy, Uz = x[:, 0] * u.T.unsqueeze(1)
+#         u_pred = torch.cat((Ux.T, Uy.T, Uz.T), dim=-1)
+#         return u_pred
 
-def getU(model, x):
-    u = model(x)
-    Ux, Uy, Uz = x[:, 0] * u.T.unsqueeze(1)
-    u_pred = torch.cat((Ux.T, Uy.T, Uz.T), dim=-1)
-    return u_pred
+#     def evaluate_model(self, x, y, z):
+#         Nx = len(x)
+#         Ny = len(y)
+#         Nz = len(z)
+#         xGrid, yGrid, zGrid = np.meshgrid(x, y, z)
+#         x1D = xGrid.flatten()
+#         y1D = yGrid.flatten()
+#         z1D = zGrid.flatten()
+#         xyz = np.concatenate((np.array([x1D]).T, np.array([y1D]).T, np.array([z1D]).T), axis=-1)
+#         xyz_tensor = torch.from_numpy(xyz).float().to(dev)
+#         xyz_tensor.requires_grad_(True)
+#         # u_pred_torch = self.model(xyz_tensor)
+#         u_pred_torch = self.getU(self.model, xyz_tensor)
+#         u_pred = u_pred_torch.detach().cpu().numpy()
+#         surUx = u_pred[:, 0].reshape(Ny, Nx, Nz)
+#         surUy = u_pred[:, 1].reshape(Ny, Nx, Nz)
+#         surUz = u_pred[:, 2].reshape(Ny, Nx, Nz)
+#         U = (np.float64(surUx), np.float64(surUy), np.float64(surUz))
+#         return U
+
+lmbd =  E * nu / ((1 + nu)*(1 - 2*nu))
+mu = E / (2*(1 + nu))
 
 def Psi(u, x):
-    duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1), create_graph=True, retain_graph=True)[0]
-    duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1), create_graph=True, retain_graph=True)[0]
-    duzdxyz = grad(u[:, 2].unsqueeze(1), x, torch.ones(x.shape[0], 1), create_graph=True, retain_graph=True)[0]
+    duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
+    duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
+    duzdxyz = grad(u[:, 2].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
+
     Fxx = duxdxyz[:, 0].unsqueeze(1) + 1
     Fxy = duxdxyz[:, 1].unsqueeze(1) + 0
     Fxz = duxdxyz[:, 2].unsqueeze(1) + 0
@@ -177,16 +207,17 @@ def Psi(u, x):
     Fzx = duzdxyz[:, 0].unsqueeze(1) + 0
     Fzy = duzdxyz[:, 1].unsqueeze(1) + 0
     Fzz = duzdxyz[:, 2].unsqueeze(1) + 1
+
     detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
     trC = Fxx ** 2 + Fxy ** 2 + Fxz ** 2 + Fyx ** 2 + Fyy ** 2 + Fyz ** 2 + Fzx ** 2 + Fzy ** 2 + Fzz ** 2
     strainEnergy = 0.5 * lmbd * (torch.log(detF) * torch.log(detF)) - mu * torch.log(detF) + 0.5 * mu * (trC - 3)
     return strainEnergy
 
-def loss_squared_sum(input, target):
-    return torch.sum((input - target)**2, dim=1) / input.shape[1]*input.data.nelement()
+# def loss_squared_sum(input, target):
+#     return torch.sum((input - target)**2, dim=1) / input.shape[1]*input.data.nelement()
 
-def penalty(input):
-    return torch.sum(input) / input.data.nelement()
+# def penalty(input):
+#     return torch.sum(input) / input.data.nelement()
 
 """ Simspson's method to be implemented later
 
@@ -212,26 +243,6 @@ def basic_simps(f, dx=1, axis=-1):
     return np.sum(1/3 * dx * (f[s0] + 4 * f[s1] + f[s2]), axis)
 """
 
-def evaluate_model(model, x, y, z):
-    Nx = len(x)
-    Ny = len(y)
-    Nz = len(z)
-    xGrid, yGrid, zGrid = np.meshgrid(x, y, z)
-    x1D = xGrid.flatten()
-    y1D = yGrid.flatten()
-    z1D = zGrid.flatten()
-    xyz = np.concatenate((np.array([x1D]).T, np.array([y1D]).T, np.array([z1D]).T), axis=-1)
-    xyz_tensor = torch.from_numpy(xyz).float()
-    xyz_tensor.requires_grad_(True)
-    # u_pred_torch = self.model(xyz_tensor)
-    u_pred_torch = getU(model, xyz_tensor)
-    u_pred = u_pred_torch.detach().cpu().numpy()
-    surUx = u_pred[:, 0].reshape(Ny, Nx, Nz)
-    surUy = u_pred[:, 1].reshape(Ny, Nx, Nz)
-    surUz = u_pred[:, 2].reshape(Ny, Nx, Nz)
-    U = np.float64(surUx), np.float64(surUy), np.float64(surUz)
-    return U
-
 from pyevtk.hl import gridToVTK
 
 def write_vtk_v2(filename, x_space, y_space, z_space, U):
@@ -254,32 +265,76 @@ def L2norm(U):
     return L2norm
 
 if __name__ == '__main__':
-    domain, dirichlet, neumann = domain(l, h ,d)
+
     # x = np.linspace(0, l, int(4*N))
     # y = np.linspace(0, h, N)
     # z = np.linspace(0, d, N)
     
+    u_fem = np.load('u_fem.npy')
+    # print(u_fem.shape)
+    # print(f'FEM: {L2norm(u_fem):8.5f} \n')
+    # exit()
     x = rng.random(size=4*N)
     y = rng.random(size=N)
     z = rng.random(size=N)
     x = l*np.sort(x); y = h*np.sort(y); z = d*np.sort(z)
-    
 
-    u_fem = np.load('u_fem.npy')
-    print(u_fem.shape)
-    fig = plt.figure(figsize=(4,4))
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(u_fem[0], u_fem[1], u_fem[2], s=0.002)
+    N_ar = np.array([10, 15, 20, 25, 30])
+    hidden_dim = np.array([10, 20, 30, 40, 50])
+    max_epoch = 40
+    losses = np.zeros((len(N_ar), len(hidden_dim)))
+    L2norms = np.zeros((len(N_ar), len(hidden_dim)))
+    tot_losses = []
+    best_norm = np.inf
 
-    print(f'FEM: {L2norm(u_fem):8.5f} \n')
-    # exit()
-    model = train_model(domain, dirichlet, neumann, [l, h, d], max_it=1)
 
-    U = evaluate_model(model, x, y, z)
-    ax.scatter(U[0], U[1], U[2], s=0.002, c='tab:red')
-    Udem = np.array(U).copy()
-    print(f'\nDEM: {L2norm(Udem):8.5f}   FEM: {L2norm(u_fem):8.5f} \n')
-    print((L2norm(Udem) - L2norm(u_fem))/(L2norm(u_fem)))
+    num_experiments = 10
+    for i in range(len(N_ar)):
+        for j in range(len(hidden_dim)):
+            for _ in range(num_experiments):
+                dom, dirichlet, neumann = domain(l, h ,d, N_ar[i])
 
-    write_vtk_v2('output/NeoHook_nobias', x, y, z, U)
+                model = MultiLayerNet(3, hidden_dim[j], 3)
+                DemBeam = DeepEnergyMethod(model, Psi, 3)
+
+                DemBeam.train_model(dom, dirichlet, neumann, [l, h, d], epochs=max_epoch)
+                # print(DemBeam.losses[max_epoch])
+                U = DemBeam.evaluate_model(x, y, z)
+
+                Udem = np.array(U).copy()
+                np.save(f'stored_arrays/u_dem_{i}{j}', Udem)
+
+                error_norm = (L2norm(Udem) - L2norm(u_fem))/L2norm(u_fem)
+
+                if abs(error_norm) < abs(best_norm):
+                    best_norm = error_norm
+                    Ubest = U
+                    print(f"Best N: {N_ar[i]:2d}, nr. neurons: {hidden_dim[j]:2d}")
+
+                tot_losses.append(DemBeam.losses)
+                losses[i, j] += DemBeam.losses[max_epoch]
+                L2norms[i, j] += error_norm
+
+            print(f"N: {N_ar[i]}, nr. hidden neurons: {hidden_dim[j]}")
+            print(f'\nDEM: {L2norm(Udem):8.5f}   FEM: {L2norm(u_fem):8.5f}')
+            print(f'L2norm = {error_norm:.5f}\n')
+
+    losses /= num_experiments
+    L2norms /= num_experiments
+
+    print('losses')
+    print(losses)
+    print('L2norms')
+    print(L2norms)
+    np.save('stored_arrays/3Dlosses', losses)
+    np.save('stored_arraysL2norms', L2norms)
+    tot_losses = np.array(tot_losses)
+    np.save('stored_arrays/tot_losses', tot_losses)
+    write_vtk_v2('output/NeoHook3D', x, y, z, Ubest)
+
+
+    # fig = plt.figure(figsize=(4,4))
+    # ax = fig.add_subplot(111, projection='3d')
+    # ax.scatter(u_fem[0], u_fem[1], u_fem[2], s=0.002)
+    # ax.scatter(U[0], U[1], U[2], s=0.002, c='tab:red')
     # plt.show()
