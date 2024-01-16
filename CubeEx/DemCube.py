@@ -10,7 +10,7 @@ torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
 
 N = 20
-L = H = D = 1
+L = H = D = 1.0
 dx = dy = dz = L/N
 
 d_boundary = 0.0
@@ -48,14 +48,14 @@ def domain(l, h, d, N=25):
     ax.scatter(db_pts_x, db_pts_y, db_pts_z, facecolor='tab:green', s=0.5)
     ax.scatter(nb_pts_x, nb_pts_y, nb_pts_z, facecolor='tab:red', s=0.5)
     # ax.set_box_aspect((4,1,1))
-    # ax.set_xticks([0.0, 2.0, 4.0])
-    # ax.set_zticks([0.0, 1.0])
-    # ax.set_yticks([0.0, 1.0])
+    ax.set_xticks([0.0, 0.5, 1.0])
+    ax.set_yticks([0.0, 0.5, 1.0])
+    ax.set_zticks([0.0, 0.5, 1.0])
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
     ax.view_init(elev=20, azim=-75)
-    plt.show()
+    # plt.show()
     # exit()
 
     dirichlet = {

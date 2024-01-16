@@ -22,7 +22,6 @@ uh = dolfin.TrialFunction(V)
 u = dolfin.Function(V)
 v = dolfin.TestFunction(V)
 
-
 neumann_domain = dolfin.MeshFunction("size_t", mesh, 2)
 neumann_domain.set_all(0)
 dolfin.CompiledSubDomain("near(x[0], side) && on_boundary", side=4.0, tol=10e-10).mark(neumann_domain, 1)
@@ -37,42 +36,40 @@ bc = dolfin.DirichletBC(V, dolfin.Constant((0.0, 0.0, 0.0)), boundary)
 F = dolfin.grad(u) + dolfin.Identity(3)
 J = dolfin.det(F)
 B = F * F.T
+C = F.T * F
+I1 = dolfin.tr(C)
+E = 0.5 * (C - dolfin.Identity(3))
+
+f = dolfin.Constant((0.0, -5.0, 0.0))
+
 # # define epsilon and sigma
 # def epsilon(u):
 #     return 0.5*(ufl.nabla_grad(u) + ufl.nabla_grad(u).T)
 
-def sigma(u):
-    # return lmbd*dolfin.tr(epsilon(u))*dolfin.Identity(3) + 2*mu*epsilon(u)
-    return J**-1 * mu * B + 1/J * (lmbd * dolfin.ln(J) - mu) * dolfin.Identity(3)
-
-# equations for the PDE
-f = dolfin.Constant((0.0, -5.0, 0.0))
+# def sigma(u):
+#     return lmbd*dolfin.tr(epsilon(u))*dolfin.Identity(3) + 2*mu*epsilon(u)
 
 # a = dolfin.inner(sigma(F), epsilon(v))*dolfin.dx
 
-a = dolfin.inner(ufl.nabla_div(sigma(uh)), v)*dolfin.dx
-L = dolfin.dot(f, v)*ds(1) # + dolfin.dot(dolfin.Constant((0, 0, 0)), v)*dolfin.ds
+# sigma = 1/J * mu * B + 1/J * (lmbd * dolfin.ln(J) - mu) * dolfin.Identity(3)
 
+# a = dolfin.inner(sigma, ufl.nabla_grad(v))*dolfin.dx
+# # a = dolfin.inner(ufl.nabla_div(sigma), v)*dolfin.dx
+# L = dolfin.dot(f, v)*ds(1)
 
-#J = dolfin.det(F)
-#C =F.T * F
-#I1 = dolfin.tr(C)
-#E = 0.5 * (C - dolfin.Identity(3))
+# dolfin.solve(a == L, u, bcs=bc,
+#             solver_parameters={"linear_solver": "mumps"})
 
-# psi = 1/2*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 1/2*mu*(I1 - 3)
-#psi = 1/2*lmbd*dolfin.tr(E)**2 + mu*dolfin.tr(E*E) # + 1/2*mu*(I1 - 3)
+psi = 0.5*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 0.5*mu*(I1 - 3)
 
-# dolfin.info(dolfin.LinearVariationalSolver.default_parameters(), True)
-
-#energy = psi*dolfin.dx(domain=mesh) - dolfin.dot(f, v)*ds(1)
-#total_virtual_work = dolfin.derivative(energy, u, v)
-
-# dolfin.solve(total_virtual_work == 0, u, bc,
-#              solver_parameters={'newton_solver':
-#                                 {'absolute_tolerance': 1e-6,
-#                                 'linear_solver': 'mumps'}})
-dolfin.solve(a == L, u, bcs=bc,
-            solver_parameters={"linear_solver": "mumps"})
+energy = psi*dolfin.dx(domain=mesh) #- dolfin.dot(f, v)*ds(1)
+# total_virtual_work = dolfin.derivative(energy, u, v)
+total_internal_work = dolfin.derivative(energy, u, v)
+total_virtual_work = total_internal_work - dolfin.dot(f, v)*ds(1)
+dolfin.solve(total_virtual_work == 0, u, bc,
+             solver_parameters={'newton_solver':
+                                {'absolute_tolerance': 1e-6,
+                                'linear_solver': 'mumps'}})
 
 dolfin.File('output/3dbeam_lin.pvd') << u
 
