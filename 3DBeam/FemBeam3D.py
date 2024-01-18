@@ -62,7 +62,7 @@ f = dolfin.Constant((0.0, -5.0, 0.0))
 
 psi = 0.5*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 0.5*mu*(I1 - 3)
 
-energy = psi*dolfin.dx(domain=mesh) #- dolfin.dot(f, v)*ds(1)
+energy = psi*dolfin.dx(domain=mesh) #- dolfin.dot(f, u)*ds(1)
 # total_virtual_work = dolfin.derivative(energy, u, v)
 total_internal_work = dolfin.derivative(energy, u, v)
 total_virtual_work = total_internal_work - dolfin.dot(f, v)*ds(1)
@@ -71,7 +71,7 @@ dolfin.solve(total_virtual_work == 0, u, bc,
                                 {'absolute_tolerance': 1e-6,
                                 'linear_solver': 'mumps'}})
 
-dolfin.File('output/3dbeam_lin.pvd') << u
+dolfin.File('output/3dbeam_lin2.pvd') << u
 
 
 x = np.linspace(0, l, 4*N)
