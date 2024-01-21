@@ -4,8 +4,14 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.autograd import grad
+
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 350
+
+import sys
+sys.path.insert(0, "..")
+from DEM import DeepEnergyMethod
+
 torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
 
@@ -86,68 +92,69 @@ class MultiLayerNet(nn.Module):
         x = self.l4(x)
         return x
 
-class DeepEnergyMethod:
-    def __init__(self, model, energy, dim):
-        self.model = model
-        self.energy = energy
+# class DeepEnergyMethod:
+#     def __init__(self, model, energy, dim):
+#         self.model = model
+#         self.energy = energy
     
-    def train_model(self, data, dirichlet, neumann, LHD, lr=0.3, max_it=20):
-        # data
-        x = torch.from_numpy(data).float()
-        x.requires_grad_(True)
+#     def train_model(self, data, dirichlet, neumann, LHD, lr=0.3, max_it=20):
+#         # data
+#         x = torch.from_numpy(data).float()
+#         x.requires_grad_(True)
 
-        # boundary
-        dirBC_coords = torch.from_numpy(dirichlet['coords']).float()
-        dirBC_coords.requires_grad_(True)
-        dirBC_values = torch.from_numpy(dirichlet['values']).float()
+#         # boundary
+#         dirBC_coords = torch.from_numpy(dirichlet['coords']).float()
+#         dirBC_coords.requires_grad_(True)
+#         dirBC_values = torch.from_numpy(dirichlet['values']).float()
 
-        neuBC_coords = torch.from_numpy(neumann['coords']).float()
-        neuBC_coords.requires_grad_(True)
-        neuBC_values = torch.from_numpy(neumann['values']).float()
+#         neuBC_coords = torch.from_numpy(neumann['coords']).float()
+#         neuBC_coords.requires_grad_(True)
+#         neuBC_values = torch.from_numpy(neumann['values']).float()
 
-        optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr)
-        # loss = []
-        start_time = time.time()
-        for i in range(max_it):
-            def closure():
-                # internal loss
-                u_pred = self.getU(self.model, x)
-                u_pred.double()
+#         optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr)
+#         # loss = []
+#         start_time = time.time()
+#         for i in range(max_it):
+#             def closure():
+#                 # internal loss
+#                 u_pred = self.getU(self.model, x)
+#                 u_pred.double()
 
-                IntEnergy = self.energy(u_pred, x)
-                internal_loss = LHD[0]*LHD[1]*LHD[2]*penalty(IntEnergy)
+#                 IntEnergy = self.energy(u_pred, x)
+#                 internal_loss = LHD[0]*LHD[1]*LHD[2]*penalty(IntEnergy)
 
-                # boundary loss
-                dir_pred = self.getU(self.model, dirBC_coords)
-                # print(torch.norm(dir_pred))
-                bc_dir = LHD[1]*LHD[2]*loss_squared_sum(dir_pred, dirBC_values)
-                boundary_loss = torch.sum(bc_dir)
+#                 # boundary loss
+#                 dir_pred = self.getU(self.model, dirBC_coords)
+#                 # print(torch.norm(dir_pred))
+#                 bc_dir = LHD[1]*LHD[2]*loss_squared_sum(dir_pred, dirBC_values)
+#                 boundary_loss = torch.sum(bc_dir)
 
-                # external loss
-                neu_pred = self.getU(self.model, neuBC_coords)
-                bc_neu = torch.matmul((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
-                external_loss = LHD[1]*LHD[2]*penalty(bc_neu)
-                # print(neu_pred.shape, neuBC_coords.shape, neuBC_values.shape)
-                # print(bc_neu.shape); exit()
-                energy_loss = internal_loss - torch.sum(external_loss)
-                loss = internal_loss - torch.sum(external_loss) + boundary_loss
+#                 # external loss
+#                 neu_pred = self.getU(self.model, neuBC_coords)
+#                 bc_neu = torch.matmul((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
+#                 external_loss = LHD[1]*LHD[2]*penalty(bc_neu)
+#                 # print(neu_pred.shape, neuBC_coords.shape, neuBC_values.shape)
+#                 # print(bc_neu.shape); exit()
+#                 energy_loss = internal_loss - torch.sum(external_loss)
+#                 loss = internal_loss - torch.sum(external_loss) + boundary_loss
 
-                optimizer.zero_grad()
-                loss.backward()
+#                 optimizer.zero_grad()
+#                 loss.backward()
 
-                print(f'Iter: {i+1:d}, Energy: {energy_loss.item():10.5f}')
-                #       + f'loss: {loss.item():10.5f}')
-                return loss
+#                 print(f'Iter: {i+1:d}, Energy: {energy_loss.item():10.5f}')
+#                 #       + f'loss: {loss.item():10.5f}')
+#                 return loss
 
-            optimizer.step(closure)
-        # return self.model
+#             optimizer.step(closure)
+#         # return self.model
 
-    def getU(self, model, x):
-        u = model(x)
-        Ux, Uy, Uz = x[:, 0] * u.T.unsqueeze(1)
-        u_pred = torch.cat((Ux.T, Uy.T, Uz.T), dim=-1)
-        return u_pred
+#     def getU(self, model, x):
+#         u = model(x)
+#         Ux, Uy, Uz = x[:, 0] * u.T.unsqueeze(1)
+#         u_pred = torch.cat((Ux.T, Uy.T, Uz.T), dim=-1)
+#         return u_pred
 
+class DeepEnergyMethodCube(DeepEnergyMethod):
     def evaluate_model(self, x, y, z):
         Nx = len(x)
         Ny = len(y)
@@ -197,7 +204,7 @@ def Psi(u, x):
 
     compressibility = kappa * (J * torch.log(J) - J + 1)
     neo_hookean = 0.5 * mu * (trC - 3)
-    active_stress_energy = 0.5 * Ta * (Fxx*Fxx + Fyx*Fyx + Fzx*Fzx - 1)
+    active_stress_energy = 0.5 * Ta / J * (Fxx*Fxx + Fyx*Fyx + Fzx*Fzx - 1)
 
     # strainEnergy = 0.5 * lmbd * (torch.log(detF) * torch.log(detF)) - mu * torch.log(detF) + 0.5 * mu * (trC - 3)
     return compressibility + neo_hookean + active_stress_energy
@@ -220,14 +227,21 @@ if __name__ == '__main__':
 
 
     model = MultiLayerNet(3, 30, 3)
-    DemBeam = DeepEnergyMethod(model, Psi, 3)
+    DemBeam = DeepEnergyMethodCube(model, Psi, 3)
 
-    DemBeam.train_model(domain, dirichlet, neumann, [L, H, D], max_it=10)
+    DemBeam.train_model(domain, dirichlet, neumann, [L, H, D], epochs=5)
+
+    
 
     x = rng.random(size=N)
     y = rng.random(size=N)
     z = rng.random(size=N)
+    x = (x - np.min(x)) / (np.max(x) - np.min(x))
+    y = (y - np.min(y)) / (np.max(y) - np.min(y))
+    z = (z - np.min(z)) / (np.max(z) - np.min(z))
+
     x = L*np.sort(x); y = H*np.sort(y); z = D*np.sort(z)
+
 
     U = DemBeam.evaluate_model(x, y, z)
     Udem = np.array(U).copy()
