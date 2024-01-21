@@ -5,7 +5,7 @@ import numpy as np
 l = 4
 h = 1 
 d = 1
-N = 25
+N = 10
 
 E = 1000
 nu = 0.3
@@ -19,7 +19,7 @@ mesh = dolfin.BoxMesh(dolfin.Point(0, 0, 0), dolfin.Point(l, h, d), 4*N, N, N)
 
 V = dolfin.VectorFunctionSpace(mesh, 'P', 1)
 uh = dolfin.TrialFunction(V)
-u = dolfin.Function(V)
+u = dolfin.Function(V)  
 v = dolfin.TestFunction(V)
 
 neumann_domain = dolfin.MeshFunction("size_t", mesh, 2)
@@ -51,9 +51,10 @@ f = dolfin.Constant((0.0, -5.0, 0.0))
 
 # a = dolfin.inner(sigma(F), epsilon(v))*dolfin.dx
 
-# sigma = 1/J * mu * B + 1/J * (lmbd * dolfin.ln(J) - mu) * dolfin.Identity(3)
+# # sigma = 1/J * mu * B + 1/J * (lmbd * dolfin.ln(J) - mu) * dolfin.Identity(3)
+# P =  mu * F + (lmbd * dolfin.ln(J) - mu) * dolfin.inv(F).T
 
-# a = dolfin.inner(sigma, ufl.nabla_grad(v))*dolfin.dx
+# a = dolfin.inner(P, dolfin.grad(v))*dolfin.dx 
 # # a = dolfin.inner(ufl.nabla_div(sigma), v)*dolfin.dx
 # L = dolfin.dot(f, v)*ds(1)
 
@@ -74,14 +75,16 @@ dolfin.solve(total_virtual_work == 0, u, bc,
 dolfin.File('output/3dbeam_lin2.pvd') << u
 
 
-x = np.linspace(0, l, 4*N)
-y = np.linspace(0, h, N)
-z = np.linspace(0, d, N)
-u_fem = np.zeros((3, 4*N, N, N))
+breakpoint()
 
-for i in range(4*N):
-    for j in range(N):
-        for k in range(N):
-            u_fem[:, i, j, k] = u(x[i], y[j], z[k])
+# x = np.linspace(0, l, 4*N)
+# y = np.linspace(0, h, N)
+# z = np.linspace(0, d, N)
+# u_fem = np.zeros((3, 4*N, N, N))
 
-np.save('u_fem', u_fem)
+# for i in range(4*N):
+#     for j in range(N):
+#         for k in range(N):
+#             u_fem[:, i, j, k] = u(x[i], y[j], z[k])
+
+# np.save('u_fem', u_fem)
