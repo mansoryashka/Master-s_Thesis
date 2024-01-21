@@ -282,8 +282,8 @@ if __name__ == '__main__':
     z = rng.random(size=N)
     x = l*np.sort(x); y = h*np.sort(y); z = d*np.sort(z)
 
-    N_ar = np.array([10, 15, 20, 25, 30])
-    hidden_dim = np.array([10, 20, 30, 40, 50])
+    N_ar = np.array([10, 20, 30])
+    hidden_dim = np.array([10, 20, 30, 40])
     max_epoch = 40
     losses = np.zeros((len(N_ar), len(hidden_dim)))
     L2norms = np.zeros((len(N_ar), len(hidden_dim)))
