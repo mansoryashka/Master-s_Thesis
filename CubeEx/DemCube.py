@@ -10,10 +10,11 @@ matplotlib.rcParams['figure.dpi'] = 350
 
 import sys
 sys.path.insert(0, "..")
-from DEM import DeepEnergyMethod
+from DEM import DeepEnergyMethod, dev
 
 torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
+# dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 N = 20
 L = H = D = 1.0
@@ -185,9 +186,9 @@ def Psi(u, x):
     kappa = 1e3
     Ta = 1.0
 
-    duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1), create_graph=True, retain_graph=True)[0]
-    duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1), create_graph=True, retain_graph=True)[0]
-    duzdxyz = grad(u[:, 2].unsqueeze(1), x, torch.ones(x.shape[0], 1), create_graph=True, retain_graph=True)[0]
+    duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
+    duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
+    duzdxyz = grad(u[:, 2].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
 
     Fxx = duxdxyz[:, 0].unsqueeze(1) + 1
     Fxy = duxdxyz[:, 1].unsqueeze(1) + 0
