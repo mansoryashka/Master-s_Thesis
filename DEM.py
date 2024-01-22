@@ -65,7 +65,7 @@ class DeepEnergyMethod:
                     self.losses[i+1] = loss.item() / max_it
 
                 #       + f'loss: {loss.item():10.5f}')
-                # print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}')
+                print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}')
                 return loss
 
             optimizer.step(closure)
