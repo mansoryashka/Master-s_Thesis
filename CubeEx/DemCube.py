@@ -165,7 +165,7 @@ class DeepEnergyMethodCube(DeepEnergyMethod):
         y1D = yGrid.flatten()
         z1D = zGrid.flatten()
         xyz = np.concatenate((np.array([x1D]).T, np.array([y1D]).T, np.array([z1D]).T), axis=-1)
-        xyz_tensor = torch.from_numpy(xyz).float()
+        xyz_tensor = torch.from_numpy(xyz).float().to(dev)
         xyz_tensor.requires_grad_(True)
         # u_pred_torch = self.model(xyz_tensor)
         u_pred_torch = self.getU(self.model, xyz_tensor)
