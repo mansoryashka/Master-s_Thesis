@@ -202,7 +202,8 @@ def Psi(u, x):
     J = detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
     trC = Fxx ** 2 + Fxy ** 2 + Fxz ** 2 + Fyx ** 2 + Fyy ** 2 + Fyz ** 2 + Fzx ** 2 + Fzy ** 2 + Fzz ** 2
 
-    compressibility = kappa * (J * torch.log(J) - J + 1)
+    # compressibility = kappa * (J * torch.log(J) - J + 1)
+    compressibility = kappa * (J - 1)**2
     neo_hookean = 0.5 * mu * (trC - 3)
     active_stress_energy = 0.5 * Ta / J * (Fxx*Fxx + Fyx*Fyx + Fzx*Fzx - 1)
 

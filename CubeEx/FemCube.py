@@ -154,11 +154,12 @@ def compressibility(F: ufl.Coefficient, kappa: float = 1e3) -> ufl.Coefficient:
         Energy for compressibility
     """
     J = dolfin.det(F)
-    return kappa * (J * dolfin.ln(J) - J + 1)
+    # return kappa * (J * dolfin.ln(J) - J + 1)
+    return kappa * (J - 1)**2
 
 
 # Create a Unit Cube Mesh
-mesh = dolfin.UnitCubeMesh(3, 3, 3)
+mesh = dolfin.UnitCubeMesh(5, 5, 5)
 
 # Function space for the displacement
 V = dolfin.VectorFunctionSpace(mesh, "CG", 2)
@@ -211,8 +212,8 @@ left.mark(ffun, left_marker)
 right.mark(ffun, right_marker)
 
 # We can also save this file to xdmf and visualize it in Paraview
-with dolfin.XDMFFile("ffun.xdmf") as ffun_file:
-    ffun_file.write(ffun)
+# with dolfin.XDMFFile("output/ffun.xdmf") as ffun_file:
+#     ffun_file.write(ffun)
 
 
 # Now we can form to total internal virtual work which is the
@@ -223,7 +224,8 @@ internal_virtual_work = dolfin.derivative(
 )
 
 # We can also apply a force on the right boundary using a Neumann boundary condition
-traction = dolfin.Constant(-0.5)
+# traction = dolfin.Constant(1.0)
+traction = dolfin.Constant(-50.0)
 N = dolfin.FacetNormal(mesh)
 n = traction * ufl.cofac(F) * N
 ds = dolfin.ds(domain=mesh, subdomain_data=ffun)
@@ -237,7 +239,7 @@ dolfin.solve(total_virtual_work == 0, u, bcs=[bcs])
 
 
 # We can visualize the solution in Paraview
-with dolfin.XDMFFile("output/u.xdmf") as u_file:
+with dolfin.XDMFFile("output/um50.xdmf") as u_file:
     u_file.write_checkpoint(
         u,
         function_name="u",
