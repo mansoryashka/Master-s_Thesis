@@ -230,7 +230,7 @@ if __name__ == '__main__':
     model = MultiLayerNet(3, 30, 3)
     DemBeam = DeepEnergyMethodCube(model, Psi, 3)
 
-    DemBeam.train_model(domain, dirichlet, neumann, [L, H, D], epochs=5)
+    DemBeam.train_model(domain, dirichlet, neumann, [L, H, D], epochs=40)
 
     
 
@@ -247,6 +247,6 @@ if __name__ == '__main__':
     U = DemBeam.evaluate_model(x, y, z)
     Udem = np.array(U).copy()
     np.save('u_dem', Udem)
-    write_vtk_v2('output/CubeEx', x, y, z, U)
+    write_vtk_v2('output/DemCube', x, y, z, U)
 
     
