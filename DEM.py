@@ -11,10 +11,38 @@ torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
 dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
+class MultiLayerNet(nn.Module):
+    def __init__(self, *neurons):
+        super(MultiLayerNet, self).__init__()
+        #### throw error if depth < 3 ####
+
+        self.depth = len(neurons)
+        input_dim = neurons[0]
+        output_dim = neurons[-1]
+        self.hidden_layers = []
+
+        self.first_layer = nn.Linear(input_dim, neurons[1])
+
+        for i in range(1, self.depth-2):
+            exec(
+                f'self.hidden_layer{i} = nn.Linear(neurons[{i}], neurons[{i+1}])'
+            )
+            self.hidden_layers.append(eval(f'self.hidden_layer{i}'))
+
+        self.last_layer = nn.Linear(neurons[-2], output_dim)
+
+    def forward(self, x):
+        x = torch.tanh(self.first_layer(x))
+        for i in range(self.depth-3):
+            x = torch.tanh(self.hidden_layers[i](x))
+        x = self.last_layer(x)
+        return x
+
 class DeepEnergyMethod:
     def __init__(self, model, energy, dim):
         self.model = model.to(dev)
         self.energy = energy
+        
     def train_model(self, data, dirichlet, neumann, LHD, lr=0.5, max_it=20, epochs=20):
         # data
         x = torch.from_numpy(data).float().to(dev)

@@ -10,7 +10,7 @@ matplotlib.rcParams['figure.dpi'] = 350
 
 import sys
 sys.path.insert(0, "..")
-from DEM import DeepEnergyMethod, dev
+from DEM import DeepEnergyMethod, dev, MultiLayerNet
 
 torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
@@ -78,20 +78,20 @@ def domain(l, h, d, N=25):
     return domain, dirichlet, neumann
 
 
-class MultiLayerNet(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim):
-        super(MultiLayerNet, self).__init__()
-        self.l1 = nn.Linear(input_dim, hidden_dim)
-        self.l2 = nn.Linear(hidden_dim, hidden_dim)
-        self.l3 = nn.Linear(hidden_dim, hidden_dim)
-        self.l4 = nn.Linear(hidden_dim, output_dim)
+# class MultiLayerNet(nn.Module):
+#     def __init__(self, input_dim, hidden_dim, output_dim):
+#         super(MultiLayerNet, self).__init__()
+#         self.l1 = nn.Linear(input_dim, hidden_dim)
+#         self.l2 = nn.Linear(hidden_dim, hidden_dim)
+#         self.l3 = nn.Linear(hidden_dim, hidden_dim)
+#         self.l4 = nn.Linear(hidden_dim, output_dim)
 
-    def forward(self, x):
-        x = torch.tanh(self.l1(x))
-        x = torch.tanh(self.l2(x))
-        x = torch.tanh(self.l3(x))
-        x = self.l4(x)
-        return x
+#     def forward(self, x):
+#         x = torch.tanh(self.l1(x))
+#         x = torch.tanh(self.l2(x))
+#         x = torch.tanh(self.l3(x))
+#         x = self.l4(x)
+#         return x
 
 # class DeepEnergyMethod:
 #     def __init__(self, model, energy, dim):
@@ -228,12 +228,10 @@ if __name__ == '__main__':
     domain, dirichlet, neumann = domain(L, H, D)
 
 
-    model = MultiLayerNet(3, 30, 3)
+    model = MultiLayerNet(3, 30, 30, 30, 3)
     DemBeam = DeepEnergyMethodCube(model, Psi, 3)
 
-    DemBeam.train_model(domain, dirichlet, neumann, [L, H, D], epochs=40)
-
-    
+    DemBeam.train_model(domain, dirichlet, neumann, [L, H, D], epochs=10)
 
     x = rng.random(size=N)
     y = rng.random(size=N)

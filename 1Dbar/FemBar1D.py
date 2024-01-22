@@ -12,28 +12,15 @@ V = dolfin.VectorFunctionSpace(mesh, "Lagrange", 1)
 u = dolfin.Function(V)
 v = dolfin.TestFunction(V)
 
-# F = dolfin.grad(u) + dolfin.Identity(1)
-# J = dolfin.det(F)
-# C = F.T * F
-# I1 = dolfin.tr(C)
-
-# E = 1.0
-# nu = 1.0
-# lmbda = (E * nu) / ((1 + nu) * (1 - 2 * nu))
-# mu = E / (2 * (1 + nu))
-# psi = 0.5 * lmbda * dolfin.ln(J) ** 2 - mu * dolfin.ln(J) + 0.5 * mu * (I1 - 3)
-
 eps = dolfin.grad(u)
-
 
 def Psi(e):
     return pow(1 + e, 3 / 2) - (3 / 2) * e - 1
 
-
-fig, ax = plt.subplots()
-e = np.linspace(-1, 2.0, 50)
-ax.plot(e, Psi(e))
-fig.savefig("psi.png")
+# fig, ax = plt.subplots()
+# e = np.linspace(-1, 2.0, 50)
+# ax.plot(e, Psi(e))
+# fig.savefig("psi.png")
 
 psi = Psi(eps[0, 0])
 X = dolfin.SpatialCoordinate(mesh)
@@ -55,25 +42,19 @@ left.mark(ffun, left_marker)
 ds = dolfin.ds(domain=mesh, subdomain_data=ffun)
 dx = dolfin.dx(domain=mesh)
 
+energy = psi * dx - dolfin.inner(f, u) * dx
+
+virtual_work = dolfin.derivative(energy, u, v) \
+    + t * dolfin.inner(u, v) * ds(right_marker)
 
 bc = dolfin.DirichletBC(V, dolfin.Constant([0.0]), ffun, left_marker)
 
-energy = psi * dx - dolfin.inner(f, u) * dx
-
-virtual_work = dolfin.derivative(energy, u, v) + t * dolfin.inner(u, v) * ds(
-    right_marker
-)
-
-
-# dolfin.info(dolfin.NonlinearVariationalSolver.default_parameters(), True)
-
 dolfin.solve(virtual_work == 0, u, bcs=bc, 
              solver_parameters={"newton_solver": 
-                                {"absolute_tolerance": 6.7e-10, 
+                                {"absolute_tolerance": 1e-9, 
                                  "relative_tolerance": 1e-9,
                                  'linear_solver': 'mumps'
                                  }})
-
 
 x = np.linspace(-1, L, 20)
 us = np.array([u(xi) for xi in x])

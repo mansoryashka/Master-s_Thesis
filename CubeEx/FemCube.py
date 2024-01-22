@@ -225,7 +225,7 @@ internal_virtual_work = dolfin.derivative(
 
 # We can also apply a force on the right boundary using a Neumann boundary condition
 # traction = dolfin.Constant(1.0)
-traction = dolfin.Constant(-50.0)
+traction = dolfin.Constant(-0.5)
 N = dolfin.FacetNormal(mesh)
 n = traction * ufl.cofac(F) * N
 ds = dolfin.ds(domain=mesh, subdomain_data=ffun)
