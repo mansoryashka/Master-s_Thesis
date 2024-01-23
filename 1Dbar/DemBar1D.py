@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.autograd import grad
+from pathlib import Path
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 200
 
@@ -31,6 +32,9 @@ times = {}
 
 def exact(x):
     return 1./135*(68 + 105*x - 40*x**3 + 3*x**5)
+
+def du_exact(x):
+    return 1./135*(105 - 120*x**2 + 15*x**4)
 
 def energy(u, x):
     eps = grad(u, x, torch.ones(x.shape, device=dev), create_graph=True, retain_graph=True)[0]
@@ -114,32 +118,46 @@ def evaluate_model(model, test_data):
     return u_pred, e_loss
 
 
-def plot_Ns():
-    model_blank = NN(1, 10, 1)
-    test_set = np.array([np.linspace(x0, Length, test_size)]).T
-    dxt = test_set[1] - test_set[0]
+def save_trained_model(Ns):
     times = {}
     losses = {}
-    predictions = {}
-    ex = exact(test_set)
-    # for N in [621]:
     best_loss = np.inf
-    Ns = np.logspace(2, 5, 4, dtype=int)
-    # for N in np.linspace(100, 1000, 50, dtype=int):
-    for N in Ns:
-        domain = np.array([np.linspace(x0, Length, N)]).T
 
-        model_trained, elapsed = train_model(domain, model_blank, epochs=config['epochs'], lr=0.1)
+    model = NN(1, 10, 1)
+
+    # Ns = np.logspace(2, 5, 4, dtype=int)
+    Ns = [100, 500, 1000, 10000]
+
+    for N in Ns:
+        domain = np.linspace(x0, Length, N, endpoint=True).reshape((N, 1))
+
+        model, elapsed = train_model(domain, model, epochs=config['epochs'], lr=0.1)
         times[N] = elapsed
         # predict
-        u_pred, loss = evaluate_model(model_trained, test_set)
-        predictions[N] = u_pred
-        losses[N] = loss
-        loss = np.sum(L2norm(u_pred, ex, dxt))
-        if loss < best_loss:
-            best_loss = loss
-            best_pred = u_pred
+        u_pred, loss = evaluate_model(model, test_set)
+        du_pred = np.gradient(u_pred, (Length-x0)/test_size, axis=0)
 
+        np.save(arrays_path / f'u_pred_{N}', u_pred)
+        np.save(arrays_path / f'du_pred_{N}', du_pred)
+
+        # losses[N] = loss
+        # loss = np.sum(L2norm(u_pred, exact(test_set), dx))
+        # if loss < best_loss:
+        #     best_loss = loss
+        #     best_pred = u_pred
+
+
+def plot_Ns(Ns, *filenames):
+
+    predictions = {}
+    epsilon_predictions = {}
+
+    for N in Ns:
+        predictions[N] = np.load(arrays_path / f'u_pred_{N}.npy')
+        epsilon_predictions[N] = np.load(arrays_path / f'du_pred_{N}.npy')
+
+    ex = exact(test_set)
+    du_ex = du_exact(test_set)
     # l1 = sorted(times.items())
     # a,b = zip(*l1)
     # plt.figure(figsize=(4,4))
@@ -151,43 +169,60 @@ def plot_Ns():
     # plt.figure()
     # plt.plot(a, b)
 
-    markers = {100: 's', 1000: 'o', 10000: 'v', 100000: 'x'}
-    lines = {100: None, 1000: None, 10000: '.', 100000: ':'}
-    colors = {100: 'tab:blue', 1000: 'tab:orange', 10000: 'tab:red', 100000: 'tab:green'}
-    alpha = {100: 0.5, 1000: 0.5, 10000: 0.5, 100000: 1}
+    markers = ['s', 'o', 'v', 'x']
+    # lines = [None, None, '.', ':']
+    colors = ['tab:blue', 'tab:orange', 'tab:red', 'tab:green']
+    alpha = [0.5, 0.5, 0.5, 1]
 
+    # plot u and relative error
     fig1, ax1 = plt.subplots(figsize=(5,4))
     fig2, ax2 = plt.subplots(figsize=(5,4))
-    ax1.plot(test_set, exact(test_set))
-    for N in Ns:
-        xs = N % 97
-        print(xs)
-        ax1.scatter(test_set[xs::11], predictions[N][xs::11], 
-                    c=colors[N], marker=markers[N], s=10, alpha=alpha[N], label=f'N = {N}')
-        
-        rel_err = (predictions[N][1:]-ex[1:])/ex[1:]
-        ax2.semilogy(test_set[1:], rel_err, label=f'N = {N}')
-    ax2.legend()
-    plt.show()
-    # print(test_set.shape, u_pred.shape)
 
+    ax1.plot(test_set, ex, linestyle='-.', color='k', alpha=0.8, label='Exact')
+    for i in range(len(Ns)):
+        xs = Ns[i] % 97     # different starting point for clearer plot
+        ax1.scatter(test_set[xs::11], predictions[Ns[i]][xs::11], 
+                    c=colors[i], marker=markers[i], s=10, alpha=alpha[i], label=f'N = {Ns[i]}')
+        
+        # calculate and plot the relative error
+        rel_err = (predictions[Ns[i]][1:] - ex[1:]) #/ ex[1:]      # relative error
+        ax2.semilogy(test_set[1:], rel_err, label=f'N = {Ns[i]}')
+    ax1.legend()
+    ax2.legend()
+    # plt.show()
+
+    # plot du and relative error
+    fig3, ax3 = plt.subplots(figsize=(5,4))
+    fig4, ax4 = plt.subplots(figsize=(5,4))
+
+    ax3.plot(test_set, du_ex, linestyle='-.', color='k', alpha=0.8, label='Exact')
+    for i in range(len(Ns)):
+        xs = Ns[i] % 97     # different starting point for clearer plot
+        ax3.scatter(test_set[xs::11], epsilon_predictions[Ns[i]][xs::11], 
+                    c=colors[i], marker=markers[i], s=10, alpha=alpha[i], label=f'N = {Ns[i]}')
+        
+        # calculate and plot the relative error
+        rel_err = (epsilon_predictions[Ns[i]][1:-1] - du_ex[1:-1]) #/ du_ex[1:-1]      # relative error
+        ax4.semilogy(test_set[1:-1], rel_err, label=f'N = {Ns[i]}')
+    ax3.legend()
+    ax4.legend()
+    if filenames:
+        # if len(filenames != 4):
+        #     raise Exception('Need four filenames to save four figures!')
+        fig1.savefig(figures_path / Path(filenames[0] + '.pdf'))
+        fig2.savefig(figures_path / Path(filenames[1] + '.pdf'))
+        fig3.savefig(figures_path / Path(filenames[2] + '.pdf'))
+        fig4.savefig(figures_path / Path(filenames[3] + '.pdf'))
+    else:
+        plt.show()
 
 if __name__ == '__main__':
-    x = np.linspace(-1, 1, 20_001)
-    dx = x[1] - x[0]
-    f = x
-    y = exact(x)
-    # dy = np.gradient(y, dx)
-    dy = 1./135*(105 - 120*x**2 + 15*x**4)
+    test_set = np.linspace(x0, Length, test_size, endpoint=True).reshape((test_size, 1))
+    current_path = Path.cwd().resolve()
+    figures_path = current_path / 'figures'
+    arrays_path = current_path / 'stored_arrays'
 
-    # energy_exact = (1+dy)**(3/2) - 3/2*dy - 1
-
-    # print('Analytisk løsning: ', np.trapz(energy_exact - f*y, x, dx=dx))
-    # exit()
-    # print(y[:100])
-    # plt.plot(x, y, 'o')
-    # plt.s<how()
-    # plt.plot(x, energy)
-    # plt.show(); exit()
-
-    plot_Ns()
+    Ns = [100, 500, 1000, 10000]
+    save_trained_model(Ns)
+    # plot_Ns(Ns, 'fig1', 'fig2', 'fig3', 'fig4')
+    plot_Ns(Ns)

@@ -20,7 +20,7 @@ def Psi(e):
 # fig, ax = plt.subplots()
 # e = np.linspace(-1, 2.0, 50)
 # ax.plot(e, Psi(e))
-# fig.savefig("psi.png")
+# fig.savefig("output/psi.pdf")
 
 psi = Psi(eps[0, 0])
 X = dolfin.SpatialCoordinate(mesh)
@@ -60,7 +60,7 @@ x = np.linspace(-1, L, 20)
 us = np.array([u(xi) for xi in x])
 fig, ax = plt.subplots()
 ax.plot(x, us)
-fig.savefig("u.png")
+fig.savefig("output/u.pdf")
 
 
 dx = x[1] - x[0]
