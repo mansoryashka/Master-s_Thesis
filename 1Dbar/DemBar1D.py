@@ -52,7 +52,8 @@ class NN(nn.Module):
         return x
 
 def train_model(data, model, lr=0.5, max_it=20, epochs=10):
-    x = torch.from_numpy(data).float()
+    x = torch.from_numpy(data).float().to(dev)
+    model.to(dev)
     # x = x.to(dev)
     x.requires_grad_(True)
     optimizer = torch.optim.LBFGS(model.parameters(), lr=lr, max_iter=max_it)
@@ -65,7 +66,8 @@ def train_model(data, model, lr=0.5, max_it=20, epochs=10):
             energyInt = energy(u_pred, x)
             energy_loss = (L - x0)*penalty(energyInt) - (L - x0)*penalty(boundary)
             # energy_loss = (L - x0)*energy_pen(energy) - (L - x0)*energy_pen(boundary)
-            if np.isnan(energy_loss.detach().numpy()):
+            # if np.isnan(energy_loss.detach().cpu().numpy()):
+            if torch.isnan(energy_loss):
                 # eps = grad(u_pred, x, torch.ones(x.shape))[0]
                 # plt.subplot(121)
                 # plt.plot(x.detach().numpy(), u_pred.detach().numpy())
@@ -76,6 +78,7 @@ def train_model(data, model, lr=0.5, max_it=20, epochs=10):
                 pass
             else:
                 loss = energy_loss
+                print(loss)
                 optimizer.zero_grad()
                 loss.backward()
             # print(f'Iter: {i+1:d}, Loss: {energy_loss.item():.5f}')
@@ -103,13 +106,13 @@ def evaluate_model(model, test_data):
     energyInt = energy(u_pred, x)
     e_loss = (L - x0)*(penalty(energyInt) - penalty(u_pred*x))
     # e_loss = (L-x0)*(energy_pen(energy) - energy_pen(u_pred*x))
-    print(f'evaluation_loss: {e_loss}')
-    u_pred = u_pred.detach().numpy()
-    e_loss = e_loss.detach().numpy()
+    # print(f'evaluation_loss: {e_loss}')
+    u_pred = u_pred.detach().cpu().numpy()
+    e_loss = e_loss.detach().cpu().numpy()
     return u_pred, e_loss
 
 
-def save_trained_model_N(Ns, lr=0.1, num_neurons=10):
+def save_trained_model_N(Ns, lr=0.1, num_neurons=10, num_epochs=30):
     times = {}
     losses = {}
     best_loss = np.inf
@@ -122,7 +125,7 @@ def save_trained_model_N(Ns, lr=0.1, num_neurons=10):
     for N in Ns:
         domain = np.linspace(x0, L, N, endpoint=True).reshape((N, 1))
 
-        model, elapsed = train_model(domain, model, epochs=30, lr=lr)
+        model, elapsed = train_model(domain, model, epochs=num_epochs, lr=lr)
         times[N] = elapsed
         # predict
         u_pred, loss = evaluate_model(model, test_set)
@@ -137,16 +140,17 @@ def save_trained_model_N(Ns, lr=0.1, num_neurons=10):
         #     best_loss = loss
         #     best_pred = u_pred
 
-def save_trained_model_lr_neurons(lrs, num_neurons, N=1000):
+def save_trained_model_lr_neurons(lrs, num_neurons, N=1000, num_epochs=30):
     # times = {}
     # losses = {}
     # best_loss = np.inf
     for n in num_neurons:
-        model = NN(1, n, 1)
         for lr in lrs:
+            print('lr: ', lr, 'n: ', n)
+            model = NN(1, n, 1)
             domain = np.linspace(x0, L, N, endpoint=True).reshape((N, 1))
 
-            model, elapsed = train_model(domain, model, epochs=30, lr=lr)
+            model, elapsed = train_model(domain, model, epochs=num_epochs, lr=lr)
             times[N] = elapsed
             # predict
             u_pred, loss = evaluate_model(model, test_set)
@@ -292,7 +296,7 @@ if __name__ == '__main__':
     # save_trained_model_N(Ns)
     # plot_Ns(Ns, 'dem_fig1', 'dem_fig2', 'dem_fig3', 'dem_fig4')
     # plot_Ns(1000*Ns)
-    num_expreriments = 20
+    num_expreriments = 50
 
     # u_norms = np.zeros(len(Ns))
     # du_norms = u_norms.copy()
@@ -306,8 +310,8 @@ if __name__ == '__main__':
     # print(u_norms/num_expreriments)
     # print(du_norms/num_expreriments)
         
-    lrs = [.1, .2, .3, .5, 1]
-    num_neurons = [5, 10, 20, 30, 50]
+    lrs = [0.01, 0.05, .1, .5, 1]
+    num_neurons = [5, 10, 15, 20, 30]
     u_norms = np.zeros((len(lrs), len(num_neurons)))
     du_norms = u_norms.copy()
     for _ in range(num_expreriments):
@@ -315,24 +319,21 @@ if __name__ == '__main__':
         u_norms += calculate_L2norms(lrs=lrs, num_neurons=num_neurons)[0]
         du_norms += calculate_L2norms(lrs=lrs, num_neurons=num_neurons)[1]
 
-    print(u_norms/num_expreriments)
-    print(du_norms/num_expreriments)
-
+    # print(u_norms/num_expreriments)
+    # print(du_norms/num_expreriments)
+    u_norms /= num_expreriments
+    du_norms /= num_expreriments
 
     import seaborn as sns
     sns.set()
-    x_ticks=[str(i) for i in lrs]
-    y_ticks=[str(i) for i in num_neurons]
-    fig, ax = plt.subplots(1, 2, figsize=(10, 4))
-    sns.heatmap(1000*u_norms, annot=True, ax=ax[0], cmap='autumn', xticklabels=x_ticks, yticklabels=y_ticks, cbar=False)
-    sns.heatmap(1000*du_norms, annot=True, ax=ax[1], cmap='autumn', xticklabels=x_ticks, yticklabels=y_ticks, cbar=False)
-    plt.show()
-    # ax[0].matshow(u_norms)
-    # ax[1].matshow(du_norms)
-
-
-    # ax[0].set_xticklabels(['']+num_neurons)
-    # ax[0].set_yticklabels(['']+lrs)
-    # ax[1].set_xticklabels(['']+num_neurons)
-    # ax[1].set_yticklabels(['']+lrs)
+    y_ticks=[str(i) for i in lrs]
+    x_ticks=[str(i) for i in num_neurons]
+    fig, ax = plt.subplots(1, 2, figsize=(12, 6), sharey=True)
+    sns.heatmap(u_norms, annot=True, ax=ax[0], cmap='cividis', xticklabels=x_ticks, yticklabels=y_ticks, cbar=False)
+    sns.heatmap(du_norms, annot=True, ax=ax[1], cmap='cividis', xticklabels=x_ticks, yticklabels=y_ticks, cbar=False)
+    ax[0].set_xlabel('Nr. of neurons in hidden layer')
+    ax[1].set_xlabel('Nr. of neurons in hidden layer')
+    ax[0].set_ylabel('$\eta$')
+    plt.savefig(figures_path / 'heatmap_lr_neurons.pdf')
     # plt.show()
+

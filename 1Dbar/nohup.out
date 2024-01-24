@@ -1,0 +1,66 @@
+0.01
+evaluation_loss: -0.1987956315279007
+evaluation_loss: -0.1987956315279007
+evaluation_loss: -0.1987956315279007
+evaluation_loss: -0.1987956315279007
+evaluation_loss: -0.1987956315279007
+evaluation_loss: -0.1987956315279007
+evaluation_loss: -0.1987956315279007
+evaluation_loss: -0.1987956315279007
+evaluation_loss: -0.1987956017255783
+evaluation_loss: -0.1987956017255783
+evaluation_loss: -0.1987956017255783
+evaluation_loss: -0.1987956017255783
+evaluation_loss: -0.1987956017255783
+evaluation_loss: -0.1987956017255783
+evaluation_loss: -0.1987956017255783
+evaluation_loss: -0.1987956017255783
+evaluation_loss: -0.19879508018493652
+evaluation_loss: -0.19879508018493652
+evaluation_loss: -0.19879508018493652
+evaluation_loss: -0.19879508018493652
+evaluation_loss: -0.19879508018493652
+evaluation_loss: -0.19879508018493652
+evaluation_loss: -0.19879508018493652
+evaluation_loss: -0.19879508018493652
+evaluation_loss: -0.1987951546907425
+evaluation_loss: -0.1987951546907425
+evaluation_loss: -0.1987951546907425
+evaluation_loss: -0.1987951546907425
+evaluation_loss: -0.1987951546907425
+evaluation_loss: -0.1987951546907425
+evaluation_loss: -0.1987951546907425
+evaluation_loss: -0.1987951546907425
+evaluation_loss: -0.19879527390003204
+evaluation_loss: -0.19879527390003204
+evaluation_loss: -0.19879527390003204
+evaluation_loss: -0.19879527390003204
+evaluation_loss: -0.19879527390003204
+evaluation_loss: -0.19879527390003204
+evaluation_loss: -0.19879527390003204
+evaluation_loss: -0.19879527390003204
+0.01
+Linear(in_features=1, out_features=5, bias=True)
+evaluation_loss: -0.1987956315279007
+Traceback (most recent call last):
+  File "/itf-fi-ml/home/mansurd/Master/1Dbar/DemBar1D.py", line 316, in <module>
+    save_trained_model_lr_neurons(lrs, num_neurons)
+  File "/itf-fi-ml/home/mansurd/Master/1Dbar/DemBar1D.py", line 151, in save_trained_model_lr_neurons
+    model, elapsed = train_model(domain, model, epochs=num_epochs, lr=lr)
+  File "/itf-fi-ml/home/mansurd/Master/1Dbar/DemBar1D.py", line 84, in train_model
+    optimizer.step(closure)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/optim/optimizer.py", line 109, in wrapper
+    return func(*args, **kwargs)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/autograd/grad_mode.py", line 27, in decorate_context
+    return func(*args, **kwargs)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/optim/lbfgs.py", line 311, in step
+    orig_loss = closure()
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/autograd/grad_mode.py", line 27, in decorate_context
+    return func(*args, **kwargs)
+  File "/itf-fi-ml/home/mansurd/Master/1Dbar/DemBar1D.py", line 66, in closure
+    energyInt = energy(u_pred, x)
+  File "/itf-fi-ml/home/mansurd/Master/1Dbar/DemBar1D.py", line 36, in energy
+    eps = grad(u, x, torch.ones(x.shape, device=dev), create_graph=True, retain_graph=True)[0]
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/autograd/__init__.py", line 276, in grad
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+KeyboardInterrupt
