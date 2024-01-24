@@ -12,21 +12,17 @@ np.random.seed(2023)
 torch.manual_seed(2023)
 dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-Length = 1.0
+L = 1.0
 x0 = -1
 N = 100
 test_size = 200
-
+dx_t = (L - x0) / test_size
+print(dx_t)
 known_left_ux = 0
 bc_left_penalty = 1.0
 
 known_right_tx = 0
 bc_right_penalty = 1.0
-
-config = {
-    'lr': 0.1,
-    'epochs': 30
-}
 
 times = {}
 
@@ -67,8 +63,8 @@ def train_model(data, model, lr=0.5, max_it=20, epochs=10):
             u_pred = (x + 1) * model(x)
             boundary = u_pred*x
             energyInt = energy(u_pred, x)
-            energy_loss = (Length - x0)*penalty(energyInt) - (Length - x0)*penalty(boundary)
-            # energy_loss = (Length - x0)*energy_pen(energy) - (Length - x0)*energy_pen(boundary)
+            energy_loss = (L - x0)*penalty(energyInt) - (L - x0)*penalty(boundary)
+            # energy_loss = (L - x0)*energy_pen(energy) - (L - x0)*energy_pen(boundary)
             if np.isnan(energy_loss.detach().numpy()):
                 # eps = grad(u_pred, x, torch.ones(x.shape))[0]
                 # plt.subplot(121)
@@ -97,8 +93,6 @@ def energy_pen(input):
     return torch.mean(input)
 
 def L2norm(input, target, x=None, dx=1):
-    # print(input.shape, target.shape)
-    # print(np.trapz(target**2, dx=dx, axis=0)); exit()
     L2 =  np.sqrt(np.trapz((input-target)**2, dx=dx, axis=0)) / np.sqrt(np.trapz(target**2, dx=dx, axis=0))
     return L2
 
@@ -106,39 +100,36 @@ def evaluate_model(model, test_data):
     x = torch.from_numpy(test_data).float().to(dev)
     x.requires_grad_(True)
     u_pred = (x + 1) * model(x)
-    # print(u_pred.shape)
-    # print(x.shape)
-    # exit()
     energyInt = energy(u_pred, x)
-    e_loss = (Length-x0)*(penalty(energyInt) - penalty(u_pred*x))
-    # e_loss = (Length-x0)*(energy_pen(energy) - energy_pen(u_pred*x))
+    e_loss = (L - x0)*(penalty(energyInt) - penalty(u_pred*x))
+    # e_loss = (L-x0)*(energy_pen(energy) - energy_pen(u_pred*x))
     print(f'evaluation_loss: {e_loss}')
     u_pred = u_pred.detach().numpy()
     e_loss = e_loss.detach().numpy()
     return u_pred, e_loss
 
 
-def save_trained_model(Ns):
+def save_trained_model_N(Ns, lr=0.1, num_neurons=10):
     times = {}
     losses = {}
     best_loss = np.inf
 
-    model = NN(1, 10, 1)
+    model = NN(1, num_neurons, 1)
 
     # Ns = np.logspace(2, 5, 4, dtype=int)
     Ns = [100, 500, 1000, 10000]
 
     for N in Ns:
-        domain = np.linspace(x0, Length, N, endpoint=True).reshape((N, 1))
+        domain = np.linspace(x0, L, N, endpoint=True).reshape((N, 1))
 
-        model, elapsed = train_model(domain, model, epochs=config['epochs'], lr=0.1)
+        model, elapsed = train_model(domain, model, epochs=30, lr=lr)
         times[N] = elapsed
         # predict
         u_pred, loss = evaluate_model(model, test_set)
-        du_pred = np.gradient(u_pred, (Length-x0)/test_size, axis=0)
+        du_pred = np.gradient(u_pred, dx_t, axis=0)
 
-        np.save(arrays_path / f'u_pred_{N}', u_pred)
-        np.save(arrays_path / f'du_pred_{N}', du_pred)
+        np.save(arrays_path / f'u_pred_N{N}', u_pred)
+        np.save(arrays_path / f'du_pred_N{N}', du_pred)
 
         # losses[N] = loss
         # loss = np.sum(L2norm(u_pred, exact(test_set), dx))
@@ -146,18 +137,41 @@ def save_trained_model(Ns):
         #     best_loss = loss
         #     best_pred = u_pred
 
+def save_trained_model_lr_neurons(lrs, num_neurons, N=1000):
+    # times = {}
+    # losses = {}
+    # best_loss = np.inf
+    for n in num_neurons:
+        model = NN(1, n, 1)
+        for lr in lrs:
+            domain = np.linspace(x0, L, N, endpoint=True).reshape((N, 1))
+
+            model, elapsed = train_model(domain, model, epochs=30, lr=lr)
+            times[N] = elapsed
+            # predict
+            u_pred, loss = evaluate_model(model, test_set)
+            du_pred = np.gradient(u_pred, dx_t, axis=0)
+
+            np.save(arrays_path / f'u_pred_lr{lr}_n{n}', u_pred)
+            np.save(arrays_path / f'du_pred_lr{lr}_n{n}', du_pred)
+
+            # losses[N] = loss
+            # loss = np.sum(L2norm(u_pred, exact(test_set), dx))
+            # if loss < best_loss:
+            #     best_loss = loss
+            #     best_pred = u_pred
 
 def plot_Ns(Ns, *filenames):
-
     predictions = {}
-    epsilon_predictions = {}
+    gradient_predictions = {}
 
     for N in Ns:
-        predictions[N] = np.load(arrays_path / f'u_pred_{N}.npy')
-        epsilon_predictions[N] = np.load(arrays_path / f'du_pred_{N}.npy')
+        predictions[N] = np.load(arrays_path / f'u_pred_N{N}.npy')
+        gradient_predictions[N] = np.load(arrays_path / f'du_pred_N{N}.npy')
 
     ex = exact(test_set)
     du_ex = du_exact(test_set)
+
     # l1 = sorted(times.items())
     # a,b = zip(*l1)
     # plt.figure(figsize=(4,4))
@@ -174,7 +188,7 @@ def plot_Ns(Ns, *filenames):
     colors = ['tab:blue', 'tab:orange', 'tab:red', 'tab:green']
     alpha = [0.5, 0.5, 0.5, 1]
 
-    # plot u and relative error
+    # plot u and absative error
     fig1, ax1 = plt.subplots(figsize=(5,4))
     fig2, ax2 = plt.subplots(figsize=(5,4))
 
@@ -184,9 +198,16 @@ def plot_Ns(Ns, *filenames):
         ax1.scatter(test_set[xs::11], predictions[Ns[i]][xs::11], 
                     c=colors[i], marker=markers[i], s=10, alpha=alpha[i], label=f'N = {Ns[i]}')
         
-        # calculate and plot the relative error
-        rel_err = (predictions[Ns[i]][1:] - ex[1:]) #/ ex[1:]      # relative error
-        ax2.semilogy(test_set[1:], rel_err, label=f'N = {Ns[i]}')
+        # calculate and plot the absolute error
+        abs_err = (predictions[Ns[i]] - ex)
+        ax2.semilogy(test_set, abs_err, label=f'N = {Ns[i]}')
+
+    ax1.set_title('Displacement as function of length')
+    ax2.set_title('Absolute error of displacement')
+    ax1.set_xlabel('X')
+    ax2.set_xlabel('X')
+    ax1.set_ylabel('Displacement')
+    ax2.set_ylabel('Absolute error')
     ax1.legend()
     ax2.legend()
     # plt.show()
@@ -198,17 +219,25 @@ def plot_Ns(Ns, *filenames):
     ax3.plot(test_set, du_ex, linestyle='-.', color='k', alpha=0.8, label='Exact')
     for i in range(len(Ns)):
         xs = Ns[i] % 97     # different starting point for clearer plot
-        ax3.scatter(test_set[xs::11], epsilon_predictions[Ns[i]][xs::11], 
+        ax3.scatter(test_set[xs::11], gradient_predictions[Ns[i]][xs::11], 
                     c=colors[i], marker=markers[i], s=10, alpha=alpha[i], label=f'N = {Ns[i]}')
         
         # calculate and plot the relative error
-        rel_err = (epsilon_predictions[Ns[i]][1:-1] - du_ex[1:-1]) #/ du_ex[1:-1]      # relative error
-        ax4.semilogy(test_set[1:-1], rel_err, label=f'N = {Ns[i]}')
+        abs_err = (gradient_predictions[Ns[i]] - du_ex) #    / du_ex      # absative error
+        ax4.semilogy(test_set, abs_err, label=f'N = {Ns[i]}')
+
+    ax3.set_title('Displacement gradient as function of length')
+    ax4.set_title('Absolute error of displacement gradient')
+    ax3.set_xlabel('X')
+    ax4.set_xlabel('X')
+    ax3.set_ylabel('Displacement gradient')
+    ax4.set_ylabel('Relative error')
     ax3.legend()
     ax4.legend()
+
     if filenames:
-        # if len(filenames != 4):
-        #     raise Exception('Need four filenames to save four figures!')
+        if len(filenames) != 4:
+            raise Exception('Need four filenames to save four figures!')
         fig1.savefig(figures_path / Path(filenames[0] + '.pdf'))
         fig2.savefig(figures_path / Path(filenames[1] + '.pdf'))
         fig3.savefig(figures_path / Path(filenames[2] + '.pdf'))
@@ -216,13 +245,94 @@ def plot_Ns(Ns, *filenames):
     else:
         plt.show()
 
+def calculate_L2norms(Ns=None, lrs=None, num_neurons=None):
+    """ Calculate L2 norm for many values of N or lr and num_neurons. """
+    predictions = {}
+    gradient_predictions = {}
+    # u_norms = {}
+    # du_norms = {}
+
+    if Ns:
+        u_norms = np.zeros(len(Ns))
+        du_norms = np.zeros(len(Ns))
+        for i in range(len(Ns)):
+            predictions[Ns[i]] = np.load(arrays_path / f'u_pred_N{Ns[i]}.npy')
+            gradient_predictions[Ns[i]] = np.load(arrays_path / f'du_pred_N{Ns[i]}.npy')
+
+            u_norms[i] = L2norm(predictions[Ns[i]], ex, dx=dx_t)[0]
+            du_norms[i] = L2norm(gradient_predictions[Ns[i]], du_ex, dx=dx_t)[0]
+            
+    elif (lrs and num_neurons):
+        u_norms = np.zeros((len(lrs), len(num_neurons)))
+        du_norms = np.zeros((len(lrs), len(num_neurons)))
+        for i in range(len(lrs)):
+            lr = lrs[i]
+            for j in range(len(num_neurons)):
+                n = num_neurons[j]
+                predictions[(lr, n)] = np.load(arrays_path / f'u_pred_lr{lr}_n{n}.npy')
+                gradient_predictions[(lr, n)] = np.load(arrays_path / f'du_pred_lr{lr}_n{n}.npy')
+
+                u_norms[i, j] = L2norm(predictions[(lr, n)], ex, dx=dx_t)[0]
+                du_norms[i, j] = L2norm(gradient_predictions[(lr, n)], du_ex, dx=dx_t)[0]
+
+    else:
+        print('Feil!')
+        return
+    return u_norms, du_norms
+
 if __name__ == '__main__':
-    test_set = np.linspace(x0, Length, test_size, endpoint=True).reshape((test_size, 1))
+    test_set = np.linspace(x0, L, test_size, endpoint=True).reshape((test_size, 1))
+    ex = exact(test_set); du_ex = du_exact(test_set)
+
     current_path = Path.cwd().resolve()
     figures_path = current_path / 'figures'
     arrays_path = current_path / 'stored_arrays'
 
     Ns = [100, 500, 1000, 10000]
-    save_trained_model(Ns)
-    # plot_Ns(Ns, 'fig1', 'fig2', 'fig3', 'fig4')
-    plot_Ns(Ns)
+    # save_trained_model_N(Ns)
+    # plot_Ns(Ns, 'dem_fig1', 'dem_fig2', 'dem_fig3', 'dem_fig4')
+    # plot_Ns(1000*Ns)
+    num_expreriments = 20
+
+    # u_norms = np.zeros(len(Ns))
+    # du_norms = u_norms.copy()
+
+    # for _ in range(num_expreriments):
+    #     save_trained_model_lr_neurons([.1, .2, .3], [10, 20, 30])
+        # save_trained_model_N(Ns)
+        # u_norms += calculate_L2norms(Ns=Ns)[0]
+        # du_norms += calculate_L2norms(Ns=Ns)[1]
+
+    # print(u_norms/num_expreriments)
+    # print(du_norms/num_expreriments)
+        
+    lrs = [.1, .2, .3, .5, 1]
+    num_neurons = [5, 10, 20, 30, 50]
+    u_norms = np.zeros((len(lrs), len(num_neurons)))
+    du_norms = u_norms.copy()
+    for _ in range(num_expreriments):
+        save_trained_model_lr_neurons(lrs, num_neurons)
+        u_norms += calculate_L2norms(lrs=lrs, num_neurons=num_neurons)[0]
+        du_norms += calculate_L2norms(lrs=lrs, num_neurons=num_neurons)[1]
+
+    print(u_norms/num_expreriments)
+    print(du_norms/num_expreriments)
+
+
+    import seaborn as sns
+    sns.set()
+    x_ticks=[str(i) for i in lrs]
+    y_ticks=[str(i) for i in num_neurons]
+    fig, ax = plt.subplots(1, 2, figsize=(10, 4))
+    sns.heatmap(1000*u_norms, annot=True, ax=ax[0], cmap='autumn', xticklabels=x_ticks, yticklabels=y_ticks, cbar=False)
+    sns.heatmap(1000*du_norms, annot=True, ax=ax[1], cmap='autumn', xticklabels=x_ticks, yticklabels=y_ticks, cbar=False)
+    plt.show()
+    # ax[0].matshow(u_norms)
+    # ax[1].matshow(du_norms)
+
+
+    # ax[0].set_xticklabels(['']+num_neurons)
+    # ax[0].set_yticklabels(['']+lrs)
+    # ax[1].set_xticklabels(['']+num_neurons)
+    # ax[1].set_yticklabels(['']+lrs)
+    # plt.show()
