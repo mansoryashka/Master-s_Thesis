@@ -41,6 +41,7 @@ I1 = dolfin.tr(C)
 E = 0.5 * (C - dolfin.Identity(3))
 
 f = dolfin.Constant((0.0, -5.0, 0.0))
+# f2 = J*dolfin.inv(F).T*f
 
 # # define epsilon and sigma
 # def epsilon(u):
@@ -49,33 +50,34 @@ f = dolfin.Constant((0.0, -5.0, 0.0))
 # def sigma(u):
 #     return lmbd*dolfin.tr(epsilon(u))*dolfin.Identity(3) + 2*mu*epsilon(u)
 
-# a = dolfin.inner(sigma(F), epsilon(v))*dolfin.dx
+def sigma(u):
+    F = dolfin.grad(u) + dolfin.Identity(3)
+    J = dolfin.det(F)
+    P =  mu * F + (lmbd * dolfin.ln(J) - mu) * dolfin.inv(F.T)
+    sigma = 1/J * P * F.T
+    return sigma
 
-# # sigma = 1/J * mu * B + 1/J * (lmbd * dolfin.ln(J) - mu) * dolfin.Identity(3)
-# P =  mu * F + (lmbd * dolfin.ln(J) - mu) * dolfin.inv(F).T
+a = dolfin.inner(sigma(u), dolfin.grad(v))*dolfin.dx 
+L = dolfin.inner(f, v)*ds(1)
 
-# a = dolfin.inner(P, dolfin.grad(v))*dolfin.dx 
-# # a = dolfin.inner(ufl.nabla_div(sigma), v)*dolfin.dx
-# L = dolfin.dot(f, v)*ds(1)
+J = dolfin.derivative(a, u)
+dolfin.solve(J == L, u, bcs=bc,
+            solver_parameters={"linear_solver": "mumps"})
 
-# dolfin.solve(a == L, u, bcs=bc,
-#             solver_parameters={"linear_solver": "mumps"})
 
-psi = 0.5*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 0.5*mu*(I1 - 3)
-
-energy = psi*dolfin.dx(domain=mesh) #- dolfin.dot(f, u)*ds(1)
-# total_virtual_work = dolfin.derivative(energy, u, v)
-total_internal_work = dolfin.derivative(energy, u, v)
-total_virtual_work = total_internal_work - dolfin.dot(f, v)*ds(1)
-dolfin.solve(total_virtual_work == 0, u, bc,
-             solver_parameters={'newton_solver':
-                                {'absolute_tolerance': 1e-6,
-                                'linear_solver': 'mumps'}})
+# psi = 0.5*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 0.5*mu*(I1 - 3)
+# energy = psi*dolfin.dx(domain=mesh) #- dolfin.dot(f, u)*ds(1)
+# total_internal_work = dolfin.derivative(energy, u, v)
+# total_virtual_work = total_internal_work - dolfin.dot(f, v)*ds(1)
+# dolfin.solve(total_virtual_work == 0, u, bc,
+#              solver_parameters={'newton_solver':
+#                                 {'absolute_tolerance': 1e-6,
+#                                 'linear_solver': 'mumps'}})
 
 dolfin.File('output/3dbeam_lin2.pvd') << u
 
 
-breakpoint()
+# breakpoint()
 
 # x = np.linspace(0, l, 4*N)
 # y = np.linspace(0, h, N)
