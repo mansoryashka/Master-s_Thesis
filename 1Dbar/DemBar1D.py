@@ -282,6 +282,7 @@ def calculate_L2norms(Ns=None, lrs=None, num_neurons=None):
     else:
         print('Feil!')
         return
+    
     return u_norms, du_norms
 
 if __name__ == '__main__':
@@ -292,7 +293,7 @@ if __name__ == '__main__':
     figures_path = current_path / 'figures'
     arrays_path = current_path / 'stored_arrays'
 
-    Ns = [100, 500, 1000, 10000]
+    # Ns = [100, 500, 1000, 10000]
     # save_trained_model_N(Ns)
     # plot_Ns(Ns, 'dem_fig1', 'dem_fig2', 'dem_fig3', 'dem_fig4')
     # plot_Ns(1000*Ns)
@@ -323,17 +324,26 @@ if __name__ == '__main__':
     # print(du_norms/num_expreriments)
     u_norms /= num_expreriments
     du_norms /= num_expreriments
+    np.save('stored_arrays/u_norms50exp', u_norms)
+    np.save('stored_arrays/du_norms50exp', du_norms)
 
     import seaborn as sns
     sns.set()
     y_ticks=[str(i) for i in lrs]
     x_ticks=[str(i) for i in num_neurons]
-    fig, ax = plt.subplots(1, 2, figsize=(12, 6), sharey=True)
-    sns.heatmap(u_norms, annot=True, ax=ax[0], cmap='cividis', xticklabels=x_ticks, yticklabels=y_ticks, cbar=False)
-    sns.heatmap(du_norms, annot=True, ax=ax[1], cmap='cividis', xticklabels=x_ticks, yticklabels=y_ticks, cbar=False)
-    ax[0].set_xlabel('Nr. of neurons in hidden layer')
-    ax[1].set_xlabel('Nr. of neurons in hidden layer')
-    ax[0].set_ylabel('$\eta$')
-    plt.savefig(figures_path / 'heatmap_lr_neurons.pdf')
+    fig1, ax1 = plt.subplots(figsize=(4, 4))
+    fig2, ax2 = plt.subplots(figsize=(4, 4))
+    sns.heatmap(u_norms, annot=True, ax=ax1, 
+                cmap='cividis', xticklabels=x_ticks,
+                yticklabels=y_ticks, cbar=False, vmax=np.max(u_norms[u_norms < 1]))
+    sns.heatmap(du_norms, annot=True, ax=ax2, 
+                cmap='cividis', xticklabels=x_ticks,
+                yticklabels=y_ticks, cbar=False, vmax=np.max(du_norms[du_norms < 1]))
+    ax1.set_xlabel('Nr. of neurons in hidden layer')
+    ax2.set_xlabel('Nr. of neurons in hidden layer')
+    ax1.set_ylabel('$\eta$')
+    ax2.set_ylabel('$\eta$')
+    fig1.savefig(figures_path / 'heatmap_lr_neurons1.pdf')
+    fig2.savefig(figures_path / 'heatmap_lr_neurons2.pdf')
     # plt.show()
 
