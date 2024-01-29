@@ -1,10 +1,6 @@
 import dolfin
-
 import numpy as np
 import matplotlib.pyplot as plt
-
-L = 1.0
-N = 100000
 
 def FEM_1D_Beam(N, x0 = -1, L = 1):
     mesh = dolfin.IntervalMesh(N, x0, L)
@@ -61,17 +57,23 @@ def FEM_1D_Beam(N, x0 = -1, L = 1):
 
 if __name__ == '__main__':
     from DemBar1D import exact, du_exact
-    x = np.linspace(-1, L, 200, endpoint=True)
+    L = 1.0
+    x0 = -1.0
+    Ntest = 200
+    x = np.linspace(x0, L, Ntest, endpoint=True)
     dx = x[1] - x[0]
+
     u_ex = exact(x)
     du_ex = du_exact(x)
+
     fig, ax = plt.subplots()
     fig2, ax2 = plt.subplots()
+
     #### Skal jeg kjøre FEM for de samme verdiene som DEM? ###
     for N in [10, 100, 500, 1000, 10000]:
     # for N in [5, 10, 20, 100]:
         u = FEM_1D_Beam(N)
-        print(type(u))
+
         us = np.array([u(xi) for xi in x])
         abs_err = np.abs(us - u_ex)
         ax.semilogy(x, abs_err, label=f'N = {N}')
@@ -80,6 +82,7 @@ if __name__ == '__main__':
         du = np.gradient(us, dx)
         abs_err2 = np.abs(du - du_ex)
         ax2.semilogy(x, abs_err2, label=f'N = {N}')
+        print(f'N: {N}, abs(e) = {abs_err:.2f}')
 
     ax.legend()
     ax2.legend()
