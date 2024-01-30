@@ -17,7 +17,7 @@ x0 = -1
 N = 100
 test_size = 200
 dx_t = (L - x0) / test_size
-print(dx_t)
+# print(dx_t)
 known_left_ux = 0
 bc_left_penalty = 1.0
 
@@ -341,8 +341,8 @@ if __name__ == '__main__':
                 yticklabels=y_ticks, cbar=False, vmax=np.max(du_norms[du_norms < 1]))
     ax1.set_xlabel('Nr. of neurons in hidden layer')
     ax2.set_xlabel('Nr. of neurons in hidden layer')
-    ax1.set_ylabel('$\eta$')
-    ax2.set_ylabel('$\eta$')
+    ax1.set_ylabel(r'$\eta$')
+    ax2.set_ylabel(r'$\eta$')
     fig1.savefig(figures_path / 'heatmap_lr_neurons1.pdf')
     fig2.savefig(figures_path / 'heatmap_lr_neurons2.pdf')
     # plt.show()

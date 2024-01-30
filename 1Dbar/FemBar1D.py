@@ -56,7 +56,7 @@ def FEM_1D_Beam(N, x0 = -1, L = 1):
     return u
 
 if __name__ == '__main__':
-    from DemBar1D import exact, du_exact
+    from DemBar1D import exact, du_exact, L2norm
     L = 1.0
     x0 = -1.0
     Ntest = 200
@@ -69,8 +69,9 @@ if __name__ == '__main__':
     fig, ax = plt.subplots()
     fig2, ax2 = plt.subplots()
 
+    norms = {}
     #### Skal jeg kjøre FEM for de samme verdiene som DEM? ###
-    for N in [10, 100, 500, 1000, 10000]:
+    for N in [10, 100, 1000, 10000]:
     # for N in [5, 10, 20, 100]:
         u = FEM_1D_Beam(N)
 
@@ -82,11 +83,14 @@ if __name__ == '__main__':
         du = np.gradient(us, dx)
         abs_err2 = np.abs(du - du_ex)
         ax2.semilogy(x, abs_err2, label=f'N = {N}')
-        print(f'N: {N}, abs(e) = {abs_err:.2f}')
+        # print(f'N: {N}, L2norm = {L2norm(us, u_ex)}')
+        norms[N] = L2norm(us, u_ex)
+
 
     ax.legend()
     ax2.legend()
     # plt.show()
+
 
     fig, ax = plt.subplots()
     ax.plot(x, u_ex, label='Exact')
@@ -94,7 +98,16 @@ if __name__ == '__main__':
     plt.show()
     # fig.savefig("output/u.pdf")
 
-
+    ### et forsøk  på å regne ut konvergensrate? ###
+    plt.figure()
+    prev_key=1
+    prev_val=1
+    for i, (key, val) in enumerate(norms.items()):
+        print(key, prev_key)
+        print(np.log10(prev_val/val)/np.log10((1/prev_key)/(1/key)))
+        prev_key, prev_val = key, val
+    plt.loglog(norms.keys(), norms.values(), '--o')
+    
 # dx = x[1] - x[0]
 # epsilon = np.zeros(len(us))
 # epsilon[:-1] = (us[:-1] - us[1:])/dx
