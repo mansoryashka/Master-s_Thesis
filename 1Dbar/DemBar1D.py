@@ -112,7 +112,7 @@ def evaluate_model(model, test_data):
     return u_pred, e_loss
 
 
-def save_trained_model_N(Ns, lr=0.1, num_neurons=10, num_epochs=30):
+def save_trained_model_N(Ns, lr=0.05, num_neurons=10, num_epochs=30):
     times = {}
     losses = {}
     best_loss = np.inf
@@ -120,7 +120,7 @@ def save_trained_model_N(Ns, lr=0.1, num_neurons=10, num_epochs=30):
     model = NN(1, num_neurons, 1)
 
     # Ns = np.logspace(2, 5, 4, dtype=int)
-    Ns = [100, 500, 1000, 10000]
+    # Ns = [100, 500, 1000, 10000]
 
     for N in Ns:
         domain = np.linspace(x0, L, N, endpoint=True).reshape((N, 1))
@@ -198,6 +198,7 @@ def plot_Ns(Ns, *filenames):
 
     ax1.plot(test_set, ex, linestyle='-.', color='k', alpha=0.8, label='Exact')
     for i in range(len(Ns)):
+        xs = 0     # different starting point for clearer plot
         xs = Ns[i] % 97     # different starting point for clearer plot
         ax1.scatter(test_set[xs::11], predictions[Ns[i]][xs::11], 
                     c=colors[i], marker=markers[i], s=10, alpha=alpha[i], label=f'N = {Ns[i]}')
@@ -222,7 +223,8 @@ def plot_Ns(Ns, *filenames):
 
     ax3.plot(test_set, du_ex, linestyle='-.', color='k', alpha=0.8, label='Exact')
     for i in range(len(Ns)):
-        xs = Ns[i] % 97     # different starting point for clearer plot
+        xs = 0     # different starting point for clearer plot
+        # xs = Ns[i] % 97     # different starting point for clearer plot
         ax3.scatter(test_set[xs::11], gradient_predictions[Ns[i]][xs::11], 
                     c=colors[i], marker=markers[i], s=10, alpha=alpha[i], label=f'N = {Ns[i]}')
         
@@ -293,57 +295,58 @@ if __name__ == '__main__':
     figures_path = current_path / 'figures'
     arrays_path = current_path / 'stored_arrays'
 
-    # Ns = [100, 500, 1000, 10000]
-    # save_trained_model_N(Ns)
-    # plot_Ns(Ns, 'dem_fig1', 'dem_fig2', 'dem_fig3', 'dem_fig4')
+    Ns = [10, 100, 1000, 10000]
+    save_trained_model_N(Ns)
+    plot_Ns(Ns, 'dem_fig1', 'dem_fig2', 'dem_fig3', 'dem_fig4')
     # plot_Ns(1000*Ns)
-    num_expreriments = 50
+    # num_expreriments = 50
 
     # u_norms = np.zeros(len(Ns))
     # du_norms = u_norms.copy()
 
     # for _ in range(num_expreriments):
-    #     save_trained_model_lr_neurons([.1, .2, .3], [10, 20, 30])
-        # save_trained_model_N(Ns)
-        # u_norms += calculate_L2norms(Ns=Ns)[0]
-        # du_norms += calculate_L2norms(Ns=Ns)[1]
+    #     save_trained_model_N(Ns)
+    #     u_norms += calculate_L2norms(Ns=Ns)[0]
+    #     du_norms += calculate_L2norms(Ns=Ns)[1]
 
     # print(u_norms/num_expreriments)
     # print(du_norms/num_expreriments)
         
-    lrs = [0.01, 0.05, .1, .5, 1]
-    num_neurons = [5, 10, 15, 20, 30]
-    u_norms = np.zeros((len(lrs), len(num_neurons)))
-    du_norms = u_norms.copy()
-    for _ in range(num_expreriments):
-        save_trained_model_lr_neurons(lrs, num_neurons)
-        u_norms += calculate_L2norms(lrs=lrs, num_neurons=num_neurons)[0]
-        du_norms += calculate_L2norms(lrs=lrs, num_neurons=num_neurons)[1]
+    # np.save('stored_arrays/u_norms50expN', u_norms)
+    # np.save('stored_arrays/du_norms50expN', du_norms)
+    # lrs = [0.01, 0.05, .1, .5, 1]
+    # num_neurons = [5, 10, 15, 20, 30]
+    # u_norms = np.zeros((len(lrs), len(num_neurons)))
+    # du_norms = u_norms.copy()
+    # for _ in range(num_expreriments):
+    #     save_trained_model_lr_neurons(lrs, num_neurons)
+    #     u_norms += calculate_L2norms(lrs=lrs, num_neurons=num_neurons)[0]
+    #     du_norms += calculate_L2norms(lrs=lrs, num_neurons=num_neurons)[1]
 
     # print(u_norms/num_expreriments)
     # print(du_norms/num_expreriments)
-    u_norms /= num_expreriments
-    du_norms /= num_expreriments
-    np.save('stored_arrays/u_norms50exp', u_norms)
-    np.save('stored_arrays/du_norms50exp', du_norms)
+    # u_norms /= num_expreriments
+    # du_norms /= num_expreriments
+    # np.save('stored_arrays/u_norms50exp', u_norms)
+    # np.save('stored_arrays/du_norms50exp', du_norms)
 
-    import seaborn as sns
-    sns.set()
-    y_ticks=[str(i) for i in lrs]
-    x_ticks=[str(i) for i in num_neurons]
-    fig1, ax1 = plt.subplots(figsize=(4, 4))
-    fig2, ax2 = plt.subplots(figsize=(4, 4))
-    sns.heatmap(u_norms, annot=True, ax=ax1, 
-                cmap='cividis', xticklabels=x_ticks,
-                yticklabels=y_ticks, cbar=False, vmax=np.max(u_norms[u_norms < 1]))
-    sns.heatmap(du_norms, annot=True, ax=ax2, 
-                cmap='cividis', xticklabels=x_ticks,
-                yticklabels=y_ticks, cbar=False, vmax=np.max(du_norms[du_norms < 1]))
-    ax1.set_xlabel('Nr. of neurons in hidden layer')
-    ax2.set_xlabel('Nr. of neurons in hidden layer')
-    ax1.set_ylabel(r'$\eta$')
-    ax2.set_ylabel(r'$\eta$')
-    fig1.savefig(figures_path / 'heatmap_lr_neurons1.pdf')
-    fig2.savefig(figures_path / 'heatmap_lr_neurons2.pdf')
+    # import seaborn as sns
+    # sns.set()
+    # y_ticks=[str(i) for i in lrs]
+    # x_ticks=[str(i) for i in num_neurons]
+    # fig1, ax1 = plt.subplots(figsize=(5,5))
+    # fig2, ax2 = plt.subplots(figsize=(5,5))
+    # sns.heatmap(u_norms, annot=True, ax=ax1, 
+    #             cmap='cividis', xticklabels=x_ticks,
+    #             yticklabels=y_ticks, cbar=False, vmax=np.max(u_norms[u_norms < 1]))
+    # sns.heatmap(du_norms, annot=True, ax=ax2, 
+    #             cmap='cividis', xticklabels=x_ticks,
+    #             yticklabels=y_ticks, cbar=False, vmax=np.max(du_norms[du_norms < 1]))
+    # ax1.set_xlabel('Nr. of neurons in hidden layer')
+    # ax2.set_xlabel('Nr. of neurons in hidden layer')
+    # ax1.set_ylabel(r'$\eta$')
+    # ax2.set_ylabel(r'$\eta$')
+    # fig1.savefig(figures_path / 'heatmap_lr_neurons1.pdf')
+    # fig2.savefig(figures_path / 'heatmap_lr_neurons2.pdf')
     # plt.show()
 
