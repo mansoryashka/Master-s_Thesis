@@ -76,10 +76,10 @@ energy = psi*dolfin.dx(domain=mesh) #- dolfin.dot(f, u)*ds(1)
 total_internal_work = dolfin.derivative(energy, u2, v2)
 total_virtual_work = total_internal_work - dolfin.inner(f, v2)*ds(1)
 
-# dolfin.solve(total_virtual_work == 0, u2, bc,
-#              solver_parameters={'newton_solver': {
-#                                 # 'absolute_tolerance': 1e-6,
-#                                 'linear_solver': 'mumps'}})
+dolfin.solve(total_virtual_work == 0, u2, bc,
+             solver_parameters={'newton_solver': {
+                                # 'absolute_tolerance': 1e-6,
+                                'linear_solver': 'mumps'}})
 
 dolfin.File('output/3dbeam_sig.pvd') << u
 dolfin.File('output/3dbeam_sig2.pvd') << u2
