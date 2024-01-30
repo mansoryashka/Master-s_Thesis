@@ -176,19 +176,7 @@ def plot_Ns(Ns, *filenames):
     ex = exact(test_set)
     du_ex = du_exact(test_set)
 
-    # l1 = sorted(times.items())
-    # a,b = zip(*l1)
-    # plt.figure(figsize=(4,4))
-    # plt.plot(a, b, 'x')
-    # plt.show(); exit()
-
-    # l1 = sorted(losses.items())
-    # a,b = zip(*l1)
-    # plt.figure()
-    # plt.plot(a, b)
-
     markers = ['s', 'o', 'v', 'x']
-    # lines = [None, None, '.', ':']
     colors = ['tab:blue', 'tab:orange', 'tab:red', 'tab:green']
     alpha = [0.5, 0.5, 0.5, 1]
 
@@ -198,8 +186,7 @@ def plot_Ns(Ns, *filenames):
 
     ax1.plot(test_set, ex, linestyle='-.', color='k', alpha=0.8, label='Exact')
     for i in range(len(Ns)):
-        xs = 0     # different starting point for clearer plot
-        xs = Ns[i] % 97     # different starting point for clearer plot
+        xs = 0
         ax1.scatter(test_set[xs::11], predictions[Ns[i]][xs::11], 
                     c=colors[i], marker=markers[i], s=10, alpha=alpha[i], label=f'N = {Ns[i]}')
         
@@ -287,19 +274,23 @@ def calculate_L2norms(Ns=None, lrs=None, num_neurons=None):
     
     return u_norms, du_norms
 
+
 if __name__ == '__main__':
-    test_set = np.linspace(x0, L, test_size, endpoint=True).reshape((test_size, 1))
+    test_set = np.linspace(x0, L, test_size+2, endpoint=True)[1:-1].reshape((test_size, 1))
+    # print(test_set); exit()
     ex = exact(test_set); du_ex = du_exact(test_set)
 
     current_path = Path.cwd().resolve()
     figures_path = current_path / 'figures'
     arrays_path = current_path / 'stored_arrays'
 
-    Ns = [10, 100, 1000, 10000]
+    Ns = [100, 500, 1000, 10000]
     save_trained_model_N(Ns)
     plot_Ns(Ns, 'dem_fig1', 'dem_fig2', 'dem_fig3', 'dem_fig4')
+
+    
     # plot_Ns(1000*Ns)
-    # num_expreriments = 50
+    # num_expreriments = 20
 
     # u_norms = np.zeros(len(Ns))
     # du_norms = u_norms.copy()
@@ -314,6 +305,7 @@ if __name__ == '__main__':
         
     # np.save('stored_arrays/u_norms50expN', u_norms)
     # np.save('stored_arrays/du_norms50expN', du_norms)
+
     # lrs = [0.01, 0.05, .1, .5, 1]
     # num_neurons = [5, 10, 15, 20, 30]
     # u_norms = np.zeros((len(lrs), len(num_neurons)))
