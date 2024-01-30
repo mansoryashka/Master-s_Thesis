@@ -60,7 +60,7 @@ if __name__ == '__main__':
     L = 1.0
     x0 = -1.0
     Ntest = 200
-    x = np.linspace(x0, L, Ntest, endpoint=True)
+    x = np.linspace(x0, L, Ntest+2, endpoint=True)[1:-1]
     dx = x[1] - x[0]
 
     u_ex = exact(x)
@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     norms = {}
     #### Skal jeg kjøre FEM for de samme verdiene som DEM? ###
-    for N in [10, 100, 1000, 10000]:
+    for N in [10, 100, 500, 1000, 10000]:
     # for N in [5, 10, 20, 100]:
         u = FEM_1D_Beam(N)
 
@@ -107,7 +107,7 @@ if __name__ == '__main__':
         prev_key, prev_val = key, val
         print(f'{key:5d} & {val:8.3g}')
     plt.loglog(norms.keys(), norms.values(), '--o')
-    
+    plt.show()
 # dx = x[1] - x[0]
 # epsilon = np.zeros(len(us))
 # epsilon[:-1] = (us[:-1] - us[1:])/dx
