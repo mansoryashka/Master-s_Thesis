@@ -288,23 +288,22 @@ if __name__ == '__main__':
     save_trained_model_N(Ns)
     plot_Ns(Ns, 'dem_fig1', 'dem_fig2', 'dem_fig3', 'dem_fig4')
 
-    
-    # plot_Ns(1000*Ns)
-    # num_expreriments = 20
 
-    # u_norms = np.zeros(len(Ns))
-    # du_norms = u_norms.copy()
+    num_expreriments = 20
 
-    # for _ in range(num_expreriments):
-    #     save_trained_model_N(Ns)
-    #     u_norms += calculate_L2norms(Ns=Ns)[0]
-    #     du_norms += calculate_L2norms(Ns=Ns)[1]
+    u_norms = np.zeros(len(Ns))
+    du_norms = u_norms.copy()
 
-    # print(u_norms/num_expreriments)
-    # print(du_norms/num_expreriments)
+    for _ in range(num_expreriments):
+        save_trained_model_N(Ns)
+        u_norms += calculate_L2norms(Ns=Ns)[0]
+        du_norms += calculate_L2norms(Ns=Ns)[1]
+
+    print(u_norms/num_expreriments)
+    print(du_norms/num_expreriments)
         
-    # np.save('stored_arrays/u_norms50expN', u_norms)
-    # np.save('stored_arrays/du_norms50expN', du_norms)
+    np.save('stored_arrays/u_norms50expN', u_norms)
+    np.save('stored_arrays/du_norms50expN', du_norms)
 
     # lrs = [0.01, 0.05, .1, .5, 1]
     # num_neurons = [5, 10, 15, 20, 30]
