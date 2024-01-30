@@ -85,11 +85,10 @@ if __name__ == '__main__':
         ax2.semilogy(x, abs_err2, label=f'N = {N}')
         # print(f'N: {N}, L2norm = {L2norm(us, u_ex)}')
         norms[N] = L2norm(us, u_ex)
-
-
     ax.legend()
     ax2.legend()
     # plt.show()
+    # print(norms)
 
 
     fig, ax = plt.subplots()
@@ -106,6 +105,7 @@ if __name__ == '__main__':
         print(key, prev_key)
         print(np.log10(prev_val/val)/np.log10((1/prev_key)/(1/key)))
         prev_key, prev_val = key, val
+        print(f'{key:5d} & {val:8.3g}')
     plt.loglog(norms.keys(), norms.values(), '--o')
     
 # dx = x[1] - x[0]
