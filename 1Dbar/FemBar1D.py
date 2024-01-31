@@ -103,9 +103,9 @@ if __name__ == '__main__':
     prev_val=1
     for i, (key, val) in enumerate(norms.items()):
         print(key, prev_key)
-        print(np.log10(prev_val/val)/np.log10((1/prev_key)/(1/key)))
+        print(np.log(prev_val/val)/np.log((1/prev_key)/(1/key)))
         prev_key, prev_val = key, val
-        print(f'{key:5d} & {val:8.3g}')
+        # print(f'{key:5d} & {val:8.3g}')
     plt.loglog(norms.keys(), norms.values(), '--o')
     plt.show()
 # dx = x[1] - x[0]
