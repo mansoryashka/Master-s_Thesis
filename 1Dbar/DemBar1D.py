@@ -60,6 +60,7 @@ def train_model(data, model, lr=0.5, max_it=20, epochs=10):
     loss = []
     start_time = time.time()
     for i in range(epochs):
+        optimizer.zero_grad()
         def closure():
             u_pred = (x + 1) * model(x)
             boundary = u_pred*x
@@ -254,7 +255,7 @@ def calculate_L2norms(Ns=None, lrs=None, num_neurons=None):
 
             u_norms[i] = L2norm(predictions[Ns[i]], ex, dx=dx_t)[0]
             du_norms[i] = L2norm(gradient_predictions[Ns[i]], du_ex, dx=dx_t)[0]
-            
+
     elif (lrs and num_neurons):
         u_norms = np.zeros((len(lrs), len(num_neurons)))
         du_norms = np.zeros((len(lrs), len(num_neurons)))
@@ -277,7 +278,7 @@ def calculate_L2norms(Ns=None, lrs=None, num_neurons=None):
 
 if __name__ == '__main__':
     test_set = np.linspace(x0, L, test_size+2, endpoint=True)[1:-1].reshape((test_size, 1))
-    # print(test_set); exit()
+
     ex = exact(test_set); du_ex = du_exact(test_set)
 
     current_path = Path.cwd().resolve()
@@ -285,59 +286,59 @@ if __name__ == '__main__':
     arrays_path = current_path / 'stored_arrays'
 
     Ns = [100, 500, 1000, 10000]
-    save_trained_model_N(Ns)
-    plot_Ns(Ns, 'dem_fig1', 'dem_fig2', 'dem_fig3', 'dem_fig4')
+    # save_trained_model_N(Ns)
+    # plot_Ns(Ns, 'dem_fig1', 'dem_fig2', 'dem_fig3', 'dem_fig4')
 
 
-    num_expreriments = 20
+    num_expreriments = 10
 
-    u_norms = np.zeros(len(Ns))
-    du_norms = u_norms.copy()
-
-    for _ in range(num_expreriments):
-        save_trained_model_N(Ns)
-        u_norms += calculate_L2norms(Ns=Ns)[0]
-        du_norms += calculate_L2norms(Ns=Ns)[1]
-
-    print(u_norms/num_expreriments)
-    print(du_norms/num_expreriments)
-        
-    np.save('stored_arrays/u_norms50expN', u_norms)
-    np.save('stored_arrays/du_norms50expN', du_norms)
-
-    # lrs = [0.01, 0.05, .1, .5, 1]
-    # num_neurons = [5, 10, 15, 20, 30]
-    # u_norms = np.zeros((len(lrs), len(num_neurons)))
+    # u_norms = np.zeros(len(Ns))
     # du_norms = u_norms.copy()
+
     # for _ in range(num_expreriments):
-    #     save_trained_model_lr_neurons(lrs, num_neurons)
-    #     u_norms += calculate_L2norms(lrs=lrs, num_neurons=num_neurons)[0]
-    #     du_norms += calculate_L2norms(lrs=lrs, num_neurons=num_neurons)[1]
+    #     save_trained_model_N(Ns)
+    #     u_norms += calculate_L2norms(Ns=Ns)[0]
+    #     du_norms += calculate_L2norms(Ns=Ns)[1]
 
     # print(u_norms/num_expreriments)
     # print(du_norms/num_expreriments)
-    # u_norms /= num_expreriments
-    # du_norms /= num_expreriments
+        
+    # np.save('stored_arrays/u_norms50expN', u_norms)
+    # np.save('stored_arrays/du_norms50expN', du_norms)
+
+    lrs = [0.01, 0.05, .1]
+    num_neurons = [5, 10, 15, 20]
+    u_norms = np.zeros((len(lrs), len(num_neurons)))
+    du_norms = u_norms.copy()
+    for _ in range(num_expreriments):
+        save_trained_model_lr_neurons(lrs, num_neurons)
+        u_norms += calculate_L2norms(lrs=lrs, num_neurons=num_neurons)[0]
+        du_norms += calculate_L2norms(lrs=lrs, num_neurons=num_neurons)[1]
+
+    print(u_norms/num_expreriments)
+    print(du_norms/num_expreriments)
+    u_norms /= num_expreriments
+    du_norms /= num_expreriments
     # np.save('stored_arrays/u_norms50exp', u_norms)
     # np.save('stored_arrays/du_norms50exp', du_norms)
 
-    # import seaborn as sns
-    # sns.set()
-    # y_ticks=[str(i) for i in lrs]
-    # x_ticks=[str(i) for i in num_neurons]
-    # fig1, ax1 = plt.subplots(figsize=(5,5))
-    # fig2, ax2 = plt.subplots(figsize=(5,5))
-    # sns.heatmap(u_norms, annot=True, ax=ax1, 
-    #             cmap='cividis', xticklabels=x_ticks,
-    #             yticklabels=y_ticks, cbar=False, vmax=np.max(u_norms[u_norms < 1]))
-    # sns.heatmap(du_norms, annot=True, ax=ax2, 
-    #             cmap='cividis', xticklabels=x_ticks,
-    #             yticklabels=y_ticks, cbar=False, vmax=np.max(du_norms[du_norms < 1]))
-    # ax1.set_xlabel('Nr. of neurons in hidden layer')
-    # ax2.set_xlabel('Nr. of neurons in hidden layer')
-    # ax1.set_ylabel(r'$\eta$')
-    # ax2.set_ylabel(r'$\eta$')
-    # fig1.savefig(figures_path / 'heatmap_lr_neurons1.pdf')
-    # fig2.savefig(figures_path / 'heatmap_lr_neurons2.pdf')
-    # plt.show()
+    import seaborn as sns
+    sns.set()
+    y_ticks=[str(i) for i in lrs]
+    x_ticks=[str(i) for i in num_neurons]
+    fig1, ax1 = plt.subplots(figsize=(5,5))
+    fig2, ax2 = plt.subplots(figsize=(5,5))
+    sns.heatmap(u_norms, annot=True, ax=ax1, 
+                cmap='cividis', xticklabels=x_ticks,
+                yticklabels=y_ticks, cbar=False, vmax=np.max(u_norms[u_norms < 1]))
+    sns.heatmap(du_norms, annot=True, ax=ax2, 
+                cmap='cividis', xticklabels=x_ticks,
+                yticklabels=y_ticks, cbar=False, vmax=np.max(du_norms[du_norms < 1]))
+    ax1.set_xlabel('Nr. of neurons in hidden layer')
+    ax2.set_xlabel('Nr. of neurons in hidden layer')
+    ax1.set_ylabel(r'$\eta$')
+    ax2.set_ylabel(r'$\eta$')
+    fig1.savefig(figures_path / 'heatmap_lr_neurons1_nograd.pdf')
+    fig2.savefig(figures_path / 'heatmap_lr_neurons2_nograd.pdf')
+    plt.show()
 
