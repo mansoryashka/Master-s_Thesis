@@ -10,6 +10,7 @@ matplotlib.rcParams['figure.dpi'] = 350
 torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
 dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+# dev = torch.device('cpu')
 
 class MultiLayerNet(nn.Module):
     def __init__(self, *neurons):
@@ -96,7 +97,8 @@ class DeepEnergyMethod:
                     self.losses[i+1] = loss.item() / max_it
 
                 #       + f'loss: {loss.item():10.5f}')
-                print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}')
+                # print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}')
+                # print(f'Iter: {i+1:2d}, Energy: {loss}')
                 return loss
 
             optimizer.step(closure)

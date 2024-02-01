@@ -10,12 +10,12 @@ matplotlib.rcParams['figure.dpi'] = 350
 
 import sys
 sys.path.insert(0, "..")
-from DEM import DeepEnergyMethod
+from DEM import DeepEnergyMethod, MultiLayerNet, dev
 
 # np.random.seed(2023)
 torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
-dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+# dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 # code to run on ML node with no hangup :
 # CUDA_VISIBLE_DEVICES=x TMP=./tmp nohup python yourscript.py > out1.log 2> error1.log &
 
@@ -92,20 +92,20 @@ def domain(l, h, d, N=25):
 
 # domain(l, h, d)
 
-class MultiLayerNet(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim):
-        super(MultiLayerNet, self).__init__()
-        self.l1 = nn.Linear(input_dim, hidden_dim)
-        self.l2 = nn.Linear(hidden_dim, hidden_dim)
-        self.l3 = nn.Linear(hidden_dim, hidden_dim)
-        self.l4 = nn.Linear(hidden_dim, output_dim)
+# class MultiLayerNet(nn.Module):
+#     def __init__(self, input_dim, hidden_dim, output_dim):
+#         super(MultiLayerNet, self).__init__()
+#         self.l1 = nn.Linear(input_dim, hidden_dim)
+#         self.l2 = nn.Linear(hidden_dim, hidden_dim)
+#         self.l3 = nn.Linear(hidden_dim, hidden_dim)
+#         self.l4 = nn.Linear(hidden_dim, output_dim)
 
-    def forward(self, x):
-        x = torch.tanh(self.l1(x))
-        x = torch.tanh(self.l2(x))
-        x = torch.tanh(self.l3(x))
-        x = self.l4(x)
-        return x
+#     def forward(self, x):
+#         x = torch.tanh(self.l1(x))
+#         x = torch.tanh(self.l2(x))
+#         x = torch.tanh(self.l3(x))
+#         x = self.l4(x)
+#         return x
 
 # class DeepEnergyMethod:
 #     def __init__(self, model, energy, dim):
@@ -273,7 +273,7 @@ if __name__ == '__main__':
     # y = np.linspace(0, h, N)
     # z = np.linspace(0, d, N)
     
-    u_fem = np.load('u_fem.npy')
+    # u_fem = np.load('u_fem.npy')
     # print(u_fem.shape)
     # print(f'FEM: {L2norm(u_fem):8.5f} \n')
     # exit()
@@ -282,25 +282,28 @@ if __name__ == '__main__':
     z = rng.random(size=N)
     x = l*np.sort(x); y = h*np.sort(y); z = d*np.sort(z)
 
-    N_ar = np.array([10, 20, 30])
-    hidden_dim = np.array([10, 20, 30, 40])
+    N_ar = np.array([20]) #, 20, 30])
+    hidden_dim = np.array([30, 50])#, 30, 40])
     max_epoch = 40
     losses = np.zeros((len(N_ar), len(hidden_dim)))
     L2norms = np.zeros((len(N_ar), len(hidden_dim)))
     tot_losses = []
     best_norm = np.inf
 
-
-    num_experiments = 10
+    import time
+    num_experiments = 1
     for i in range(len(N_ar)):
         for j in range(len(hidden_dim)):
             for _ in range(num_experiments):
+                print(dev)
                 dom, dirichlet, neumann = domain(l, h ,d, N_ar[i])
 
-                model = MultiLayerNet(3, hidden_dim[j], 3)
+                model = MultiLayerNet(3, hidden_dim[j], hidden_dim[j], hidden_dim[j], 3)
                 DemBeam = DeepEnergyMethod(model, Psi, 3)
-
+                start = time.time()
                 DemBeam.train_model(dom, dirichlet, neumann, [l, h, d], epochs=max_epoch)
+                print(time.time()-start)
+                """
                 # print(DemBeam.losses[max_epoch])
                 U = DemBeam.evaluate_model(x, y, z)
 
@@ -341,3 +344,4 @@ if __name__ == '__main__':
     # ax.scatter(u_fem[0], u_fem[1], u_fem[2], s=0.002)
     # ax.scatter(U[0], U[1], U[2], s=0.002, c='tab:red')
     # plt.show()
+    """

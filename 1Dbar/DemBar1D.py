@@ -10,7 +10,8 @@ matplotlib.rcParams['figure.dpi'] = 200
 
 np.random.seed(2023)
 torch.manual_seed(2023)
-dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+# dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+dev = torch.device('cpu')
 
 L = 1.0
 x0 = -1
@@ -81,7 +82,7 @@ def train_model(data, model, lr=0.5, max_it=20, epochs=10):
                 loss = energy_loss
                 total_loss.append(loss.detach().cpu().numpy())
                 # print(f'{id(model):16d}, {len(x):10d}, {loss.item():10.6f}')
-                print('epoch: ', i, 'loss: ', loss.item())
+                print('epoch: ', i, 'loss: ', loss)
                 optimizer.zero_grad()
                 loss.backward()
             # print(f'Iter: {i+1:d}, Loss: {energy_loss.item():.5f}')
