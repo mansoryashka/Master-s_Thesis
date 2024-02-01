@@ -60,7 +60,7 @@ def train_model(data, model, lr=0.5, max_it=20, epochs=10):
     total_loss = []
     # start_time = time.time()
     for i in range(epochs):
-        optimizer.zero_grad()
+        # optimizer.zero_grad()
         def closure():
             u_pred = (x + 1) * model(x)
             boundary = u_pred*x
@@ -80,7 +80,7 @@ def train_model(data, model, lr=0.5, max_it=20, epochs=10):
             else:
                 loss = energy_loss
                 total_loss.append(loss.detach().cpu().numpy())
-                # print(len(x), loss.data)
+                # print(f'{id(model):16d}, {len(x):10d}, {loss.item():10.6f}')
                 optimizer.zero_grad()
                 loss.backward()
             # print(f'Iter: {i+1:d}, Loss: {energy_loss.item():.5f}')
@@ -114,22 +114,14 @@ def evaluate_model(model, test_data):
     return u_pred, e_loss
 
 
-def save_trained_model_N(Ns, lr=0.05, num_neurons=10, num_epochs=30):
-    # times = {}
-    # losses = {}
-    # best_loss = np.inf
-
-
-    # Ns = np.logspace(2, 5, 4, dtype=int)
-
+def save_trained_model_N(Ns, lr=0.05, num_neurons=5, num_epochs=30):
     for N in Ns:
         model = NN(1, num_neurons, 1)
-        # print(id(model))
+
+        print('pre:  ', id(model))
         domain = np.linspace(x0, L, N, endpoint=True).reshape((N, 1))
 
         model, total_loss = train_model(domain, model, epochs=num_epochs, lr=lr)
-        # times[N] = elapsed
-        # predict
         u_pred, loss = evaluate_model(model, test_set)
         du_pred = np.gradient(u_pred, dx_t, axis=0)
 
@@ -283,15 +275,17 @@ if __name__ == '__main__':
     figures_path = current_path / 'figures'
     arrays_path = current_path / 'stored_arrays'
 
-    Ns = [500, 1000, 10000]
+    # Ns = [100, 500, 1000, 10000]
+    Ns = [10000, 1000, 500, 100]
 
-    # save_trained_model_N(Ns)
+    save_trained_model_N(Ns)
     # # plot_Ns(Ns, 'dem_fig1', 'dem_fig2', 'dem_fig3', 'dem_fig4')
     for N in Ns:
-        loss = np.load(arrays_path / f'total_loss{N}.npy')
+        total_loss = np.load(arrays_path / f'total_loss{N}.npy')
         plt.figure()
-        plt.plot(loss)
+        plt.plot(total_loss)
         plt.savefig(figures_path / f'loss_{N}.pdf')
+
     exit()
 
     num_expreriments = 10
