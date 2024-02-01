@@ -81,6 +81,7 @@ def train_model(data, model, lr=0.5, max_it=20, epochs=10):
                 loss = energy_loss
                 total_loss.append(loss.detach().cpu().numpy())
                 # print(f'{id(model):16d}, {len(x):10d}, {loss.item():10.6f}')
+                print('epoch: ', i, 'loss: ', loss.item())
                 optimizer.zero_grad()
                 loss.backward()
             # print(f'Iter: {i+1:d}, Loss: {energy_loss.item():.5f}')
@@ -117,44 +118,29 @@ def evaluate_model(model, test_data):
 def save_trained_model_N(Ns, lr=0.05, num_neurons=5, num_epochs=30):
     for N in Ns:
         model = NN(1, num_neurons, 1)
-
-        print('pre:  ', id(model))
         domain = np.linspace(x0, L, N, endpoint=True).reshape((N, 1))
 
         model, total_loss = train_model(domain, model, epochs=num_epochs, lr=lr)
         u_pred, loss = evaluate_model(model, test_set)
         du_pred = np.gradient(u_pred, dx_t, axis=0)
 
-        np.save(arrays_path / f'u_pred_N{N}', u_pred)
-        np.save(arrays_path / f'du_pred_N{N}', du_pred)
-        np.save(arrays_path / f'total_loss{N}', np.array(total_loss))
+        # np.save(arrays_path / f'u_pred_N{N}', u_pred)
+        # np.save(arrays_path / f'du_pred_N{N}', du_pred)
+        # np.save(arrays_path / f'total_loss{N}', np.array(total_loss))
 
 
 def save_trained_model_lr_neurons(lrs, num_neurons, N=1000, num_epochs=30):
-    # times = {}
-    # losses = {}
-    # best_loss = np.inf
     for n in num_neurons:
         for lr in lrs:
-            print('lr: ', lr, 'n: ', n)
             model = NN(1, n, 1)
             
             domain = np.linspace(x0, L, N, endpoint=True).reshape((N, 1))
-
             model, total_loss = train_model(domain, model, epochs=num_epochs, lr=lr)
-            # times[N] = elapsed
-            # predict
             u_pred, loss = evaluate_model(model, test_set)
             du_pred = np.gradient(u_pred, dx_t, axis=0)
 
             np.save(arrays_path / f'u_pred_lr{lr}_n{n}', u_pred)
             np.save(arrays_path / f'du_pred_lr{lr}_n{n}', du_pred)
-
-            # losses[N] = loss
-            # loss = np.sum(L2norm(u_pred, exact(test_set), dx))
-            # if loss < best_loss:
-            #     best_loss = loss
-            #     best_pred = u_pred
 
 def plot_Ns(Ns, *filenames):
     predictions = {}
@@ -227,14 +213,15 @@ def plot_Ns(Ns, *filenames):
         fig3.savefig(figures_path / Path(filenames[2] + '.pdf'))
         fig4.savefig(figures_path / Path(filenames[3] + '.pdf'))
     else:
-        plt.show()
+        fig1.savefig(figures_path / Path('fig0.pdf'))
+        fig2.savefig(figures_path / Path('fig1.pdf'))
+        fig3.savefig(figures_path / Path('fig2.pdf'))
+        fig4.savefig(figures_path / Path('fig3.pdf'))
 
 def calculate_L2norms(Ns=None, lrs=None, num_neurons=None):
     """ Calculate L2 norm for many values of N or lr and num_neurons. """
     predictions = {}
     gradient_predictions = {}
-    # u_norms = {}
-    # du_norms = {}
 
     if Ns:
         u_norms = np.zeros(len(Ns))
@@ -275,16 +262,16 @@ if __name__ == '__main__':
     figures_path = current_path / 'figures'
     arrays_path = current_path / 'stored_arrays'
 
-    # Ns = [100, 500, 1000, 10000]
-    Ns = [10000, 1000, 500, 100]
+    Ns = [100, 500, 1000, 10000]
+    # Ns = [50]#, 50, 50, 50, 50]
 
-    save_trained_model_N(Ns)
+    save_trained_model_N(Ns, num_epochs=30)
     # # plot_Ns(Ns, 'dem_fig1', 'dem_fig2', 'dem_fig3', 'dem_fig4')
-    for N in Ns:
-        total_loss = np.load(arrays_path / f'total_loss{N}.npy')
-        plt.figure()
-        plt.plot(total_loss)
-        plt.savefig(figures_path / f'loss_{N}.pdf')
+    # for N in Ns:
+    #     total_loss = np.load(arrays_path / f'total_loss{N}.npy')
+    #     plt.figure()
+    #     plt.plot(total_loss)
+    #     plt.savefig(figures_path / f'loss_{N}.pdf')
 
     exit()
 
