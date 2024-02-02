@@ -21,7 +21,7 @@ dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 # code to run on ML node with no hangup :
 # CUDA_VISIBLE_DEVICES=x TMP=./tmp nohup python yourscript.py > out1.log 2> error1.log &
 
-N_test = 25
+N_test = 15
 x0 = 0
 E = 1000
 nu = 0.3
@@ -164,15 +164,15 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
         u_norms = np.zeros(len(Ns))
         for i, N in enumerate(Ns):
             # define model, DEM and domain
-            model = MultiLayerNet(3, [num_neurons]*num_layers, 3)
+            model = MultiLayerNet(3, *([num_neurons]*num_layers), 3)
             DemBeam = DeepEnergyMethod(model, energy)
             domain, dirichlet, neumann = define_domain(L, H, D, N=N)
             # train model
-            DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lrs, max_it=max_it, num_epochs=num_epochs)
+            DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lrs, max_it=max_it, epochs=num_epochs)
             # evaluate model
             U_pred = DemBeam.evaluate_model(x, y, z)
             # calculate L2norm
-            u_norms[i] = L2norm(U)
+            u_norms[i] = L2norm(U_pred)
     elif isinstance((lrs and num_neurons), (list, tuple)):
         u_norms = np.zeros((len(lrs), len(num_neurons)))
         pass
@@ -190,7 +190,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
 if __name__ == '__main__':
     u_fem = np.load('stored_arrays/u_fem.npy')
     # print(u_fem.shape)
-    print(f'FEM: {L2norm(u_fem):8.5f} \n')
+    print(f'FEM: {L2norm(u_fem)} \n')
     # exit()
 
     # x = rng.random(size=4*N_test)
@@ -199,10 +199,10 @@ if __name__ == '__main__':
     # x = L*np.sort(x); y = H*np.sort(y); z = D*np.sort(z)
     x = np.linspace(0, L, 4*N_test + 2)[1:-1]
     y = np.linspace(0, D, N_test + 2)[1:-1]
-    x = np.linspace(0, H, N_test + 2)[1:-1]
-    Ns = np.array([10, 20, 30])
+    z = np.linspace(0, H, N_test + 2)[1:-1]
+    Ns = [10, 20, 30]
 
-    U_norms = train_and_evaluate(Ns, num_epochs=2)
+    U_norms = train_and_evaluate(Ns, num_epochs=5)
     print(U_norms)
 
 
