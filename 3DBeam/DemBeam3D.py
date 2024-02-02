@@ -188,16 +188,26 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
     return u_norms
 
 if __name__ == '__main__':
-    # u_fem = np.load('u_fem.npy')
+    u_fem = np.load('stored_arrays/u_fem.npy')
     # print(u_fem.shape)
-    # print(f'FEM: {L2norm(u_fem):8.5f} \n')
+    print(f'FEM: {L2norm(u_fem):8.5f} \n')
     # exit()
-    x = rng.random(size=4*N_test)
-    y = rng.random(size=N_test)
-    z = rng.random(size=N_test)
-    x = L*np.sort(x); y = H*np.sort(y); z = D*np.sort(z)
 
-    N_ar = np.array([20]) #, 20, 30])
+    # x = rng.random(size=4*N_test)
+    # y = rng.random(size=N_test)
+    # z = rng.random(size=N_test)
+    # x = L*np.sort(x); y = H*np.sort(y); z = D*np.sort(z)
+    x = np.linspace(0, L, 4*N_test + 2)[1:-1]
+    y = np.linspace(0, D, N_test + 2)[1:-1]
+    x = np.linspace(0, H, N_test + 2)[1:-1]
+    Ns = np.array([10, 20, 30])
+
+    U_norms = train_and_evaluate(Ns, num_epochs=2)
+    print(U_norms)
+
+
+
+    exit()
     hidden_dim = np.array([30, 50])#, 30, 40])
     max_epoch = 10
     losses = np.zeros((len(N_ar), len(hidden_dim)))
