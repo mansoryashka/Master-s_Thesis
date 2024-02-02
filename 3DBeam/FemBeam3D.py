@@ -52,51 +52,48 @@ f = dolfin.Constant((0.0, -5.0, 0.0))
 # def sigma(u):
 #     return lmbd*dolfin.tr(epsilon(u))*dolfin.Identity(3) + 2*mu*epsilon(u)
 
-def sigma(u):
-    F = dolfin.nabla_grad(u) + dolfin.Identity(3)
-    J = dolfin.det(F)
-    P =  mu * F + (lmbd * dolfin.ln(J) - mu) * dolfin.inv(F.T)
-    sigma = 1/J * P * F.T
-    return sigma
+# def sigma(u):
+#     F = dolfin.nabla_grad(u) + dolfin.Identity(3)
+#     J = dolfin.det(F)
+#     P =  mu * F + (lmbd * dolfin.ln(J) - mu) * dolfin.inv(F.T)
+#     sigma = 1/J * P * F.T
+#     return sigma
 
-#a = dolfin.inner(sigma(u), dolfin.grad(v))*dolfin.dx(domain=mesh)
-F = dolfin.variable(dolfin.grad(u) + dolfin.Identity(3))
-J = dolfin.det(F)
-C = F.T * F
-I1 = dolfin.tr(C)
-
-psi = 0.5*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 0.5*mu*(I1 - 3)
-P = dolfin.diff(psi, F)
-L = dolfin.inner(f, v)*ds(1)
-
-J2 = dolfin.derivative(dolfin.inner(P, dolfin.grad(v)) * dolfin.dx(domain=mesh), u)
-dolfin.solve(J2 == L, u, bcs=bc,
-            solver_parameters={"linear_solver": "mumps"})
-
-# F = dolfin.grad(u2) + dolfin.Identity(3)
+# #a = dolfin.inner(sigma(u), dolfin.grad(v))*dolfin.dx(domain=mesh)
+# F = dolfin.variable(dolfin.grad(u) + dolfin.Identity(3))
 # J = dolfin.det(F)
 # C = F.T * F
 # I1 = dolfin.tr(C)
 
 # psi = 0.5*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 0.5*mu*(I1 - 3)
-# energy = psi*dolfin.dx(domain=mesh) #- dolfin.dot(f, u)*ds(1)
-# total_internal_work = dolfin.derivative(energy, u2, v2)
-# total_virtual_work = total_internal_work - dolfin.inner(f, v2)*ds(1)
+# P = dolfin.diff(psi, F)
+# L = dolfin.inner(f, v)*ds(1)
 
-# dolfin.solve(total_virtual_work == 0, u2, bc,
-#              solver_parameters={'newton_solver': {
-#                                 # 'absolute_tolerance': 1e-6,
-#                                 'linear_solver': 'mumps'}})
+# J2 = dolfin.derivative(dolfin.inner(P, dolfin.grad(v)) * dolfin.dx(domain=mesh), u)
+# dolfin.solve(J2 == L, u, bcs=bc,
+#             solver_parameters={"linear_solver": "mumps"})
 
-dolfin.File('output/3dbeam_sig.pvd') << u
+F = dolfin.grad(u2) + dolfin.Identity(3)
+J = dolfin.det(F)
+C = F.T * F
+I1 = dolfin.tr(C)
+
+psi = 0.5*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 0.5*mu*(I1 - 3)
+energy = psi*dolfin.dx(domain=mesh) #- dolfin.dot(f, u)*ds(1)
+total_internal_work = dolfin.derivative(energy, u2, v2)
+total_virtual_work = total_internal_work - dolfin.inner(f, v2)*ds(1)
+
+dolfin.solve(total_virtual_work == 0, u2, bc,
+             solver_parameters={'newton_solver': {
+                                # 'absolute_tolerance': 1e-6,
+                                'linear_solver': 'mumps'}})
+
+# dolfin.File('output/3dbeam_sig.pvd') << u
 # dolfin.File('output/3dbeam_sig2.pvd') << u2
 
-
-# breakpoint()
-
-x = np.linspace(0, l, 4*N)
-y = np.linspace(0, h, N)
-z = np.linspace(0, d, N)
+x = np.linspace(0, l, 4*N+2)[1:-1]
+y = np.linspace(0, h, N+2)[1:-1]
+z = np.linspace(0, d, N+2)[1:-1]
 u_fem = np.zeros((3, 4*N, N, N))
 
 for i in range(4*N):
@@ -104,4 +101,4 @@ for i in range(4*N):
         for k in range(N):
             u_fem[:, i, j, k] = u(x[i], y[j], z[k])
 
-np.save('u_fem', u_fem)
+np.save('stored_arrays/u_fem', u_fem)
