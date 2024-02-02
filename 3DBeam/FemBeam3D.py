@@ -99,6 +99,6 @@ u_fem = np.zeros((3, 4*N, N, N))
 for i in range(4*N):
     for j in range(N):
         for k in range(N):
-            u_fem[:, i, j, k] = u(x[i], y[j], z[k])
+            u_fem[:, i, j, k] = u2(x[i], y[j], z[k])
 
 np.save('stored_arrays/u_fem', u_fem)
