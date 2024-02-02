@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.autograd import grad
+import scipy.integrate as sp
+from pyevtk.hl import gridToVTK
 
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 350
@@ -15,11 +17,11 @@ from DEM import DeepEnergyMethod, MultiLayerNet, dev
 # np.random.seed(2023)
 torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
-# dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 # code to run on ML node with no hangup :
 # CUDA_VISIBLE_DEVICES=x TMP=./tmp nohup python yourscript.py > out1.log 2> error1.log &
 
-N = 25
+N_test = 25
 x0 = 0
 E = 1000
 nu = 0.3
@@ -28,9 +30,9 @@ l = 4
 h = 1
 d = 1
 
-dx = l/(4*N)
-dy = h/N
-dz = d/N
+dx = l/(4*N_test)
+dy = h/N_test
+dz = d/N_test
 
 d_boundary = 0.0
 d_cond = [0, 0, 0]
@@ -90,113 +92,11 @@ def domain(l, h, d, N=25):
 
     return domain, dirichlet, neumann
 
-# domain(l, h, d)
-
-# class MultiLayerNet(nn.Module):
-#     def __init__(self, input_dim, hidden_dim, output_dim):
-#         super(MultiLayerNet, self).__init__()
-#         self.l1 = nn.Linear(input_dim, hidden_dim)
-#         self.l2 = nn.Linear(hidden_dim, hidden_dim)
-#         self.l3 = nn.Linear(hidden_dim, hidden_dim)
-#         self.l4 = nn.Linear(hidden_dim, output_dim)
-
-#     def forward(self, x):
-#         x = torch.tanh(self.l1(x))
-#         x = torch.tanh(self.l2(x))
-#         x = torch.tanh(self.l3(x))
-#         x = self.l4(x)
-#         return x
-
-# class DeepEnergyMethod:
-#     def __init__(self, model, energy, dim):
-#         self.model = model.to(dev)
-#         self.energy = energy
-#     def train_model(self, data, dirichlet, neumann, LHD, lr=0.5, max_it=20, epochs=20):
-#         # data
-#         x = torch.from_numpy(data).float().to(dev)
-#         x.requires_grad_(True)
-#         optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr, max_iter=max_it)
-
-#         # boundary
-#         dirBC_coords = torch.from_numpy(dirichlet['coords']).float().to(dev)
-#         dirBC_coords.requires_grad_(True)
-#         dirBC_values = torch.from_numpy(dirichlet['values']).float().to(dev)
-
-#         neuBC_coords = torch.from_numpy(neumann['coords']).float().to(dev)
-#         neuBC_coords.requires_grad_(True)
-#         neuBC_values = torch.from_numpy(neumann['values']).float().to(dev)
-
-#         self.losses = {}
-#         start_time = time.time()
-#         for i in range(epochs):
-#             def closure():
-#                 # internal loss
-#                 u_pred = self.getU(self.model, x)
-#                 u_pred.double()
-
-#                 IntEnergy = self.energy(u_pred, x)
-#                 internal_loss = LHD[0]*LHD[1]*LHD[2]*penalty(IntEnergy)
-
-#                 # boundary loss
-#                 dir_pred = self.getU(self.model, dirBC_coords)
-#                 # print(torch.norm(dir_pred))
-#                 bc_dir = LHD[1]*LHD[2]*loss_squared_sum(dir_pred, dirBC_values)
-#                 boundary_loss = torch.sum(bc_dir)
-
-#                 # external loss
-#                 neu_pred = self.getU(self.model, neuBC_coords)
-#                 bc_neu = torch.matmul((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
-#                 external_loss = LHD[1]*LHD[2]*penalty(bc_neu)
-#                 # print(neu_pred.shape, neuBC_coords.shape, neuBC_values.shape)
-#                 # print(bc_neu.shape); exit()
-#                 energy_loss = internal_loss - torch.sum(external_loss)
-#                 loss = internal_loss - torch.sum(external_loss) + boundary_loss
-
-#                 optimizer.zero_grad()
-#                 loss.backward()
-                
-#                 if self.losses.get(i+1):
-#                     self.losses[i+1] += loss.item() / max_it
-#                 else:
-#                     self.losses[i+1] = loss.item() / max_it
-
-#                 #       + f'loss: {loss.item():10.5f}')
-#                 # print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}')
-#                 return loss
-
-#             optimizer.step(closure)
-#         # return self.model
-
-#     def getU(self, model, x):
-#         u = model(x).to(dev)
-#         Ux, Uy, Uz = x[:, 0] * u.T.unsqueeze(1)
-#         u_pred = torch.cat((Ux.T, Uy.T, Uz.T), dim=-1)
-#         return u_pred
-
-#     def evaluate_model(self, x, y, z):
-#         Nx = len(x)
-#         Ny = len(y)
-#         Nz = len(z)
-#         xGrid, yGrid, zGrid = np.meshgrid(x, y, z)
-#         x1D = xGrid.flatten()
-#         y1D = yGrid.flatten()
-#         z1D = zGrid.flatten()
-#         xyz = np.concatenate((np.array([x1D]).T, np.array([y1D]).T, np.array([z1D]).T), axis=-1)
-#         xyz_tensor = torch.from_numpy(xyz).float().to(dev)
-#         xyz_tensor.requires_grad_(True)
-#         # u_pred_torch = self.model(xyz_tensor)
-#         u_pred_torch = self.getU(self.model, xyz_tensor)
-#         u_pred = u_pred_torch.detach().cpu().numpy()
-#         surUx = u_pred[:, 0].reshape(Ny, Nx, Nz)
-#         surUy = u_pred[:, 1].reshape(Ny, Nx, Nz)
-#         surUz = u_pred[:, 2].reshape(Ny, Nx, Nz)
-#         U = (np.float64(surUx), np.float64(surUy), np.float64(surUz))
-#         return U
-
 lmbd =  E * nu / ((1 + nu)*(1 - 2*nu))
 mu = E / (2*(1 + nu))
 
-def Psi(u, x):
+def energy(u, x):
+    ### energy frunction from DEM paper ### 
     duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
     duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
     duzdxyz = grad(u[:, 2].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
@@ -216,11 +116,6 @@ def Psi(u, x):
     strainEnergy = 0.5 * lmbd * (torch.log(detF) * torch.log(detF)) - mu * torch.log(detF) + 0.5 * mu * (trC - 3)
     return strainEnergy
 
-# def loss_squared_sum(input, target):
-#     return torch.sum((input - target)**2, dim=1) / input.shape[1]*input.data.nelement()
-
-# def penalty(input):
-#     return torch.sum(input) / input.data.nelement()
 
 """ Simspson's method to be implemented later
 
@@ -246,13 +141,9 @@ def basic_simps(f, dx=1, axis=-1):
     return np.sum(1/3 * dx * (f[s0] + 4 * f[s1] + f[s2]), axis)
 """
 
-from pyevtk.hl import gridToVTK
-
 def write_vtk_v2(filename, x_space, y_space, z_space, U):
     xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
     gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
-
-import scipy.integrate as sp
 
 def L2norm(U):
     Ux = np.expand_dims(U[0].flatten(), 1)
@@ -263,28 +154,41 @@ def L2norm(U):
     udotu = np.zeros(n)
     for i in range(n):
         udotu[i] = np.dot(Uxyz[i,:], Uxyz[i,:].T)
-    udotu = udotu.reshape(4*N, N, N)
+    udotu = udotu.reshape(4*N_test, N_test, N_test)
     L2norm = np.sqrt(sp.simps(sp.simps(sp.simps(udotu, dx=dz), dx=dy), dx=dx))
     return L2norm
 
-if __name__ == '__main__':
-
-    # x = np.linspace(0, l, int(4*N))
-    # y = np.linspace(0, h, N)
-    # z = np.linspace(0, d, N)
+def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40):
+    if isinstance(Ns, (list, tuple)):
+        u_norms = np.zeros(len(Ns))
+        pass
+    elif isinstance((lrs and num_neurons), (list, tuple)):
+        u_norms = np.zeros((len(lrs), len(num_neurons)))
+        pass
+    elif isinstance((lrs and num_layers), (list, tuple)):
+        u_norms = np.zeros((len(lrs), len(num_layers)))
+        pass
+    elif isinstance((num_neurons and num_layers), (list, tuple)):
+        u_norms = np.zeros((len(num_neurons), len(num_layers)))
+        pass
+    else:
+        raise Exception('You have to provide a list of N values or one of the following:\n' + 
+                        '\t- lrs AND num_neurons\n\t- lrs AND num_layers\n\t- num_neurons AND num_layers')
     
+
+if __name__ == '__main__':
     # u_fem = np.load('u_fem.npy')
     # print(u_fem.shape)
     # print(f'FEM: {L2norm(u_fem):8.5f} \n')
     # exit()
-    x = rng.random(size=4*N)
-    y = rng.random(size=N)
-    z = rng.random(size=N)
+    x = rng.random(size=4*N_test)
+    y = rng.random(size=N_test)
+    z = rng.random(size=N_test)
     x = l*np.sort(x); y = h*np.sort(y); z = d*np.sort(z)
 
     N_ar = np.array([20]) #, 20, 30])
     hidden_dim = np.array([30, 50])#, 30, 40])
-    max_epoch = 40
+    max_epoch = 10
     losses = np.zeros((len(N_ar), len(hidden_dim)))
     L2norms = np.zeros((len(N_ar), len(hidden_dim)))
     tot_losses = []
@@ -299,11 +203,11 @@ if __name__ == '__main__':
                 dom, dirichlet, neumann = domain(l, h ,d, N_ar[i])
 
                 model = MultiLayerNet(3, hidden_dim[j], hidden_dim[j], hidden_dim[j], 3)
-                DemBeam = DeepEnergyMethod(model, Psi, 3)
+                DemBeam = DeepEnergyMethod(model, energy)
                 start = time.time()
                 DemBeam.train_model(dom, dirichlet, neumann, [l, h, d], epochs=max_epoch)
                 print(time.time()-start)
-                """
+                
                 # print(DemBeam.losses[max_epoch])
                 U = DemBeam.evaluate_model(x, y, z)
 
@@ -344,4 +248,4 @@ if __name__ == '__main__':
     # ax.scatter(u_fem[0], u_fem[1], u_fem[2], s=0.002)
     # ax.scatter(U[0], U[1], U[2], s=0.002, c='tab:red')
     # plt.show()
-    """
+    

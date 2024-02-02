@@ -16,34 +16,15 @@ class MultiLayerNet(nn.Module):
     def __init__(self, *neurons):
         super(MultiLayerNet, self).__init__()
         #### throw error if depth < 3 ####
-
-        # self.depth = len(neurons)
-        # input_dim = neurons[0]
-        # output_dim = neurons[-1]
-        # self.hidden_layers = []
-
-        # self.first_layer = nn.Linear(input_dim, neurons[1])
-
-        # for i in range(1, self.depth-2):
-        #     exec(
-        #         f'self.hidden_layer{i} = nn.Linear(neurons[{i}], neurons[{i+1}])'
-        #     )
-        #     self.hidden_layers.append(eval(f'self.hidden_layer{i}'))
-
-        # self.last_layer = nn.Linear(neurons[-2], output_dim)
         self.linears = nn.ModuleList([nn.Linear(neurons[i-1], neurons[i]) for i in range(1, len(neurons))])
 
     def forward(self, x):
-        # x = torch.tanh(self.first_layer(x))
-        # for i in range(self.depth-3):
-        #     x = torch.tanh(self.hidden_layers[i](x))
-        # x = self.last_layer(x)
         for layer in self.linears:
             x = torch.tanh(layer(x))
         return x
 
 class DeepEnergyMethod:
-    def __init__(self, model, energy, dim):
+    def __init__(self, model, energy):
         self.model = model.to(dev)
         self.energy = energy
         
