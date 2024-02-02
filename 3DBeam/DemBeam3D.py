@@ -26,24 +26,25 @@ x0 = 0
 E = 1000
 nu = 0.3
 
-l = 4
-h = 1
-d = 1
+L = 4
+H = 1
+D = 1
+LHD = [L, H, D]
 
-dx = l/(4*N_test)
-dy = h/N_test
-dz = d/N_test
+dx = L/(4*N_test)
+dy = H/N_test
+dz = D/N_test
 
 d_boundary = 0.0
 d_cond = [0, 0, 0]
 
-n_boundary = l
+n_boundary = L
 n_cond = [0, -5, 0]
 
-def domain(l, h, d, N=25):
-    x = np.linspace(0, l, int(4*N))
-    y = np.linspace(0, h, N)
-    z = np.linspace(0, d, N)
+def define_domain(L, H, D, N=25):
+    x = np.linspace(0, L, int(4*N))
+    y = np.linspace(0, H, N)
+    z = np.linspace(0, D, N)
 
     Xm, Ym, Zm = np.meshgrid(x, y, z) 
     Xm = np.expand_dims(Xm.flatten(), 1)
@@ -158,10 +159,20 @@ def L2norm(U):
     L2norm = np.sqrt(sp.simps(sp.simps(sp.simps(udotu, dx=dz), dx=dy), dx=dx))
     return L2norm
 
-def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40):
+def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, max_it=20):
     if isinstance(Ns, (list, tuple)):
         u_norms = np.zeros(len(Ns))
-        pass
+        for i, N in enumerate(Ns):
+            # define model, DEM and domain
+            model = MultiLayerNet(3, [num_neurons]*num_layers, 3)
+            DemBeam = DeepEnergyMethod(model, energy)
+            domain, dirichlet, neumann = define_domain(L, H, D, N=N)
+            # train model
+            DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lrs, max_it=max_it, num_epochs=num_epochs)
+            # evaluate model
+            U_pred = DemBeam.evaluate_model(x, y, z)
+            # calculate L2norm
+            u_norms[i] = L2norm(U)
     elif isinstance((lrs and num_neurons), (list, tuple)):
         u_norms = np.zeros((len(lrs), len(num_neurons)))
         pass
@@ -174,7 +185,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
     else:
         raise Exception('You have to provide a list of N values or one of the following:\n' + 
                         '\t- lrs AND num_neurons\n\t- lrs AND num_layers\n\t- num_neurons AND num_layers')
-    
+    return u_norms
 
 if __name__ == '__main__':
     # u_fem = np.load('u_fem.npy')
@@ -184,7 +195,7 @@ if __name__ == '__main__':
     x = rng.random(size=4*N_test)
     y = rng.random(size=N_test)
     z = rng.random(size=N_test)
-    x = l*np.sort(x); y = h*np.sort(y); z = d*np.sort(z)
+    x = L*np.sort(x); y = H*np.sort(y); z = D*np.sort(z)
 
     N_ar = np.array([20]) #, 20, 30])
     hidden_dim = np.array([30, 50])#, 30, 40])

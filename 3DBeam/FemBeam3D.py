@@ -94,14 +94,14 @@ dolfin.File('output/3dbeam_sig.pvd') << u
 
 # breakpoint()
 
-# x = np.linspace(0, l, 4*N)
-# y = np.linspace(0, h, N)
-# z = np.linspace(0, d, N)
-# u_fem = np.zeros((3, 4*N, N, N))
+x = np.linspace(0, l, 4*N)
+y = np.linspace(0, h, N)
+z = np.linspace(0, d, N)
+u_fem = np.zeros((3, 4*N, N, N))
 
-# for i in range(4*N):
-#     for j in range(N):
-#         for k in range(N):
-#             u_fem[:, i, j, k] = u(x[i], y[j], z[k])
+for i in range(4*N):
+    for j in range(N):
+        for k in range(N):
+            u_fem[:, i, j, k] = u(x[i], y[j], z[k])
 
-# np.save('u_fem', u_fem)
+np.save('u_fem', u_fem)

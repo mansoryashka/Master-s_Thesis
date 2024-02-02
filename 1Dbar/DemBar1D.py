@@ -120,6 +120,7 @@ def train_and_evaluate_model(Ns=1000, lrs=0.1, num_neurons=10, num_epochs=30):
         u_norms = np.zeros(len(Ns))
         du_norms = np.zeros(len(Ns))
         for i, N in enumerate(Ns):
+            # define model and domain
             model = NN(1, num_neurons, 1)
             domain = np.linspace(x0, L, N, endpoint=True).reshape((N, 1))
             # train mode
