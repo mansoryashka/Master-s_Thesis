@@ -135,8 +135,8 @@ def train_and_evaluate_model(Ns=1000, lrs=0.1, num_neurons=10, num_epochs=30):
     elif isinstance((lrs and num_neurons), (list, tuple)):
         u_norms = np.zeros((len(lrs), len(num_neurons)))
         du_norms = np.zeros((len(lrs), len(num_neurons)))
-        for i, n in enumerate(num_neurons):
-            for j, lr in enumerate(lrs):
+        for j, n in enumerate(num_neurons):
+            for i, lr in enumerate(lrs):
                 # define model and domain
                 model = NN(1, n, 1)
                 domain = np.linspace(x0, L, Ns, endpoint=True).reshape((Ns, 1))
@@ -146,8 +146,8 @@ def train_and_evaluate_model(Ns=1000, lrs=0.1, num_neurons=10, num_epochs=30):
                 u_pred, loss = evaluate_model(model, test_set)
                 du_pred = np.gradient(u_pred, dx_t, axis=0)
                 # calculate L2norm
-                u_norms[j, i] = L2norm(u_pred, u_exact, dx=dx_t)[0]
-                du_norms[j, i] = L2norm(du_pred, du_exact, dx=dx_t)[0]
+                u_norms[i, j] = L2norm(u_pred, u_exact, dx=dx_t)[0]
+                du_norms[i, j] = L2norm(du_pred, du_exact, dx=dx_t)[0]
     else:
         raise Exception('You need to provide a list of N values or lr AND num_neurons values.')
 
@@ -350,9 +350,11 @@ if __name__ == '__main__':
     sns.heatmap(u_norms, annot=True, ax=ax1, 
                 cmap='cividis', xticklabels=x_ticks,
                 yticklabels=y_ticks, cbar=False, vmax=np.max(u_norms[u_norms < 1]))
+                # yticklabels=y_ticks, cbar=False, vmax=np.median(u_norms))
     sns.heatmap(du_norms, annot=True, ax=ax2, 
                 cmap='cividis', xticklabels=x_ticks,
                 yticklabels=y_ticks, cbar=False, vmax=np.max(du_norms[du_norms < 1]))
+                # yticklabels=y_ticks, cbar=False, vmax=np.median(du_norms))
     ax1.set_title(r'$L^2$ error norm for displacement')
     ax2.set_title(r'$L^2$ error norm for displacement gradient')
     ax1.set_xlabel(r'($\eta$, Nr. of neurons in hidden layer)')
