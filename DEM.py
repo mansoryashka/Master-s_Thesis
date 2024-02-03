@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.autograd import grad
+import scipy.integrate as sp
+
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 350
 # np.random.seed(2023)
@@ -79,7 +81,7 @@ class DeepEnergyMethod:
 
                 #       + f'loss: {loss.item():10.5f}')
                 # print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}')
-                print(f'Iter: {i+1:2d}, Energy: {loss}')
+                # print(f'Iter: {i+1:2d}, Energy: {loss}')
                 return loss
 
             optimizer.step(closure)
@@ -117,3 +119,17 @@ def loss_squared_sum(input, target):
 
 def penalty(input):
     return torch.sum(input) / input.data.nelement()
+
+def L2norm3D(U, Nx, Ny, Nz, dx, dy, dz):
+    ### function from DEM paper ###
+    Ux = np.expand_dims(U[0].flatten(), 1)
+    Uy = np.expand_dims(U[1].flatten(), 1)
+    Uz = np.expand_dims(U[2].flatten(), 1)
+    Uxyz = np.concatenate((Ux, Uy, Uz), axis=1)
+    n = Ux.shape[0]
+    udotu = np.zeros(n)
+    for i in range(n):
+        udotu[i] = np.dot(Uxyz[i,:], Uxyz[i,:].T)
+    udotu = udotu.reshape(4*Nx, Ny, Nz)
+    L2norm = np.sqrt(sp.simps(sp.simps(sp.simps(udotu, dx=dz), dx=dy), dx=dx))
+    return L2norm

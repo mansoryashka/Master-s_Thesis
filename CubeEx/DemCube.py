@@ -4,21 +4,29 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.autograd import grad
+from pyevtk.hl import gridToVTK
+from pathlib import Path
 
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 350
 
 import sys
 sys.path.insert(0, "..")
-from DEM import DeepEnergyMethod, dev, MultiLayerNet
+from DEM import DeepEnergyMethod, dev, MultiLayerNet, L2norm3D
 
 torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
 # dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-N = 20
+current_path = Path.cwd().resolve()
+figures_path = current_path / 'figures'
+arrays_path = current_path / 'stored_arrays'
+models_path = current_path / 'trained_models'
+
+N_test = 20
 L = H = D = 1.0
-dx = dy = dz = L/N
+LHD = [L, H, D]
+dx = dy = dz = L/N_test
 
 d_boundary = 0.0
 d_cond = [0, 0, 0]
@@ -26,8 +34,8 @@ d_cond = [0, 0, 0]
 n_boundary = L
 n_cond = [-0.5, 0, 0]
 
-def domain(l, h, d, N=25):
-    x = np.linspace(0, L, int(4*N))
+def define_domain(l, h, d, N=25):
+    x = np.linspace(0, L, N)
     y = np.linspace(0, H, N)
     z = np.linspace(0, D, N)
 
@@ -103,7 +111,7 @@ nu = 0.3
 mu = E / (2*(1 + nu))
 
 # mu = 15
-def Psi(u, x):
+def energy(u, x):
     # f0 = torch.from_numpy(np.array([1, 0, 0]))
     kappa = 1e3
     Ta = 1.0
@@ -134,24 +142,97 @@ def Psi(u, x):
     return compressibility + neo_hookean + active_stress_energy
 
 
-def loss_squared_sum(input, target):
-    return torch.sum((input - target)**2, dim=1) / input.shape[1]*input.data.nelement()
+### Skrive blokkene til en egen funksjon? Kalles på helt likt inne i loopene ###
+def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, max_it=20):
+    # train on many N values
+    if isinstance((Ns and not lrs), (list, tuple)):
+        print('Ns')
+        u_norms = np.zeros(len(Ns))
+        for i, N in enumerate(Ns):
+            # define model, DEM and domain
+            model = MultiLayerNet(3, *([num_neurons]*num_layers), 3)
+            DemBeam = DeepEnergyMethod(model, energy)
+            domain, dirichlet, neumann = define_domain(L, H, D, N=N)
+            # train model
+            DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lrs, max_it=max_it, epochs=num_epochs)
+            # evaluate model
+            U_pred = DemBeam.evaluate_model(x, y, z)
+            # calculate L2norm
+            u_norms[i] = L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz)
+    # train on many learning rates and number of neurons in hidden layers
+    elif isinstance((lrs and num_neurons), (list, tuple)):
+        print('lrs, num_n')
+        u_norms = np.zeros((len(lrs), len(num_neurons)))
+        for j, n in enumerate(num_neurons):
+            for i, lr in enumerate(lrs):
+                model = MultiLayerNet(3, *([n]*num_layers), 3)
+                DemBeam = DeepEnergyMethod(model, energy)
+                domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
 
-def penalty(input):
-    return torch.sum(input) / input.data.nelement()
+                DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lr, max_it=max_it, epochs=num_epochs)
+                U_pred = DemBeam.evaluate_model(x, y, z)
 
-from pyevtk.hl import gridToVTK
+                u_norms[i, j] = L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz)
+    # train on many learning rates and number of hidden layers
+    elif isinstance((lrs and num_layers), (list, tuple)):
+        print('lrs, num_l')
+        u_norms = np.zeros((len(lrs), len(num_layers)))
+        for j, l in enumerate(num_layers):
+            for i, lr in enumerate(lrs):
+                model = MultiLayerNet(3, *([num_neurons]*l), 3)
+                DemBeam = DeepEnergyMethod(model, energy)
+                domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
+                DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lr, max_it=max_it, epochs=num_epochs)
+                # evaluate model
+                U_pred = DemBeam.evaluate_model(x, y, z)
+
+                u_norms[i, j] = L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz)
+    # train on number of neurons in hidden layers and number of hidden layers
+    elif isinstance((num_neurons and num_layers), (list, tuple)):
+        print('num_n, num_l')
+        u_norms = np.zeros((len(num_neurons), len(num_layers)))
+        for j, n in enumerate(num_neurons):
+            for i, l in enumerate(num_layers):
+                model = MultiLayerNet(3, *([n]*l), 3)
+                DemBeam = DeepEnergyMethod(model, energy)
+                domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
+                DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lrs, max_it=max_it, epochs=num_epochs)
+                # evaluate model
+                U_pred = DemBeam.evaluate_model(x, y, z)
+
+                u_norms[i, j] = L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz)
+    # train on many N values and learning rates
+    elif isinstance((Ns and lrs), (list, tuple)):
+        # print(type(Ns), type(lrs), isinstance((Ns and lrs), list), Ns); exit()
+        print('Ns and lrs')
+        u_norms = np.zeros((len(lrs), len(Ns)))
+        for j, N in enumerate(Ns):
+            for i, lr in enumerate(lrs):
+                # define model, DEM and domain
+                model = MultiLayerNet(3, *([num_neurons]*num_layers), 3)
+                DemBeam = DeepEnergyMethod(model, energy)
+                domain, dirichlet, neumann = define_domain(L, H, D, N=N)
+                # train model
+                DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lr, max_it=max_it, epochs=num_epochs)
+                # evaluate model
+                U_pred = DemBeam.evaluate_model(x, y, z)
+                # calculate L2norm
+                u_norms[i, j] = L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz)
+    else:
+        raise Exception('You have to provide a list of N values or one of the following:\n' + 
+                        '\t- lrs AND num_neurons\n\t- lrs AND num_layers\n\t- num_neurons AND num_layers')
+    return u_norms
 
 def write_vtk_v2(filename, x_space, y_space, z_space, U):
     xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
     gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
 
 if __name__ == '__main__':
-    domain, dirichlet, neumann = domain(L, H, D)
+    domain, dirichlet, neumann = define_domain(L, H, D)
 
 
     model = MultiLayerNet(3, 30, 30, 30, 3)
-    DemBeam = DeepEnergyMethodCube(model, Psi, 3)
+    DemBeam = DeepEnergyMethodCube(model, energy, 3)
 
     DemBeam.train_model(domain, dirichlet, neumann, [L, H, D], epochs=10)
 
@@ -167,7 +248,7 @@ if __name__ == '__main__':
 
     U = DemBeam.evaluate_model(x, y, z)
     Udem = np.array(U).copy()
-    np.save('u_dem', Udem)
-    write_vtk_v2('output/DemCube', x, y, z, U)
+    # np.save('u_dem', Udem)
+    # write_vtk_v2('output/DemCube', x, y, z, U)
 
     
