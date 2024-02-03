@@ -157,93 +157,114 @@ def compressibility(F: ufl.Coefficient, kappa: float = 1e3) -> ufl.Coefficient:
     # return kappa * (J * dolfin.ln(J) - J + 1)
     return kappa * (J - 1)**2
 
+def FEM_Cube(N):
+    # Create a Unit Cube Mesh
+    mesh = dolfin.UnitCubeMesh(N, N, N)
 
-# Create a Unit Cube Mesh
-mesh = dolfin.UnitCubeMesh(5, 5, 5)
+    # Function space for the displacement
+    V = dolfin.VectorFunctionSpace(mesh, "CG", 2)
+    # The displacement
+    u = dolfin.Function(V)
+    # Test function for the displacement
+    u_test = dolfin.TestFunction(V)
 
-# Function space for the displacement
-V = dolfin.VectorFunctionSpace(mesh, "CG", 2)
-# The displacement
-u = dolfin.Function(V)
-# Test function for the displacement
-u_test = dolfin.TestFunction(V)
+    # Compute the deformation gradient
+    F = dolfin.grad(u) + dolfin.Identity(3)
 
-# Compute the deformation gradient
-F = dolfin.grad(u) + dolfin.Identity(3)
+    # Active tension
+    Ta = dolfin.Constant(1.0)
+    # Set fiber direction to be constant in the x-direction
+    f0 = dolfin.Constant([1.0, 0.0, 0.0])
 
-# Active tension
-Ta = dolfin.Constant(1.0)
-# Set fiber direction to be constant in the x-direction
-f0 = dolfin.Constant([1.0, 0.0, 0.0])
+    E = 1000
+    nu = 0.3
+    mu = E / (2*(1 + nu))
 
-E = 1000
-nu = 0.3
-mu = E / (2*(1 + nu))
+    # Collect the contributions to the total energy (here using the Holzapfel Ogden model)
+    elastic_energy = (
+        # transverse_holzapfel_ogden(F, f0=f0)
+        neo_hookean(F, mu=mu)
+        + active_stress_energy(F, f0, Ta)
+        + compressibility(F)
+    )
+    # Here we can also use the Neo Hookean model instead
+    # elastic_energy = neo_hookean(F) + active_stress_energy(F, f0, Ta) + compressibility(F)
 
-# Collect the contributions to the total energy (here using the Holzapfel Ogden model)
-elastic_energy = (
-    # transverse_holzapfel_ogden(F, f0=f0)
-    neo_hookean(F, mu=mu)
-    + active_stress_energy(F, f0, Ta)
-    + compressibility(F)
-)
-# Here we can also use the Neo Hookean model instead
-# elastic_energy = neo_hookean(F) + active_stress_energy(F, f0, Ta) + compressibility(F)
+    # Define some subdomain. Here we mark the x = 0 plane with the marker 1
+    left = dolfin.CompiledSubDomain("near(x[0], 0)")
+    left_marker = 1
+    # And we define the Dirichlet boundary condition on this side
+    # We specify that the displacement should be zero in all directions
+    bcs = dolfin.DirichletBC(V, dolfin.Constant((0.0, 0.0, 0.0)), left)
 
-# Define some subdomain. Here we mark the x = 0 plane with the marker 1
-left = dolfin.CompiledSubDomain("near(x[0], 0)")
-left_marker = 1
-# And we define the Dirichlet boundary condition on this side
-# We specify that the displacement should be zero in all directions
-bcs = dolfin.DirichletBC(V, dolfin.Constant((0.0, 0.0, 0.0)), left)
-
-# We also define a subdomain on the opposite wall
-right = dolfin.CompiledSubDomain("near(x[0], 1)")
-# and we give a marker of two
-right_marker = 2
-
-
-# We create a facet function for marking the facets
-ffun = dolfin.MeshFunction("size_t", mesh, 2)
-# We set all values to zero
-ffun.set_all(0)
-# Then then mark the left and right subdomains
-left.mark(ffun, left_marker)
-right.mark(ffun, right_marker)
-
-# We can also save this file to xdmf and visualize it in Paraview
-# with dolfin.XDMFFile("output/ffun.xdmf") as ffun_file:
-#     ffun_file.write(ffun)
+    # We also define a subdomain on the opposite wall
+    right = dolfin.CompiledSubDomain("near(x[0], 1)")
+    # and we give a marker of two
+    right_marker = 2
 
 
-# Now we can form to total internal virtual work which is the
-# derivative of the energy in the system
-quad_degree = 4
-internal_virtual_work = dolfin.derivative(
-    elastic_energy * dolfin.dx(metadata={"quadrature_degree": quad_degree}), u, u_test
-)
+    # We create a facet function for marking the facets
+    ffun = dolfin.MeshFunction("size_t", mesh, 2)
+    # We set all values to zero
+    ffun.set_all(0)
+    # Then then mark the left and right subdomains
+    left.mark(ffun, left_marker)
+    right.mark(ffun, right_marker)
 
-# We can also apply a force on the right boundary using a Neumann boundary condition
-# traction = dolfin.Constant(1.0)
-traction = dolfin.Constant(-0.5)
-N = dolfin.FacetNormal(mesh)
-n = traction * ufl.cofac(F) * N
-ds = dolfin.ds(domain=mesh, subdomain_data=ffun)
-external_virtual_work = dolfin.inner(u_test, n) * ds(right_marker)
+    # We can also save this file to xdmf and visualize it in Paraview
+    # with dolfin.XDMFFile("output/ffun.xdmf") as ffun_file:
+    #     ffun_file.write(ffun)
 
-# The total virtual work is the sum of the internal and external virtual work
-total_virtual_work = internal_virtual_work + external_virtual_work
 
-# The we solve for the displacement u
-dolfin.solve(total_virtual_work == 0, u, bcs=[bcs])
+    # Now we can form to total internal virtual work which is the
+    # derivative of the energy in the system
+    quad_degree = 4
+    internal_virtual_work = dolfin.derivative(
+        elastic_energy * dolfin.dx(metadata={"quadrature_degree": quad_degree}), u, u_test
+    )
 
+    # We can also apply a force on the right boundary using a Neumann boundary condition
+    # traction = dolfin.Constant(1.0)
+    traction = dolfin.Constant(-0.5)
+    N = dolfin.FacetNormal(mesh)
+    n = traction * ufl.cofac(F) * N
+    ds = dolfin.ds(domain=mesh, subdomain_data=ffun)
+    external_virtual_work = dolfin.inner(u_test, n) * ds(right_marker)
+
+    # The total virtual work is the sum of the internal and external virtual work
+    total_virtual_work = internal_virtual_work + external_virtual_work
+
+    # The we solve for the displacement u
+    dolfin.solve(total_virtual_work == 0, u, bcs=[bcs],
+                solver_parameters={'newton_solver': {
+                    # 'absolute_tolerance': 1e-6,
+                    'linear_solver': 'mumps'}})
+
+    return u
 
 # We can visualize the solution in Paraview
-with dolfin.XDMFFile("output/um50.xdmf") as u_file:
-    u_file.write_checkpoint(
-        u,
-        function_name="u",
-        time_step=0.0,
-        encoding=dolfin.XDMFFile.Encoding.HDF5,
-        append=False,
-    )
+# with dolfin.XDMFFile("output/um50.xdmf") as u_file:
+#     u_file.write_checkpoint(
+#         u,
+#         function_name="u",
+#         time_step=0.0,
+#         encoding=dolfin.XDMFFile.Encoding.HDF5,
+#         append=False,
+#     )
+
+
+if __name__ == '__main__':
+    import numpy as np
+    Ns = [5, 10, 15]
+    # Ns = [20]
+    N_test = 20
+    x = y = z = np.linspace(0, 1, N_test+2)[1:-1]
+    for N in Ns:
+        u = FEM_Cube(N)
+
+        u_fem = np.zeros((3, N_test, N_test, N_test))
+        for i in range(N_test):
+            for j in range(N_test):
+                for k in range(N_test):
+                    u_fem[:, i, j, k] = u(x[i], y[j], z[k])
+        np.save(f'stored_arrays/u_fem{N}', u_fem)
