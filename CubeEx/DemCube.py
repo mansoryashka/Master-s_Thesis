@@ -228,27 +228,20 @@ def write_vtk_v2(filename, x_space, y_space, z_space, U):
     gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
 
 if __name__ == '__main__':
-    domain, dirichlet, neumann = define_domain(L, H, D)
+    x = np.linspace(0, L, N_test + 2)[1:-1]
+    y = np.linspace(0, D, N_test + 2)[1:-1]
+    z = np.linspace(0, H, N_test + 2)[1:-1]
 
-
-    model = MultiLayerNet(3, 30, 30, 30, 3)
-    DemBeam = DeepEnergyMethodCube(model, energy, 3)
-
-    DemBeam.train_model(domain, dirichlet, neumann, [L, H, D], epochs=10)
-
-    x = rng.random(size=N)
-    y = rng.random(size=N)
-    z = rng.random(size=N)
-    x = (x - np.min(x)) / (np.max(x) - np.min(x))
-    y = (y - np.min(y)) / (np.max(y) - np.min(y))
-    z = (z - np.min(z)) / (np.max(z) - np.min(z))
-
-    x = L*np.sort(x); y = H*np.sort(y); z = D*np.sort(z)
-
-
-    U = DemBeam.evaluate_model(x, y, z)
-    Udem = np.array(U).copy()
-    # np.save('u_dem', Udem)
-    # write_vtk_v2('output/DemCube', x, y, z, U)
+    N = 30
+    lrs = [.05, .1, .5, .9]
+    num_layers = [2, 3, 4, 5]
+    num_neurons = 30
+    num_expreriments = 30
+    U_norms = 0
+    for i in range(num_expreriments):
+        U_norms += train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=80)
+    U_norms /= num_expreriments
+    e_norms = (U_norms - L2norm(u_fem30)) / L2norm(u_fem30)
+    plot_heatmap(e_norms, num_layers, lrs, rf'$L^2$ error norm with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'heatmap_lrs_num_layers80')
 
     
