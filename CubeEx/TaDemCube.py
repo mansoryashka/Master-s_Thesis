@@ -386,11 +386,11 @@ if __name__ == '__main__':
         dirichlet['coords'][:, -1] = Ta
         neumann['coords'][:, -1] = Ta
 
-        DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=10)
+        DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=40)
         U_pred = DemCubeTa.evaluate_model(x, y, z, Ta)
-        print(time.perf_counter() - start)
+        print(f'time: {time.perf_counter() - start:.3f} s')
 
         t += dt
         Ta = ca_transient(t)
-        print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
+        # print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
         write_vtk_v2(f'output/CubeTa{i:02d}', x, y, z, U_pred)
