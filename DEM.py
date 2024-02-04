@@ -80,7 +80,7 @@ class DeepEnergyMethod:
                     self.losses[i+1] = loss.item() / max_it
 
                 #       + f'loss: {loss.item():10.5f}')
-                print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}')
+                # print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}')
                 # print(f'Iter: {i+1:2d}, Energy: {loss}')
                 return loss
 
@@ -130,6 +130,7 @@ def L2norm3D(U, Nx, Ny, Nz, dx, dy, dz):
     udotu = np.zeros(n)
     for i in range(n):
         udotu[i] = np.dot(Uxyz[i,:], Uxyz[i,:].T)
-    udotu = udotu.reshape(4*Nx, Ny, Nz)
+    udotu = udotu.reshape(Nx, Ny, Nz)
     L2norm = np.sqrt(sp.simps(sp.simps(sp.simps(udotu, dx=dz), dx=dy), dx=dx))
     return L2norm
+

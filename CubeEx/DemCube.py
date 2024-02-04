@@ -10,6 +10,9 @@ from pathlib import Path
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 350
 
+import seaborn as sns
+sns.set()
+
 import sys
 sys.path.insert(0, "..")
 from DEM import DeepEnergyMethod, dev, MultiLayerNet, L2norm3D
@@ -223,25 +226,55 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                         '\t- lrs AND num_neurons\n\t- lrs AND num_layers\n\t- num_neurons AND num_layers')
     return u_norms
 
+def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, cmap='cividis', data_max=1):
+    fig, ax = plt.subplots(figsize=(5,5))
+    xticks = [str(i) for i in xparameter]
+    yticks = [str(j) for j in yparameter]
+    sns.heatmap(data, annot=True, ax=ax, cmap=cmap,
+                xticklabels=xticks, yticklabels=yticks,
+                cbar=False, vmax=np.max(data[data < data_max]))
+    ### skriv tester for om title, labels og filnavn blir sendt inn!!! ###
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)  
+    ax.set_ylabel(ylabel)
+    fig.savefig(figures_path / Path(figname + '.pdf'))
+
 def write_vtk_v2(filename, x_space, y_space, z_space, U):
     xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
     gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
 
 if __name__ == '__main__':
+    u_fem20 = np.load(arrays_path / 'u_fem20.npy')
+    print(f'FEM: {L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)}')
+
     x = np.linspace(0, L, N_test + 2)[1:-1]
     y = np.linspace(0, D, N_test + 2)[1:-1]
     z = np.linspace(0, H, N_test + 2)[1:-1]
 
-    N = 30
+    N = 20
     lrs = [.05, .1, .5, .9]
     num_layers = [2, 3, 4, 5]
     num_neurons = 30
-    num_expreriments = 30
+    num_expreriments = 1
     U_norms = 0
     for i in range(num_expreriments):
-        U_norms += train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=80)
+        U_norms += train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=40)
     U_norms /= num_expreriments
-    e_norms = (U_norms - L2norm(u_fem30)) / L2norm(u_fem30)
-    plot_heatmap(e_norms, num_layers, lrs, rf'$L^2$ error norm with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'heatmap_lrs_num_layers80')
+    e_norms = (U_norms - L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)) / L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)
+    plot_heatmap(e_norms, num_layers, lrs, rf'$L^2$ error norm with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'heatmap_lrs_num_layers')
+    print(U_norms)
+    print(e_norms)
 
-    
+    # N = 20
+    # lrs = [.05, .1, .5, 1]
+    # num_layers = 3
+    # num_neurons = [10, 20, 30, 40, 50]
+    # num_expreriments = 30
+    # U_norms = 0
+    # for i in range(num_expreriments):
+    #     U_norms += train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=40)
+    # U_norms /= num_expreriments
+    # e_norms = (U_norms - L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)) / L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)
+    # plot_heatmap(e_norms, num_neurons, lrs, rf'$L^2$ error norm with N={N} and {num_layers} hidden layers', 'Number of neurons in hidden layers', r'$\eta$', 'heatmap_lrs_num_neurons')
+    # print(U_norms)
+    # print(e_norms)

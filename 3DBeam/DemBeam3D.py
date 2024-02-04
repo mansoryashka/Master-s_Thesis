@@ -267,7 +267,7 @@ def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, c
 
 if __name__ == '__main__':
     u_fem30 = np.load('stored_arrays/u_fem_N=30.npy')
-    print(f'FEM: {L2norm(u_fem30)} \n')
+    print(f'FEM: {L2norm3D(u_fem30)} \n')
 
 
     x = np.linspace(0, L, 4*N_test + 2)[1:-1]
