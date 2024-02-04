@@ -32,6 +32,7 @@ class DeepEnergyMethod:
         
     def train_model(self, data, dirichlet, neumann, LHD, lr=0.5, max_it=20, epochs=20):
         # data
+        print(data)
         x = torch.from_numpy(data).float().to(dev)
         x.requires_grad_(True)
         optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr, max_iter=max_it)
