@@ -251,30 +251,30 @@ if __name__ == '__main__':
     y = np.linspace(0, D, N_test + 2)[1:-1]
     z = np.linspace(0, H, N_test + 2)[1:-1]
 
-    N = 20
-    lrs = [.05, .1, .5, .9]
-    num_layers = [2, 3, 4, 5]
-    num_neurons = 30
-    num_expreriments = 1
-    U_norms = 0
-    for i in range(num_expreriments):
-        U_norms += train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=40)
-    U_norms /= num_expreriments
-    e_norms = (U_norms - L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)) / L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)
-    plot_heatmap(e_norms, num_layers, lrs, rf'$L^2$ error norm with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'heatmap_lrs_num_layers')
-    print(U_norms)
-    print(e_norms)
-
     # N = 20
-    # lrs = [.05, .1, .5, 1]
-    # num_layers = 3
-    # num_neurons = [10, 20, 30, 40, 50]
-    # num_expreriments = 30
+    # lrs = [.05, .1, .5, .9]
+    # num_layers = [2, 3, 4, 5]
+    # num_neurons = 30
+    # num_expreriments = 1
     # U_norms = 0
     # for i in range(num_expreriments):
     #     U_norms += train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=40)
     # U_norms /= num_expreriments
     # e_norms = (U_norms - L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)) / L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)
-    # plot_heatmap(e_norms, num_neurons, lrs, rf'$L^2$ error norm with N={N} and {num_layers} hidden layers', 'Number of neurons in hidden layers', r'$\eta$', 'heatmap_lrs_num_neurons')
+    # plot_heatmap(e_norms, num_layers, lrs, rf'$L^2$ error norm with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'cube_heatmap_lrs_num_layers')
     # print(U_norms)
     # print(e_norms)
+
+    N = 20
+    lrs = [.05, .1, .5, 1]
+    num_layers = 3
+    num_neurons = [10, 20, 30, 40, 50]
+    num_expreriments = 30
+    U_norms = 0
+    for i in range(num_expreriments):
+        U_norms += train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=40)
+    U_norms /= num_expreriments
+    e_norms = (U_norms - L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)) / L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)
+    plot_heatmap(e_norms, num_neurons, lrs, rf'$L^2$ error norm with N={N} and {num_layers} hidden layers', 'Number of neurons in hidden layers', r'$\eta$', 'cube_heatmap_lrs_num_neurons')
+    print(U_norms)
+    print(e_norms)

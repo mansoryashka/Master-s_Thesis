@@ -7,6 +7,9 @@ from torch.autograd import grad
 from pathlib import Path
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 200
+import seaborn as sns
+sns.set()
+# sns.set_theme()
 
 np.random.seed(2023)
 torch.manual_seed(2023)
@@ -247,6 +250,8 @@ def plot_Ns(Ns, *filenames):
     ax2.set_xlabel('X')
     ax1.set_ylabel('Displacement')
     ax2.set_ylabel('Absolute error')
+    ax1.grid()
+    ax2.grid()
     ax1.legend()
     ax2.legend()
     # plt.show()
@@ -308,8 +313,6 @@ if __name__ == '__main__':
     # u_norms /= num_expreriments
     # du_norms /= num_expreriments
 
-    import seaborn as sns
-    # sns.set()
     # y_ticks=[str(i) for i in lrs]
     # x_ticks=[str(i) for i in num_neurons]
     # fig1, ax1 = plt.subplots(figsize=(5,5))
@@ -326,58 +329,48 @@ if __name__ == '__main__':
     # ax2.set_xlabel('Nr. of neurons in hidden layer')
     # ax1.set_ylabel(r'$\eta$')
     # ax2.set_ylabel(r'$\eta$')
-    # fig1.savefig(figures_path / 'heatmap_lr_neurons1.pdf')
-    # fig2.savefig(figures_path / 'heatmap_lr_neurons2.pdf')
+    # fig1.savefig(figures_path / 'bar_heatmap_lr_neurons1.pdf')
+    # fig2.savefig(figures_path / 'bar_heatmap_lr_neurons2.pdf')
 
     Ns = [100, 500, 1000, 10000]
-    lrs = [.1, .1, .5]
-    num_neurons = [5, 10, 5]
-    u_norms = np.zeros((len(Ns), len(lrs)))
-    du_norms = u_norms.copy()
-    for i, (lr, n) in enumerate(zip(lrs, num_neurons)):
-        for _ in range(num_expreriments):
-            u_norms_i, du_norms_i = train_and_evaluate_model(Ns, lrs=lr, num_neurons=n)
-            u_norms[:, i] += u_norms_i
-            du_norms[:, i] += du_norms_i
+    # lrs = [.1, .1, .5]
+    # num_neurons = [5, 10, 5]
+    # u_norms = np.zeros((len(Ns), len(lrs)))
+    # du_norms = u_norms.copy()
+    # for i, (lr, n) in enumerate(zip(lrs, num_neurons)):
+    #     for _ in range(num_expreriments):
+    #         u_norms_i, du_norms_i = train_and_evaluate_model(Ns, lrs=lr, num_neurons=n)
+    #         u_norms[:, i] += u_norms_i
+    #         du_norms[:, i] += du_norms_i
     
-    u_norms /= num_expreriments
-    du_norms /= num_expreriments
-
-    y_ticks=[str(i) for i in Ns]
-    x_ticks=[f'({i}, {j})' for i, j in zip(lrs, num_neurons)]
-    fig1, ax1 = plt.subplots(figsize=(5,5))
-    fig2, ax2 = plt.subplots(figsize=(5,5))
-    sns.heatmap(u_norms, annot=True, ax=ax1, 
-                cmap='cividis', xticklabels=x_ticks,
-                yticklabels=y_ticks, cbar=False, vmax=np.max(u_norms[u_norms < 1]))
-                # yticklabels=y_ticks, cbar=False, vmax=np.median(u_norms))
-    sns.heatmap(du_norms, annot=True, ax=ax2, 
-                cmap='cividis', xticklabels=x_ticks,
-                yticklabels=y_ticks, cbar=False, vmax=np.max(du_norms[du_norms < 1]))
-                # yticklabels=y_ticks, cbar=False, vmax=np.median(du_norms))
-    ax1.set_title(r'$L^2$ error norm for displacement')
-    ax2.set_title(r'$L^2$ error norm for displacement gradient')
-    ax1.set_xlabel(r'($\eta$, Nr. of neurons in hidden layer)')
-    ax2.set_xlabel(r'($\eta$, Nr. of neurons in hidden layer)')
-    ax1.set_ylabel(r'$N$')
-    ax2.set_ylabel(r'$N$')
-    fig1.savefig(figures_path / 'heatmap_Ns1.pdf')
-    fig2.savefig(figures_path / 'heatmap_Ns2.pdf')
-
-
-
-
-
-    # print(u_norms/num_expreriments)
-    # print(du_norms/num_expreriments)
     # u_norms /= num_expreriments
     # du_norms /= num_expreriments
-    # np.save('stored_arrays/u_norms50exp', u_norms)
-    # np.save('stored_arrays/du_norms50exp', du_norms)
+
+    # y_ticks=[str(i) for i in Ns]
+    # x_ticks=[f'({i}, {j})' for i, j in zip(lrs, num_neurons)]
+    # fig1, ax1 = plt.subplots(figsize=(5,5))
+    # fig2, ax2 = plt.subplots(figsize=(5,5))
+    # sns.heatmap(u_norms, annot=True, ax=ax1, 
+    #             cmap='cividis', xticklabels=x_ticks,
+    #             yticklabels=y_ticks, cbar=False, vmax=np.max(u_norms[u_norms < 1]))
+    #             # yticklabels=y_ticks, cbar=False, vmax=np.median(u_norms))
+    # sns.heatmap(du_norms, annot=True, ax=ax2, 
+    #             cmap='cividis', xticklabels=x_ticks,
+    #             yticklabels=y_ticks, cbar=False, vmax=np.max(du_norms[du_norms < 1]))
+    #             # yticklabels=y_ticks, cbar=False, vmax=np.median(du_norms))
+    # ax1.set_title(r'$L^2$ error norm for displacement')
+    # ax2.set_title(r'$L^2$ error norm for displacement gradient')
+    # ax1.set_xlabel(r'($\eta$, Nr. of neurons in hidden layer)')
+    # ax2.set_xlabel(r'($\eta$, Nr. of neurons in hidden layer)')
+    # ax1.set_ylabel(r'$N$')
+    # ax2.set_ylabel(r'$N$')
+    # fig1.savefig(figures_path / 'bar_heatmap_Ns1.pdf')
+    # fig2.savefig(figures_path / 'bar_heatmap_Ns2.pdf')
 
 
-    # train_and_evaluate_model(Ns, num_epochs=30)
-    # # plot_Ns(Ns, 'dem_fig1', 'dem_fig2', 'dem_fig3', 'dem_fig4')
+
+    # train_and_evaluate_model(Ns, num_epochs=3)
+    # plot_Ns(Ns, 'dem_fig1', 'dem_fig2', 'dem_fig3', 'dem_fig4')
     # for N in Ns:
     #     total_loss = np.load(arrays_path / f'total_loss{N}.npy')
     #     plt.figure()

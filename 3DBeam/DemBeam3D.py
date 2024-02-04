@@ -277,7 +277,7 @@ if __name__ == '__main__':
 
     # U_norms = train_and_evaluate(Ns, num_epochs=20, num_layers=3)
     # print(U_norms)
-    # print((U_norms - L2norm(u_fem30))/L2norm(u_fem30))
+    # print((U_norms - L2norm3D(u_fem30))/L2norm3D(u_fem30))
 
     # N = 30
     # lrs = [.05, .1, .5, .9]
@@ -288,8 +288,8 @@ if __name__ == '__main__':
     # for i in range(num_expreriments):
     #     U_norms += train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=80)
     # U_norms /= num_expreriments
-    # e_norms = (U_norms - L2norm(u_fem30)) / L2norm(u_fem30)
-    # plot_heatmap(e_norms, num_layers, lrs, rf'$L^2$ error norm with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'heatmap_lrs_num_layers80')
+    # e_norms = (U_norms - L2norm3D(u_fem30)) / L2norm3D(u_fem30)
+    # plot_heatmap(e_norms, num_layers, lrs, rf'$L^2$ error norm with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers80')
 
 
     N = 30
@@ -301,10 +301,10 @@ if __name__ == '__main__':
     for i in range(num_expreriments):
         U_norms += train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=80)
     U_norms /= num_expreriments
-    e_norms = (U_norms - L2norm(u_fem30)) / L2norm(u_fem30)
-    plot_heatmap(e_norms, num_neurons, lrs, rf'$L^2$ error norm with N={N} and {num_layers} hidden layers', 'Number of neurons in hidden layers', r'$\eta$', 'heatmap_lrs_num_neurons80')
+    e_norms = (U_norms - L2norm3D(u_fem30)) / L2norm3D(u_fem30)
+    plot_heatmap(e_norms, num_neurons, lrs, rf'$L^2$ error norm with N={N} and {num_layers} hidden layers', 'Number of neurons in hidden layers', r'$\eta$', 'beam_heatmap_lrs_num_neurons80')
     print(U_norms)
-    print((U_norms - L2norm(u_fem30))/L2norm(u_fem30))
+    print((U_norms - L2norm3D(u_fem30))/L2norm3D(u_fem30))
 
 
     # Ns = [20, 30, 40, 50, 60]
@@ -318,4 +318,4 @@ if __name__ == '__main__':
     # U_norms /= num_expreriments
     # print(U_norms)
     # e_norms = (U_norms - L2norm(u_fem30)) / L2norm(u_fem30)
-    # plot_heatmap(e_norms, Ns, lrs, rf'$L^2$ error norm with {num_neurons} hidden neurons and {num_layers} hidden layers', 'N', r'$\eta$', 'heatmap_lrs_N')
+    # plot_heatmap(e_norms, Ns, lrs, rf'$L^2$ error norm with {num_neurons} hidden neurons and {num_layers} hidden layers', 'N', r'$\eta$', 'beam_heatmap_lrs_N')
