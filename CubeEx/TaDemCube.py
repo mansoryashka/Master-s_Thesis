@@ -365,7 +365,7 @@ if __name__ == '__main__':
     num_steps = int(T/dt + 1)
     Ta = ca_transient(t)
 
-    N=30; lr=.5; num_neurons=20; num_layers=3
+    N=30; lr=.8; num_neurons=30; num_layers=5
     train_domain, dirichlet, neumann = define_domain(L, H, D, N)
     print(dirichlet['coords'].shape)
     model = MultiLayerNet(4, *([num_neurons]*num_layers), 3)
@@ -388,7 +388,7 @@ if __name__ == '__main__':
         dirichlet['coords'][:, -1] = Ta
         neumann['coords'][:, -1] = Ta
 
-        DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=30)
+        DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=50)
         U_pred = DemCubeTa.evaluate_model(x, y, z, Ta)
         print(f'time: {time.perf_counter() - start:.3f} s')
 
