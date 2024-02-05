@@ -73,6 +73,7 @@ def define_domain(l, h, d, N=25):
     ax.set_ylabel('y')
     ax.set_zlabel('z')
     ax.view_init(elev=20, azim=-75)
+    plt.close()
     # plt.show()
     # exit()
 
@@ -310,14 +311,14 @@ def ca_transient(t, tstart=0.05):
         -1 / (1 - tau2 / tau1)
     )
     # ca = np.zeros_like(t)
-
+    xt = 0.5*t
     # ca[t <= tstart] = ca_diast
-    if 2*t % 1 <= tstart:
+    if xt % 1 <= tstart:
         ca = ca_diast
     else:
         ca = (ca_ampl - ca_diast) / beta * (
-            np.exp(-(2*t % 1- tstart) / tau1)
-            - np.exp(-(2*t % 1- tstart) / tau2)) + ca_diast
+            np.exp(-(xt % 1- tstart) / tau1)
+            - np.exp(-(xt % 1- tstart) / tau2)) + ca_diast
 
     return ca
 
@@ -387,128 +388,128 @@ if __name__ == '__main__':
         dirichlet['coords'][:, -1] = Ta
         neumann['coords'][:, -1] = Ta
 
-        DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=60)
+        DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=30)
         U_pred = DemCubeTa.evaluate_model(x, y, z, Ta)
         print(f'time: {time.perf_counter() - start:.3f} s')
 
         t += dt
         Ta = ca_transient(t)
-        # print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
+        print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
         write_vtk_v2(f'output/rough/CubeTa{i:02d}', x, y, z, U_pred)
 
     ### finer
-    T = 1.2
-    dt = 0.01
-    t = 0
-    num_steps = int(T/dt + 1)
-    Ta = ca_transient(t)
+    # T = 1.2
+    # dt = 0.01
+    # t = 0
+    # num_steps = int(T/dt + 1)
+    # Ta = ca_transient(t)
 
-    N=20; lr=.5; num_neurons=20; num_layers=3
-    train_domain, dirichlet, neumann = define_domain(L, H, D, N)
-    print(dirichlet['coords'].shape)
-    model = MultiLayerNet(4, *([num_neurons]*num_layers), 3)
-    DemCubeTa = DeepEnergyMethodCubeTa(model, energy)
-    Ta_arr = np.zeros((train_domain.shape[0], 1))
+    # N=20; lr=.5; num_neurons=20; num_layers=3
+    # train_domain, dirichlet, neumann = define_domain(L, H, D, N)
+    # print(dirichlet['coords'].shape)
+    # model = MultiLayerNet(4, *([num_neurons]*num_layers), 3)
+    # DemCubeTa = DeepEnergyMethodCubeTa(model, energy)
+    # Ta_arr = np.zeros((train_domain.shape[0], 1))
 
-    Ta_arr[:] = Ta
-    Ta_arr_for_bc = Ta_arr[:dirichlet['coords'].shape[0]]
-    train_domain_wTa = np.concatenate((train_domain, Ta_arr), axis=1)
-    dirichlet['coords'] = np.concatenate((dirichlet['coords'], Ta_arr_for_bc), axis=1)
-    neumann['coords'] = np.concatenate((neumann['coords'], Ta_arr_for_bc), axis=1)
+    # Ta_arr[:] = Ta
+    # Ta_arr_for_bc = Ta_arr[:dirichlet['coords'].shape[0]]
+    # train_domain_wTa = np.concatenate((train_domain, Ta_arr), axis=1)
+    # dirichlet['coords'] = np.concatenate((dirichlet['coords'], Ta_arr_for_bc), axis=1)
+    # neumann['coords'] = np.concatenate((neumann['coords'], Ta_arr_for_bc), axis=1)
 
-    import time
-    for i in range(num_steps):
-        start = time.perf_counter()
+    # import time
+    # for i in range(num_steps):
+    #     start = time.perf_counter()
 
-        Ta_arr[:] = Ta
-        Ta_arr_for_bc = Ta_arr[:dirichlet['coords'].shape[0]]
-        train_domain_wTa[:,-1] = Ta
-        dirichlet['coords'][:, -1] = Ta
-        neumann['coords'][:, -1] = Ta
+    #     Ta_arr[:] = Ta
+    #     Ta_arr_for_bc = Ta_arr[:dirichlet['coords'].shape[0]]
+    #     train_domain_wTa[:,-1] = Ta
+    #     dirichlet['coords'][:, -1] = Ta
+    #     neumann['coords'][:, -1] = Ta
 
-        DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=60)
-        U_pred = DemCubeTa.evaluate_model(x, y, z, Ta)
-        print(f'time: {time.perf_counter() - start:.3f} s')
+    #     DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=60)
+    #     U_pred = DemCubeTa.evaluate_model(x, y, z, Ta)
+    #     print(f'time: {time.perf_counter() - start:.3f} s')
 
-        t += dt
-        Ta = ca_transient(t)
-        # print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
-        write_vtk_v2(f'output/finer/CubeTa{i:02d}', x, y, z, U_pred)
+    #     t += dt
+    #     Ta = ca_transient(t)
+    #     # print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
+    #     write_vtk_v2(f'output/finer/CubeTa{i:02d}', x, y, z, U_pred)
 
-    ### finest
-    T = 1.2
-    dt = 0.005
-    t = 0
-    num_steps = int(T/dt + 1)
-    Ta = ca_transient(t)
+    # ### finest
+    # T = 1.2
+    # dt = 0.005
+    # t = 0
+    # num_steps = int(T/dt + 1)
+    # Ta = ca_transient(t)
 
-    N=20; lr=.5; num_neurons=30; num_layers=3
-    train_domain, dirichlet, neumann = define_domain(L, H, D, N)
-    print(dirichlet['coords'].shape)
-    model = MultiLayerNet(4, *([num_neurons]*num_layers), 3)
-    DemCubeTa = DeepEnergyMethodCubeTa(model, energy)
-    Ta_arr = np.zeros((train_domain.shape[0], 1))
+    # N=20; lr=.5; num_neurons=30; num_layers=3
+    # train_domain, dirichlet, neumann = define_domain(L, H, D, N)
+    # print(dirichlet['coords'].shape)
+    # model = MultiLayerNet(4, *([num_neurons]*num_layers), 3)
+    # DemCubeTa = DeepEnergyMethodCubeTa(model, energy)
+    # Ta_arr = np.zeros((train_domain.shape[0], 1))
 
-    Ta_arr[:] = Ta
-    Ta_arr_for_bc = Ta_arr[:dirichlet['coords'].shape[0]]
-    train_domain_wTa = np.concatenate((train_domain, Ta_arr), axis=1)
-    dirichlet['coords'] = np.concatenate((dirichlet['coords'], Ta_arr_for_bc), axis=1)
-    neumann['coords'] = np.concatenate((neumann['coords'], Ta_arr_for_bc), axis=1)
+    # Ta_arr[:] = Ta
+    # Ta_arr_for_bc = Ta_arr[:dirichlet['coords'].shape[0]]
+    # train_domain_wTa = np.concatenate((train_domain, Ta_arr), axis=1)
+    # dirichlet['coords'] = np.concatenate((dirichlet['coords'], Ta_arr_for_bc), axis=1)
+    # neumann['coords'] = np.concatenate((neumann['coords'], Ta_arr_for_bc), axis=1)
 
-    import time
-    for i in range(num_steps):
-        start = time.perf_counter()
+    # import time
+    # for i in range(num_steps):
+    #     start = time.perf_counter()
 
-        Ta_arr[:] = Ta
-        Ta_arr_for_bc = Ta_arr[:dirichlet['coords'].shape[0]]
-        train_domain_wTa[:,-1] = Ta
-        dirichlet['coords'][:, -1] = Ta
-        neumann['coords'][:, -1] = Ta
+    #     Ta_arr[:] = Ta
+    #     Ta_arr_for_bc = Ta_arr[:dirichlet['coords'].shape[0]]
+    #     train_domain_wTa[:,-1] = Ta
+    #     dirichlet['coords'][:, -1] = Ta
+    #     neumann['coords'][:, -1] = Ta
 
-        DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=60)
-        U_pred = DemCubeTa.evaluate_model(x, y, z, Ta)
-        print(f'time: {time.perf_counter() - start:.3f} s')
+    #     DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=60)
+    #     U_pred = DemCubeTa.evaluate_model(x, y, z, Ta)
+    #     print(f'time: {time.perf_counter() - start:.3f} s')
 
-        t += dt
-        Ta = ca_transient(t)
-        # print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
-        write_vtk_v2(f'output/finest60/CubeTa{i:02d}', x, y, z, U_pred)
+    #     t += dt
+    #     Ta = ca_transient(t)
+    #     # print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
+    #     write_vtk_v2(f'output/finest60/CubeTa{i:02d}', x, y, z, U_pred)
 
-    ### finest
-    T = 1.2
-    dt = 0.005
-    t = 0
-    num_steps = int(T/dt + 1)
-    Ta = ca_transient(t)
+    # ### finest
+    # T = 1.2
+    # dt = 0.005
+    # t = 0
+    # num_steps = int(T/dt + 1)
+    # Ta = ca_transient(t)
 
-    N=20; lr=.5; num_neurons=30; num_layers=3
-    train_domain, dirichlet, neumann = define_domain(L, H, D, N)
-    print(dirichlet['coords'].shape)
-    model = MultiLayerNet(4, *([num_neurons]*num_layers), 3)
-    DemCubeTa = DeepEnergyMethodCubeTa(model, energy)
-    Ta_arr = np.zeros((train_domain.shape[0], 1))
+    # N=20; lr=.5; num_neurons=30; num_layers=3
+    # train_domain, dirichlet, neumann = define_domain(L, H, D, N)
+    # print(dirichlet['coords'].shape)
+    # model = MultiLayerNet(4, *([num_neurons]*num_layers), 3)
+    # DemCubeTa = DeepEnergyMethodCubeTa(model, energy)
+    # Ta_arr = np.zeros((train_domain.shape[0], 1))
 
-    Ta_arr[:] = Ta
-    Ta_arr_for_bc = Ta_arr[:dirichlet['coords'].shape[0]]
-    train_domain_wTa = np.concatenate((train_domain, Ta_arr), axis=1)
-    dirichlet['coords'] = np.concatenate((dirichlet['coords'], Ta_arr_for_bc), axis=1)
-    neumann['coords'] = np.concatenate((neumann['coords'], Ta_arr_for_bc), axis=1)
+    # Ta_arr[:] = Ta
+    # Ta_arr_for_bc = Ta_arr[:dirichlet['coords'].shape[0]]
+    # train_domain_wTa = np.concatenate((train_domain, Ta_arr), axis=1)
+    # dirichlet['coords'] = np.concatenate((dirichlet['coords'], Ta_arr_for_bc), axis=1)
+    # neumann['coords'] = np.concatenate((neumann['coords'], Ta_arr_for_bc), axis=1)
 
-    import time
-    for i in range(num_steps):
-        start = time.perf_counter()
+    # import time
+    # for i in range(num_steps):
+    #     start = time.perf_counter()
 
-        Ta_arr[:] = Ta
-        Ta_arr_for_bc = Ta_arr[:dirichlet['coords'].shape[0]]
-        train_domain_wTa[:,-1] = Ta
-        dirichlet['coords'][:, -1] = Ta
-        neumann['coords'][:, -1] = Ta
+    #     Ta_arr[:] = Ta
+    #     Ta_arr_for_bc = Ta_arr[:dirichlet['coords'].shape[0]]
+    #     train_domain_wTa[:,-1] = Ta
+    #     dirichlet['coords'][:, -1] = Ta
+    #     neumann['coords'][:, -1] = Ta
 
-        DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=80)
-        U_pred = DemCubeTa.evaluate_model(x, y, z, Ta)
-        print(f'time: {time.perf_counter() - start:.3f} s')
+    #     DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=80)
+    #     U_pred = DemCubeTa.evaluate_model(x, y, z, Ta)
+    #     print(f'time: {time.perf_counter() - start:.3f} s')
 
-        t += dt
-        Ta = ca_transient(t)
-        # print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
-        write_vtk_v2(f'output/finest60/CubeTa{i:02d}', x, y, z, U_pred)
+    #     t += dt
+    #     Ta = ca_transient(t)
+    #     # print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
+    #     write_vtk_v2(f'output/finest60/CubeTa{i:02d}', x, y, z, U_pred)
