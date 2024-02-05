@@ -37,7 +37,7 @@ d_cond = [0, 0, 0]
 n_boundary = L
 n_cond = [-0.5, 0, 0]
 
-def define_domain(l, h, d, N=25):
+def define_domain(L, H, D, N=25):
     x = np.linspace(0, L, N)
     y = np.linspace(0, H, N)
     z = np.linspace(0, D, N)

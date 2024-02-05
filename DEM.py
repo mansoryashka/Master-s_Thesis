@@ -32,7 +32,7 @@ class DeepEnergyMethod:
         
     def train_model(self, data, dirichlet, neumann, LHD, lr=0.5, max_it=20, epochs=20):
         # data
-        print(data)
+        # print(data)
         x = torch.from_numpy(data).float().to(dev)
         x.requires_grad_(True)
         optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr, max_iter=max_it)
@@ -46,9 +46,9 @@ class DeepEnergyMethod:
         neuBC_coords.requires_grad_(True)
         neuBC_values = torch.from_numpy(neumann['values']).float().to(dev)
 
-        self.losses = {}
+        self.losses = []
         start_time = time.time()
-        for i in range(epochs):
+        for i in range(epochs+1):
             def closure():
                 # internal loss
                 u_pred = self.getU(self.model, x)
@@ -71,21 +71,18 @@ class DeepEnergyMethod:
                 # print(bc_neu.shape); exit()
                 energy_loss = internal_loss - torch.sum(external_loss)
                 loss = internal_loss - torch.sum(external_loss) + boundary_loss
-
                 optimizer.zero_grad()
                 loss.backward()
-                
-                if self.losses.get(i+1):
-                    self.losses[i+1] += loss.item() / max_it
-                else:
-                    self.losses[i+1] = loss.item() / max_it
 
+                self.current_loss = loss
                 #       + f'loss: {loss.item():10.5f}')
                 # print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}')
                 # print(f'Iter: {i+1:2d}, Energy: {loss}')
                 return loss
 
             optimizer.step(closure)
+            if i % 5 == 0:
+                self.losses.append(self.current_loss.detach().cpu())
         # return self.model
 
     def getU(self, model, x):

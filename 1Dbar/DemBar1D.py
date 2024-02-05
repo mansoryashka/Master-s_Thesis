@@ -115,6 +115,8 @@ def energy_pen(input):
     return torch.mean(input)
 
 def L2norm(input, target, x=None, dx=1):
+    if x:
+        raise NotImplementedError('L2norm is not implemented for non-uniform x')
     L2 =  np.sqrt(np.trapz((input-target)**2, dx=dx, axis=0)) / np.sqrt(np.trapz(target**2, dx=dx, axis=0))
     return L2
 

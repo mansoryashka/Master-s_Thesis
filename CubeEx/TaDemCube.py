@@ -322,6 +322,11 @@ def ca_transient(t, tstart=0.05):
 
     return ca
 
+def L2error(u_dem, u_fem):
+    e_L2 = (L2norm3D(u_dem, N_test, N_test, N_test, dx, dy, dz) - L2norm3D(u_fem, N_test, N_test, N_test, dx, dy, dz)
+            / L2norm3D(u_fem, N_test, N_test, N_test, dx, dy, dz))
+    return e_L2
+
 if __name__ == '__main__':
     u_fem20 = np.load(arrays_path / 'u_fem20.npy')
     print(f'FEM: {L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)}')
@@ -365,7 +370,7 @@ if __name__ == '__main__':
     num_steps = int(T/dt + 1)
     Ta = ca_transient(t)
 
-    N=30; lr=.8; num_neurons=30; num_layers=5
+    N=30; lr=1.0; num_neurons=30; num_layers=2
     train_domain, dirichlet, neumann = define_domain(L, H, D, N)
     print(dirichlet['coords'].shape)
     model = MultiLayerNet(4, *([num_neurons]*num_layers), 3)
@@ -379,6 +384,7 @@ if __name__ == '__main__':
     neumann['coords'] = np.concatenate((neumann['coords'], Ta_arr_for_bc), axis=1)
 
     import time
+    print(f'N: {N}, lr: {lr}, nn: {num_neurons}, nl: {num_layers}')
     for i in range(num_steps):
         start = time.perf_counter()
 
@@ -388,15 +394,16 @@ if __name__ == '__main__':
         dirichlet['coords'][:, -1] = Ta
         neumann['coords'][:, -1] = Ta
 
-        DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=50)
+        DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=20)
         U_pred = DemCubeTa.evaluate_model(x, y, z, Ta)
         print(f'time: {time.perf_counter() - start:.3f} s')
-
+        print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
+        print(L2error(U_pred, u_fem20))
         t += dt
         Ta = ca_transient(t)
-        print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
         write_vtk_v2(f'output/rough/CubeTa{i:02d}', x, y, z, U_pred)
 
+    
     ### finer
     # T = 1.2
     # dt = 0.01
