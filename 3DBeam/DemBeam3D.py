@@ -288,8 +288,8 @@ def plot_losses(losses, parameter1, parameter2, dim1, dim2, num_epochs, title, f
     fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(10, 5))
     linestyles = ['--v', '--o', '--x', '--s', '--P', '--*']
     xdim, ydim, _ = losses.shape
-    ax1.plot(np.arange(20, num_epochs+1, 5), losses[4:, dim1, :])#, linestyles[:xdim])
-    ax2.plot(np.arange(20, num_epochs+1, 5), losses[4:, :, dim2])#, linestyles[:ydim])
+    ax1.semilogy(np.arange(0, num_epochs+1, 5), losses[:, dim1, :])#, linestyles[:xdim])
+    ax2.semilogy(np.arange(0, num_epochs+1, 5), losses[:, :, dim2])#, linestyles[:ydim])
     ax1.legend([f'{parameter1[0]} = {nn}' for nn in parameter1[1]])
     ax2.legend([f'{parameter2[0]} = {lr}' for lr in parameter2[1]])
     # ax1.set_ylim(bottom=0.0001)
@@ -302,8 +302,8 @@ def plot_losses(losses, parameter1, parameter2, dim1, dim2, num_epochs, title, f
     fig.savefig(figures_path / Path(filename + '.pdf'))
 
 if __name__ == '__main__':
-    u_fem30 = np.load('stored_arrays/u_fem_N=30.npy')
-    print(f'FEM: {L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)} \n')
+    # u_fem30 = np.load('stored_arrays/u_fem_N30.npy')
+    # print(f'FEM: {L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)} \n')
 
 
     x = np.linspace(0, L, 4*N_test + 2)[1:-1]
@@ -341,17 +341,25 @@ if __name__ == '__main__':
     num_expreriments = 30
     U_norms = 0
     losses = 0
-    for i in range(num_expreriments):
-        U_norms_i, losses_i= train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=40)
-        U_norms += U_norms_i
-        losses += losses_i
-    U_norms /= num_expreriments
-    losses /= num_expreriments
-    np.save('losses_lrs_nl80', losses)
-    e_norms = (U_norms - L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)) / L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+    # for i in range(num_expreriments):
+    #     U_norms_i, losses_i= train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=40)
+    #     U_norms += U_norms_i
+    #     losses += losses_i
+    # U_norms /= num_expreriments
+    # losses /= num_expreriments
+    # np.save('losses_lrs_nl80', losses)
+    # e_norms = (U_norms - L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)) / L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
     # print(e_norms)
-    plot_heatmap(e_norms, num_layers, lrs, rf'$L^2$ error norm with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers')
-    plot_heatmap(np.abs(e_norms), num_layers, lrs, rf'$L^2$ error norm with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layersABS')
+    # plot_heatmap(e_norms, num_layers, lrs, rf'$L^2$ error norm with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers')
+    # plot_heatmap(np.abs(e_norms), num_layers, lrs, rf'$L^2$ error norm with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layersABS')
+
+    losses_lrs_nl = np.load(arrays_path / 'losses_lrs_nl.npy')
+    # print(losses_lrs_nl)
+    losses_lrs_nl += np.abs(np.min(losses_lrs_nl[~np.isnan(losses_lrs_nl)]))
+    # print(losses_lrs_nl)
+    # print(np.min(losses_lrs_nl))
+
+    plot_losses(losses_lrs_nl, [r'$\eta$ = ', lrs], ['# of hidden layers', num_layers], 2, 1, 40, [f'{num_layers[2]} hidden layers',rf'$\eta$ = {lrs[1]}'], 'beam_loss_lrs_nl')
 
     # N = 50
     # lrs = [.05, .1, .5, 1]
