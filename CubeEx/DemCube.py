@@ -163,8 +163,8 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
             # calculate L2norm
             u_norms[i] = L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz)
     # train on many learning rates and number of neurons in hidden layers
-    elif isinstance((lrs and num_neurons), (list, tuple)):
-    # elif isinstance(lrs, (list, tuple)) and isinstance(num_neurons, (list, tuple)) :
+    # elif isinstance(lrs (list, tuple)):
+    elif isinstance(lrs, (list, tuple)) and isinstance(num_neurons, (list, tuple)) :
         print('lrs, num_n')
         u_norms = np.zeros((len(lrs), len(num_neurons)))
         for j, n in enumerate(num_neurons):
@@ -207,6 +207,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 U_pred = DemBeam.evaluate_model(x, y, z)
 
                 u_norms[i, j] = L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz)
+        torch.save(model.state_dict(), models_path / 'stored_model')
     # train on many N values and learning rates
     # elif isinstance((Ns and lrs), (list, tuple)):
     elif isinstance(Ns, (list, tuple)) and isinstance(lrs, (list, tuple)) :
@@ -275,13 +276,13 @@ if __name__ == '__main__':
     lrs = 0.9
     num_layers = [2, 3, 4, 5]
     num_neurons = [20, 30, 40, 50]
-    num_expreriments = 30
+    num_expreriments = 3
     U_norms = 0
     for i in range(num_expreriments):
-        U_norms += train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=60)
+        U_norms += train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=5)
     U_norms /= num_expreriments
     e_norms = (U_norms - L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)) / L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)
-    plot_heatmap(e_norms, num_neurons, num_layers, rf'$L^2$ error norm with N={N} and $\eta$ = {lrs}', 'Number of hidden neurons', 'Number of hidden layers', 'cube_heatmap_nn_nl')
+    # plot_heatmap(e_norms, num_neurons, num_layers, rf'$L^2$ error norm with N={N} and $\eta$ = {lrs}', 'Number of hidden neurons', 'Number of hidden layers', 'cube_heatmap_nn_nl')
     # plot_heatmap(np.abs(e_norms), num_neurons, lrs, rf'$L^2$ error norm with N={N} and $\eta$ = {lrs}', 'Number of layers', r'$\eta$', 'cube_heatmap_nn_nlABS')
     # print(U_norms)
     # print(e_norms)
