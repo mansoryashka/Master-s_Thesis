@@ -302,7 +302,7 @@ def ca_transient(t, tstart=0.05):
     tau2 = 0.110
 
     ca_diast = 0.0
-    ca_ampl = 50.0
+    ca_ampl = 60.0
 
     beta = (tau1 / tau2) ** (-1 / (tau1 / tau2 - 1)) - (tau1 / tau2) ** (
         -1 / (1 - tau2 / tau1)
@@ -360,7 +360,7 @@ if __name__ == '__main__':
         # print(i)
         start = time.perf_counter()
 
-        DemCubeTa.train_model(train_domain_wt, Ta, dirichlet, neumann, LHD, lr, epochs=40)
+        DemCubeTa.train_model(train_domain_wt, Ta, dirichlet, neumann, LHD, lr, epochs=30)
         print(f'time: {time.perf_counter() - start:.3f} s')
 
         t += dt
@@ -375,7 +375,7 @@ if __name__ == '__main__':
 
         # print(L2error(U_pred, u_fem20))
     #forskjøvet t array
-    t_array = np.linspace(0, T, int(T/dt+1) + 3, endpoint=True)[1:-1]
+    t_array = np.linspace(0, T, int(T/dt+1) + 2, endpoint=False)[1:-1]
     # print(t_array); exit()
     for i, t in enumerate(t_array):
         Ta = ca_transient(t)
