@@ -35,7 +35,7 @@ d_boundary = 0.0
 d_cond = [0, 0, 0]
 
 n_boundary = L
-n_cond = [1.0, 0, 0]
+n_cond = [-0.5, 0, 0]
 
 def define_domain(l, h, d, N=25):
     x = np.linspace(0, L, N)
@@ -305,7 +305,7 @@ def ca_transient(t, tstart=0.15):
     tau2 = 0.110
 
     ca_diast = 0.0
-    ca_ampl = 60.0
+    ca_ampl = 1.0
 
     beta = (tau1 / tau2) ** (-1 / (tau1 / tau2 - 1)) - (tau1 / tau2) ** (
         -1 / (1 - tau2 / tau1)
@@ -349,6 +349,7 @@ if __name__ == '__main__':
     t = 0
     num_steps = int(T/dt + 1)
     Ta = ca_transient(t)
+    t_array = np.linspace(0, T, num_steps)
 
     N=30; lr=0.1; num_neurons=30; num_layers=3
     train_domain, dirichlet, neumann = define_domain(L, H, D, N)
@@ -378,17 +379,21 @@ if __name__ == '__main__':
         neumann['coords'][:, -1] = Ta
 
         DemCubeTa.train_model(train_domain_wTa, Ta, dirichlet, neumann, LHD, lr, epochs=30)
-        print(f'time: {time.perf_counter() - start:.3f} s')
-        t += dt
-        Ta = ca_transient(t)
-    torch.save(DemCubeTa.model.state_dict(), models_path / 'model002')
+        # print(f'time: {time.perf_counter() - start:.3f} s')
+        # t += dt
+        # Ta = ca_transient(t)
+        Ta = ca_transient(t_array[i])
+        # print(f'{Ta:.3f}', end=', ')
+    # torch.save(DemCubeTa.model.state_dict(), models_path / 'model002')
     # DemCubeTa.model.load_state_dict(torch.load(models_path / 'model002_90'))
     #forskjøvet Ta array
     # t_array = np.linspace(0, T, int(T/dt+1)+2, endpoint=False)[1:-1]
     t_array = np.linspace(0, T, int(T/dt+1), endpoint=True)
-    print(t_array)
+    # print(t_array)
+    print('\n')
     for i, t in enumerate(t_array):
         Ta_eval = ca_transient(t)
+        # print(f'{Ta_eval:.3f}', end=', ')
         U_pred = DemCubeTa.evaluate_model(x, y, z, Ta_eval)
         print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
         write_vtk_v2(f'output/m1/CubeTa{i:02d}', x, y, z, U_pred)
