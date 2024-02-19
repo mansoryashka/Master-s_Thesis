@@ -118,7 +118,6 @@ class DeepEnergyMethodCubeTa(DeepEnergyMethod):
 
                 # boundary loss
                 dir_pred = self.getU(self.model, dirBC_coords)
-                # print(torch.norm(dir_pred))
                 bc_dir = LHD[1]*LHD[2]*loss_squared_sum(dir_pred, dirBC_values)
                 boundary_loss = torch.sum(bc_dir)
 
@@ -126,8 +125,7 @@ class DeepEnergyMethodCubeTa(DeepEnergyMethod):
                 neu_pred = self.getU(self.model, neuBC_coords)
                 bc_neu = torch.matmul((neu_pred + neuBC_coords[:,:-1]).unsqueeze(1), neuBC_values.unsqueeze(2))
                 external_loss = LHD[1]*LHD[2]*penalty(bc_neu)
-                # print(neu_pred.shape, neuBC_coords.shape, neuBC_values.shape)
-                # print(bc_neu.shape); exit()
+       
                 energy_loss = internal_loss - torch.sum(external_loss)
                 loss = internal_loss - torch.sum(external_loss) + boundary_loss
 
@@ -172,7 +170,7 @@ class DeepEnergyMethodCubeTa(DeepEnergyMethod):
 # mu = E / (2*(1 + nu))
 mu = 50
 # mu = 15
-def energy(u, x, t=.5):
+def energy(u, x, t):
     # f0 = torch.from_numpy(np.array([1, 0, 0]))
     kappa = 1e3
     Ta = ca_transient(t)
@@ -304,7 +302,7 @@ def ca_transient(t, tstart=0.05):
     tau2 = 0.110
 
     ca_diast = 0.0
-    ca_ampl = 60.0
+    ca_ampl = 5.0
 
     beta = (tau1 / tau2) ** (-1 / (tau1 / tau2 - 1)) - (tau1 / tau2) ** (
         -1 / (1 - tau2 / tau1)
@@ -321,6 +319,10 @@ def ca_transient(t, tstart=0.05):
 
     return ca
 
+# for t in np.linspace(0, 1.2, int(1.2/0.02) + 1):
+#     plt.scatter(t, ca_transient(t))
+# plt.savefig('ta.pdf'); exit()
+
 def L2error(u_dem, u_fem):
     e_L2 = (L2norm3D(u_dem, N_test, N_test, N_test, dx, dy, dz) - L2norm3D(u_fem, N_test, N_test, N_test, dx, dy, dz)
             / L2norm3D(u_fem, N_test, N_test, N_test, dx, dy, dz))
@@ -336,13 +338,12 @@ if __name__ == '__main__':
 
     ### rough
     T = 1.2
-    dt = 0.05
+    dt = 0.01
     t = 0
     num_steps = int(T/dt + 1)
 
     N=30; lr=0.1; num_neurons=30; num_layers=3
     train_domain, dirichlet, neumann = define_domain(L, H, D, N)
-    print(dirichlet['coords'].shape)
     model = MultiLayerNet(4, *([num_neurons]*num_layers), 3)
     DemCubeTa = DeepEnergyMethodCubeTa(model, energy)
     t_arr = np.zeros((train_domain.shape[0], 1))
@@ -359,16 +360,17 @@ if __name__ == '__main__':
         # print(i)
         start = time.perf_counter()
 
+        DemCubeTa.train_model(train_domain_wt, t, dirichlet, neumann, LHD, lr, epochs=30)
+        print(f'time: {time.perf_counter() - start:.3f} s')
+
+        t += dt
         t_arr[:] = t
         t_arr_for_bc = t_arr[:dirichlet['coords'].shape[0]]
         train_domain_wt[:,-1] = t
         dirichlet['coords'][:, -1] = t
         neumann['coords'][:, -1] = t
 
-        DemCubeTa.train_model(train_domain_wt, t, dirichlet, neumann, LHD, lr, epochs=50)
-        print(f'time: {time.perf_counter() - start:.3f} s')
         # print(L2error(U_pred, u_fem20))
-        t += dt
 
     #forskjøvet t array
     t_array = np.linspace(0, T, int(T/dt+1) + 2, endpoint=True)[1:-1]
