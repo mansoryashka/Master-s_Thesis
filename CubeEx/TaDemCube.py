@@ -342,7 +342,7 @@ if __name__ == '__main__':
     t = 0
     num_steps = int(T/dt + 1)
     Ta = ca_transient(t)
-    N=30; lr=0.1; num_neurons=30; num_layers=3
+    N=20; lr=0.1; num_neurons=30; num_layers=3
     train_domain, dirichlet, neumann = define_domain(L, H, D, N)
     model = MultiLayerNet(4, *([num_neurons]*num_layers), 3)
     DemCubeTa = DeepEnergyMethodCubeTa(model, energy)
