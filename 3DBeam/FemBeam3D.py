@@ -38,9 +38,15 @@ def FEM_3D(N):
     # B = F * F.T
     # C = F.T * F
     # I1 = dolfin.tr(C)
+
+    F = dolfin.grad(u) + dolfin.Identity(3)
+    J = dolfin.det(F)
+    C = F.T * F
+    I1 = dolfin.tr(C)
     # E = 0.5 * (C - dolfin.Identity(3))
 
     f = dolfin.Constant((0.0, -5.0, 0.0))
+    Fb = J * dolfin.inv(F).T * f        # body force in reference configuration
     # f2 = J*dolfin.inv(F).T*f
 
     # # define epsilon and sigma
@@ -71,22 +77,17 @@ def FEM_3D(N):
     # dolfin.solve(J2 == L, u, bcs=bc,
     #             solver_parameters={"linear_solver": "mumps"})
 
-    F = dolfin.grad(u) + dolfin.Identity(3)
-    J = dolfin.det(F)
-    C = F.T * F
-    I1 = dolfin.tr(C)
-
     psi = 0.5*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 0.5*mu*(I1 - 3)
-    energy = psi*dolfin.dx(domain=mesh) #- dolfin.dot(f, u)*ds(1)
+    energy = psi*dolfin.dx(domain=mesh) - dolfin.dot(Fb, u)*ds(1)
     total_internal_work = dolfin.derivative(energy, u, v)
-    total_virtual_work = total_internal_work - dolfin.inner(f, v)*ds(1)
+    total_virtual_work = total_internal_work #- dolfin.inner(f, v)*ds(1)
 
     dolfin.solve(total_virtual_work == 0, u, bc,
                 solver_parameters={'newton_solver': {
                                     # 'absolute_tolerance': 1e-6,
                                     'linear_solver': 'mumps'}})
 
-    # dolfin.File('output/3dbeam_sig.pvd') << u
+    dolfin.File('output/FEMBeam3D.pvd') << u
     # dolfin.File('output/3dbeam_sig2.pvd') << u
 
     x = np.linspace(0, l, 4*N_test+2)[1:-1]
@@ -99,9 +100,10 @@ def FEM_3D(N):
             for k in range(N_test):
                 u_fem[:, i, j, k] = u(x[i], y[j], z[k])
 
-    np.save(f'stored_arrays/u_fem_N={N}', u_fem)
+    np.save(f'stored_arrays/u_fem_N{N}', u_fem)
 
 if __name__ == '__main__':
     for N in [5, 10, 15, 20, 25, 30]:
+    # for N in [20]:
         print('N = ', N)
         FEM_3D(N)
