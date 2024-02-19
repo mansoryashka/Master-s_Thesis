@@ -342,7 +342,7 @@ if __name__ == '__main__':
     t = 0
     num_steps = int(T/dt + 1)
     Ta = ca_transient(t)
-    N=30; lr=0.1; num_neurons=30; num_layers=5
+    N=30; lr=0.1; num_neurons=30; num_layers=3
     train_domain, dirichlet, neumann = define_domain(L, H, D, N)
     model = MultiLayerNet(4, *([num_neurons]*num_layers), 3)
     DemCubeTa = DeepEnergyMethodCubeTa(model, energy)
@@ -357,11 +357,11 @@ if __name__ == '__main__':
     import time
     print(f'N: {N}, lr: {lr}, nn: {num_neurons}, nl: {num_layers}')
     for i in range(num_steps):
-        # print(i)
+        print(i)
         start = time.perf_counter()
 
         DemCubeTa.train_model(train_domain_wt, Ta, dirichlet, neumann, LHD, lr, epochs=30)
-        # print(f'time: {time.perf_counter() - start:.3f} s')
+        print(f'time: {time.perf_counter() - start:.3f} s')
 
         t += dt
         Ta = ca_transient(t)
