@@ -300,7 +300,7 @@ def write_vtk_v2(filename, x_space, y_space, z_space, U):
     xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
     gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
 
-def ca_transient(t, tstart=0.05):
+def ca_transient(t, tstart=0.15):
     tau1 = 0.05
     tau2 = 0.110
 
@@ -311,17 +311,25 @@ def ca_transient(t, tstart=0.05):
         -1 / (1 - tau2 / tau1)
     )
     # ca = np.zeros_like(t)
-    xt = 0.5*t
+    xt = t
     # ca[t <= tstart] = ca_diast
-    if xt % 1 <= tstart:
+    if xt <= tstart:
         ca = ca_diast
     else:
         ca = (ca_ampl - ca_diast) / beta * (
-            np.exp(-(xt % 1- tstart) / tau1)
-            - np.exp(-(xt % 1- tstart) / tau2)) + ca_diast
+            np.exp(-(xt - tstart) / tau1)
+            - np.exp(-(xt - tstart) / tau2)) + ca_diast
 
     return ca
 
+# t = np.arange(0, 1+0.02, 0.02)
+# Ta = np.zeros(t.shape)
+# for i, t_ in enumerate(t):
+#     Ta[i] = ca_transient(t_)
+# plt.figure()
+# plt.plot(t, Ta, 'x-')
+# plt.savefig('Ta.pdf')
+# exit()
 def L2error(u_dem, u_fem):
     e_L2 = (L2norm3D(u_dem, N_test, N_test, N_test, dx, dy, dz) - L2norm3D(u_fem, N_test, N_test, N_test, dx, dy, dz)
             / L2norm3D(u_fem, N_test, N_test, N_test, dx, dy, dz))
@@ -336,8 +344,8 @@ if __name__ == '__main__':
     z = np.linspace(0, H, N_test + 2)[1:-1]
 
     ### rough
-    T = 1.2
-    dt = 0.05
+    T = 1
+    dt = 0.02
     t = 0
     num_steps = int(T/dt + 1)
     Ta = ca_transient(t)
