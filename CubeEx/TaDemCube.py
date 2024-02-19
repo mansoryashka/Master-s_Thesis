@@ -342,7 +342,7 @@ if __name__ == '__main__':
     t = 0
     num_steps = int(T/dt + 1)
     Ta = ca_transient(t)
-    N=30; lr=0.1; num_neurons=50; num_layers=3
+    N=30; lr=0.1; num_neurons=30; num_layers=3
     train_domain, dirichlet, neumann = define_domain(L, H, D, N)
     model = MultiLayerNet(4, *([num_neurons]*num_layers), 3)
     DemCubeTa = DeepEnergyMethodCubeTa(model, energy)
@@ -359,19 +359,19 @@ if __name__ == '__main__':
     for i in range(num_steps+1):
         # print(i)
         start = time.perf_counter()
+        t_arr_for_bc = t_arr[:dirichlet['coords'].shape[0]]
+        t_arr[:] = Ta
+        train_domain_wt[:,-1] = Ta
+        dirichlet['coords'][:, -1] = Ta
+        neumann['coords'][:, -1] = Ta
 
-        DemCubeTa.train_model(train_domain_wt, Ta, dirichlet, neumann, LHD, lr, epochs=60)
+        DemCubeTa.train_model(train_domain_wt, Ta, dirichlet, neumann, LHD, lr, epochs=30)
         print(f'time: {time.perf_counter() - start:.3f} s')
 
         t += dt
         Ta = ca_transient(t)
         # print(t)
         # print(Ta)
-        # t_arr_for_bc = t_arr[:dirichlet['coords'].shape[0]]
-        t_arr[:] = Ta
-        train_domain_wt[:,-1] = Ta
-        dirichlet['coords'][:, -1] = Ta
-        neumann['coords'][:, -1] = Ta
 
         # print(L2error(U_pred, u_fem20))
     #forskjøvet t array
