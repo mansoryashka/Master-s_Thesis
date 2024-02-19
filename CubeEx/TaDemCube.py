@@ -302,7 +302,7 @@ def ca_transient(t, tstart=0.05):
     tau2 = 0.110
 
     ca_diast = 0.0
-    ca_ampl = 5.0
+    ca_ampl = 50.0
 
     beta = (tau1 / tau2) ** (-1 / (tau1 / tau2 - 1)) - (tau1 / tau2) ** (
         -1 / (1 - tau2 / tau1)
