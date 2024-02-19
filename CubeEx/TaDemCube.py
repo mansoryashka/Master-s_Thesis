@@ -366,7 +366,7 @@ if __name__ == '__main__':
         dirichlet['coords'][:, -1] = t
         neumann['coords'][:, -1] = t
 
-        DemCubeTa.train_model(train_domain_wt, t, dirichlet, neumann, LHD, lr, epochs=1)
+        DemCubeTa.train_model(train_domain_wt, t, dirichlet, neumann, LHD, lr, epochs=30)
         print(f'time: {time.perf_counter() - start:.3f} s')
         # print(L2error(U_pred, u_fem20))
         t += dt
