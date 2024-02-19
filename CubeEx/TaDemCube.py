@@ -339,7 +339,6 @@ if __name__ == '__main__':
     dt = 0.05
     t = 0
     num_steps = int(T/dt + 1)
-    Ta = ca_transient(t)
 
     N=30; lr=0.1; num_neurons=30; num_layers=3
     train_domain, dirichlet, neumann = define_domain(L, H, D, N)
@@ -366,17 +365,17 @@ if __name__ == '__main__':
         dirichlet['coords'][:, -1] = t
         neumann['coords'][:, -1] = t
 
-        DemCubeTa.train_model(train_domain_wt, t, dirichlet, neumann, LHD, lr, epochs=30)
+        DemCubeTa.train_model(train_domain_wt, t, dirichlet, neumann, LHD, lr, epochs=50)
         print(f'time: {time.perf_counter() - start:.3f} s')
         # print(L2error(U_pred, u_fem20))
         t += dt
-        Ta = ca_transient(t)
-    #forskjøvet Ta array
-    t_array = np.linspace(0, T, int(T/dt+1)+2, endpoint=False)[1:-1]
+
+    #forskjøvet t array
+    t_array = np.linspace(0, T, int(T/dt+1) + 2, endpoint=True)[1:-1]
     for i, t in enumerate(t_array):
         # Ta_eval = ca_transient(t)
         U_pred = DemCubeTa.evaluate_model(x, y, z, t)
-        print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
+        # print(L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz))
         write_vtk_v2(f'output/m1/CubeTa{i:02d}', x, y, z, U_pred)
     
     ### finer
