@@ -170,10 +170,10 @@ class DeepEnergyMethodCubeTa(DeepEnergyMethod):
 # mu = E / (2*(1 + nu))
 mu = 50
 # mu = 15
-def energy(u, x, t):
+def energy(u, x, Ta):
     # f0 = torch.from_numpy(np.array([1, 0, 0]))
     kappa = 1e3
-    Ta = ca_transient(t)
+    # Ta = ca_transient(t)
     duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
     duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
     duzdxyz = grad(u[:, 2].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
@@ -338,10 +338,10 @@ if __name__ == '__main__':
 
     ### rough
     T = 1.2
-    dt = 0.01
+    dt = 0.05
     t = 0
     num_steps = int(T/dt + 1)
-
+    Ta = ca_transient(t)
     N=30; lr=0.1; num_neurons=30; num_layers=3
     train_domain, dirichlet, neumann = define_domain(L, H, D, N)
     model = MultiLayerNet(4, *([num_neurons]*num_layers), 3)
@@ -360,10 +360,11 @@ if __name__ == '__main__':
         # print(i)
         start = time.perf_counter()
 
-        DemCubeTa.train_model(train_domain_wt, t, dirichlet, neumann, LHD, lr, epochs=30)
+        DemCubeTa.train_model(train_domain_wt, Ta, dirichlet, neumann, LHD, lr, epochs=30)
         print(f'time: {time.perf_counter() - start:.3f} s')
 
         t += dt
+        Ta = ca_transient(t)
         t_arr[:] = t
         t_arr_for_bc = t_arr[:dirichlet['coords'].shape[0]]
         train_domain_wt[:,-1] = t
