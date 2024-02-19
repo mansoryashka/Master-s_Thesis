@@ -360,7 +360,7 @@ if __name__ == '__main__':
         # print(i)
         start = time.perf_counter()
 
-        DemCubeTa.train_model(train_domain_wt, Ta, dirichlet, neumann, LHD, lr, epochs=30)
+        DemCubeTa.train_model(train_domain_wt, Ta, dirichlet, neumann, LHD, lr, epochs=60)
         print(f'time: {time.perf_counter() - start:.3f} s')
 
         t += dt
