@@ -30,7 +30,7 @@ class DeepEnergyMethod:
         self.model = model.to(dev)
         self.energy = energy
         
-    def train_model(self, data, dirichlet, neumann, LHD, lr=0.5, max_it=20, epochs=20, fb=0):
+    def train_model(self, data, dirichlet, neumann, LHD, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]])):
         # data
         # print(data)
         x = torch.from_numpy(data).float().to(dev)
@@ -56,6 +56,7 @@ class DeepEnergyMethod:
                 u_pred.double()
 
                 IntEnergy, J = self.energy(u_pred, x, J=True)
+                # print(IntEnergy.shape); exit()
                 internal_loss = LHD[0]*LHD[1]*LHD[2]*penalty(IntEnergy)
 
                 # boundary loss
@@ -68,14 +69,30 @@ class DeepEnergyMethod:
                 neu_pred = self.getU(self.model, neuBC_coords)
                 bc_neu = torch.matmul((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
 
-                body_loss = penalty(fb / J* (u_pred + x))
+                # print('neu_pred: ', neu_pred.shape)
+                # print('neuBC_coords: ', neuBC_coords.shape)
+                # print('neuBC_values: ', neuBC_values.shape)
+                # print('bc_neu: ', bc_neu.shape)
+                # exit()
+                phi = (u_pred + x) / J
+                body_f = torch.matmul(phi.unsqueeze(1), fb.unsqueeze(2))
+                # print(body_f.shape); exit()
+                # body_loss = torch.sum(body_f)/body_f.data.nelement()
+                # print(body_loss); exit()
+                # body_loss = penalty(body_f[0]) + penalty(body_f[1]) + penalty(body_f[2])
+                # print(fb, J.shape, u_pred.shape, x.shape)
+                # y = 1/J; print(y.shape); exit()
+                # z = fb*(u_pred+x)/J; print(z.shape); exit()
+                # print(body_loss).shape; exit()
 
+                # external_loss = LHD[1]*LHD[2]*penalty(bc_neu) + LHD[0]*LHD[1]*LHD[2]*body_loss
+                external_loss = LHD[0]*LHD[1]*LHD[2]*penalty(body_f)
 
-                external_loss = LHD[1]*LHD[2]*penalty(bc_neu) + LHD[0]*LHD[1]*LHD[2]*body_loss
                 # print(neu_pred.shape, neuBC_coords.shape, neuBC_values.shape)
                 # print(bc_neu.shape); exit()
                 energy_loss = internal_loss - torch.sum(external_loss)
-                loss = internal_loss - torch.sum(external_loss) + boundary_loss + body_loss
+                # loss = internal_loss - torch.sum(external_loss) + boundary_loss
+                loss = internal_loss - external_loss + boundary_loss
                 optimizer.zero_grad()
                 loss.backward()
 
