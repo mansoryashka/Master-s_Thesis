@@ -337,15 +337,15 @@ if __name__ == '__main__':
     # exit()
 
     N = 30
-    lrs = [.5, .8]
-    num_layers = [3, 4, 5]
+    lrs = [.05, .1, .5, .8]
+    num_layers = [3, 4, 5, 6]
     num_neurons = 30
     num_expreriments = 1
     U_norms = 0
     losses = 0
     st = time.time()
     for i in range(num_expreriments):
-        U_norms_i, losses_i= train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=40)
+        U_norms_i, losses_i= train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=80)
         U_norms += U_norms_i
         losses += losses_i
     print(time.time() - st)
