@@ -354,7 +354,7 @@ if __name__ == '__main__':
     # np.save('losses_lrs_nl', losses)
     # e_norms = (U_norms - L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)) / L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
     # print(e_norms)
-    plot_heatmap(U_norms, num_layers, lrs, rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers_Jfb')
+    plot_heatmap(U_norms, num_layers, lrs, rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers_Jfb_noneu')
     # plot_heatmap(np.abs(e_norms), num_layers, lrs, rf'$L^2$ error norm with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layersABS')
 
     # losses_lrs_nl = np.load(arrays_path / 'losses_lrs_nl.npy')
