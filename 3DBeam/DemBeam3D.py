@@ -337,7 +337,7 @@ if __name__ == '__main__':
     # exit()
 
     N = 30
-    lrs = [.1, .5, .8]
+    lrs = [.5, .8]
     num_layers = [3, 4, 5]
     num_neurons = 30
     num_expreriments = 1
