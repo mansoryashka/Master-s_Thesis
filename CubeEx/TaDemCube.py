@@ -384,11 +384,11 @@ if __name__ == '__main__':
         # Ta = ca_transient(t)
         Ta = ca_transient(t_array[i])
         # print(f'{Ta:.3f}', end=', ')
-    # torch.save(DemCubeTa.model.state_dict(), models_path / 'model002')
+    torch.save(DemCubeTa.model.state_dict(), models_path / 'model002')
     # DemCubeTa.model.load_state_dict(torch.load(models_path / 'model002_90'))
     #forskjøvet Ta array
     # t_array = np.linspace(0, T, int(T/dt+1)+2, endpoint=False)[1:-1]
-    t_array = np.linspace(0, T, int(T/dt+1), endpoint=True)
+    t_array = np.linspace(0, T, int(T/dt+1)+2, endpoint=True)[1:-1]
     # print(t_array)
     print('\n')
     for i, t in enumerate(t_array):
