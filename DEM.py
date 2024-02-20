@@ -30,10 +30,11 @@ class DeepEnergyMethod:
         self.model = model.to(dev)
         self.energy = energy
         
-    def train_model(self, data, dirichlet, neumann, LHD, lr=0.5, max_it=20, epochs=20):
+    def train_model(self, data, dirichlet, neumann, LHD, lr=0.5, max_it=20, epochs=20, fb=0):
         # data
         # print(data)
         x = torch.from_numpy(data).float().to(dev)
+        fb = torch.from_numpy(fb).float().to(dev)
         x.requires_grad_(True)
         optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr, max_iter=max_it)
 
@@ -54,7 +55,7 @@ class DeepEnergyMethod:
                 u_pred = self.getU(self.model, x)
                 u_pred.double()
 
-                IntEnergy = self.energy(u_pred, x)
+                IntEnergy, J = self.energy(u_pred, x, J=True)
                 internal_loss = LHD[0]*LHD[1]*LHD[2]*penalty(IntEnergy)
 
                 # boundary loss
@@ -66,18 +67,22 @@ class DeepEnergyMethod:
                 # external loss
                 neu_pred = self.getU(self.model, neuBC_coords)
                 bc_neu = torch.matmul((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
-                external_loss = LHD[1]*LHD[2]*penalty(bc_neu)
+
+                body_loss = penalty(fb * (u_pred + x))
+
+
+                external_loss = LHD[1]*LHD[2]*penalty(bc_neu) + LHD[0]*LHD[1]*LHD[2]*body_loss
                 # print(neu_pred.shape, neuBC_coords.shape, neuBC_values.shape)
                 # print(bc_neu.shape); exit()
                 energy_loss = internal_loss - torch.sum(external_loss)
-                loss = internal_loss - torch.sum(external_loss) + boundary_loss
+                loss = internal_loss - torch.sum(external_loss) + boundary_loss + body_loss
                 optimizer.zero_grad()
                 loss.backward()
 
                 self.current_loss = loss
                 #       + f'loss: {loss.item():10.5f}')
-                # print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}')
-                print(f'Iter: {i+1:2d}, Energy: {loss}')
+                print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}')
+                # print(f'Iter: {i+1:2d}, Energy: {loss}')
                 return loss
 
             optimizer.step(closure)
