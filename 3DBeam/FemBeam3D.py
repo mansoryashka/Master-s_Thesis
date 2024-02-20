@@ -78,7 +78,7 @@ def FEM_3D(N):
     #             solver_parameters={"linear_solver": "mumps"})
 
     psi = 0.5*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 0.5*mu*(I1 - 3)
-    energy = psi*dolfin.dx(domain=mesh) - dolfin.dot(f, u)*J*dolfin.dx(domain=mesh)
+    energy = psi*dolfin.dx(domain=mesh) - dolfin.dot(f, u)/J*dolfin.dx(domain=mesh)
     total_internal_work = dolfin.derivative(energy, u, v)
     total_virtual_work = total_internal_work #- dolfin.inner(f, v)*ds(1)
 
