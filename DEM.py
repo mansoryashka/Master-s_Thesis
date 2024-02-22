@@ -92,7 +92,7 @@ class DeepEnergyMethod:
                 # print(bc_neu.shape); exit()
                 energy_loss = internal_loss - torch.sum(external_loss)
                 # loss = internal_loss - torch.sum(external_loss) + boundary_loss
-                loss = internal_loss - external_loss + boundary_loss
+                loss = internal_loss - torch.sum(external_loss) + boundary_loss
                 optimizer.zero_grad()
                 loss.backward()
 
