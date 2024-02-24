@@ -13,6 +13,7 @@ nu = 0.3
 lmbd = E * nu / ((1 + nu)*(1 - 2*nu))
 mu = E / (2*(1 + nu))
 
+dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
 
 def FEM_3D(N):
     # define mesh and domain w/trial and test functions
@@ -22,10 +23,10 @@ def FEM_3D(N):
     u = dolfin.Function(V)  
     v = dolfin.TestFunction(V)
 
-    # neumann_domain = dolfin.MeshFunction("size_t", mesh, 2)
-    # neumann_domain.set_all(0)
-    # dolfin.CompiledSubDomain("near(x[0], side) && on_boundary", side=4.0, tol=10e-10).mark(neumann_domain, 1)
-    # ds = dolfin.Measure("ds", subdomain_data=neumann_domain)
+    neumann_domain = dolfin.MeshFunction("size_t", mesh, 2)
+    neumann_domain.set_all(0)
+    dolfin.CompiledSubDomain("near(x[0], side) && on_boundary", side=4.0, tol=10e-10).mark(neumann_domain, 1)
+    ds = dolfin.Measure("ds", subdomain_data=neumann_domain)
 
     # boundary condtions
     def boundary(x, on_boundary):
@@ -87,7 +88,7 @@ def FEM_3D(N):
                                     # 'absolute_tolerance': 1e-6,
                                     'linear_solver': 'mumps'}})
 
-    dolfin.File('output/FEMBeam3D_fJ.pvd') << u
+    dolfin.File('output/FEMBeam3D_30.pvd') << u
     # dolfin.File('output/3dbeam_sig2.pvd') << u
 
     # x = np.linspace(0, l, 4*N_test+2)[1:-1]
@@ -104,6 +105,6 @@ def FEM_3D(N):
 
 if __name__ == '__main__':
     # for N in [5, 10, 15, 20, 25, 30]:
-    for N in [20]:
+    for N in [30]:
         print('N = ', N)
         FEM_3D(N)
