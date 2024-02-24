@@ -321,8 +321,8 @@ if __name__ == '__main__':
     lr = .5
     num_layers = [2, 3, 4, 5]
     num_neurons = [30, 40, 50, 60]
-    num_expreriments = 10
-    num_epochs = 160
+    num_expreriments = 1
+    num_epochs = 60
     U_norms = 0
     losses = 0
     for i in range(num_expreriments):
