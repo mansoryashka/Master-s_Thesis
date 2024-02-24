@@ -91,17 +91,17 @@ def FEM_3D(N):
     dolfin.File('output/FEMBeam3D_30.pvd') << u
     # dolfin.File('output/3dbeam_sig2.pvd') << u
 
-    # x = np.linspace(0, l, 4*N_test+2)[1:-1]
-    # y = np.linspace(0, h, N_test+2)[1:-1]
-    # z = np.linspace(0, d, N_test+2)[1:-1]
-    # u_fem = np.zeros((3, 4*N_test, N_test, N_test))
+    x = np.linspace(0, l, 4*N_test+2)[1:-1]
+    y = np.linspace(0, h, N_test+2)[1:-1]
+    z = np.linspace(0, d, N_test+2)[1:-1]
+    u_fem = np.zeros((3, 4*N_test, N_test, N_test))
 
-    # for i in range(4*N_test):
-    #     for j in range(N_test):
-    #         for k in range(N_test):
-    #             u_fem[:, i, j, k] = u(x[i], y[j], z[k])
+    for i in range(4*N_test):
+        for j in range(N_test):
+            for k in range(N_test):
+                u_fem[:, i, j, k] = u(x[i], y[j], z[k])
 
-    # np.save(f'stored_arrays/u_fem_N{N}', u_fem)
+    np.save(f'stored_arrays/u_fem_N{N}2', u_fem)
 
 if __name__ == '__main__':
     # for N in [5, 10, 15, 20, 25, 30]:
