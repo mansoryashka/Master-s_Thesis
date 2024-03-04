@@ -305,7 +305,7 @@ def plot_losses(losses, parameter1, parameter2, dim1, dim2, num_epochs, title, f
     fig.savefig(figures_path / Path(filename + '.pdf'))
 
 if __name__ == '__main__':
-    u_fem30 = np.load('stored_arrays/u_fem_N302.npy')
+    u_fem30 = np.load('stored_arrays/u_fem_N20.npy')
     print(f'FEM: {L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)} \n')
 
     x = np.linspace(0, L, 4*N_test + 2)[1:-1]
@@ -335,12 +335,12 @@ if __name__ == '__main__':
     # plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers80')
     # exit()
 
-    N = 20
+    N = 30
     lrs = [.05, .1, .5]
-    num_layers = [3, 4, 5]
-    num_neurons = 50
+    num_layers = [3, 4, 5, 6]
+    num_neurons = 30
     num_expreriments = 1
-    num_epochs = 80
+    num_epochs = 60
     U_norms = 0
     losses = 0
     st = time.time()
@@ -352,7 +352,7 @@ if __name__ == '__main__':
     U_norms /= num_expreriments
     losses /= num_expreriments
     np.save('losses_lrs_nl', losses)
-    plot_heatmap(U_norms, num_layers, lrs, rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers')
+    plot_heatmap(U_norms, num_layers, lrs, rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers10')
 
     # losses_lrs_nl = np.load(arrays_path / 'losses_lrs_nl.npy')
     # print(losses_lrs_nl)

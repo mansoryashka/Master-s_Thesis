@@ -74,9 +74,9 @@ class DeepEnergyMethod:
                 # print('neuBC_values: ', neuBC_values.shape)
                 # print('bc_neu: ', bc_neu.shape)
                 # exit()
-                phi = (u_pred) / J
+                phi = u_pred + x
                 body_f = torch.matmul(phi.unsqueeze(1), fb.unsqueeze(2))
-                breakpoint()
+
                 # print(body_f.shape); exit()
                 # body_loss = torch.sum(body_f)/body_f.data.nelement()
                 # print(body_loss); exit()
