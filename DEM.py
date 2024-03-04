@@ -74,17 +74,8 @@ class DeepEnergyMethod:
                 # print('neuBC_values: ', neuBC_values.shape)
                 # print('bc_neu: ', bc_neu.shape)
                 # exit()
-                phi = u_pred + x
+                phi = u_pred
                 body_f = torch.matmul(phi.unsqueeze(1), fb.unsqueeze(2))
-
-                # print(body_f.shape); exit()
-                # body_loss = torch.sum(body_f)/body_f.data.nelement()
-                # print(body_loss); exit()
-                # body_loss = penalty(body_f[0]) + penalty(body_f[1]) + penalty(body_f[2])
-                # print(fb, J.shape, u_pred.shape, x.shape)
-                # y = 1/J; print(y.shape); exit()
-                # z = fb*(u_pred+x)/J; print(z.shape); exit()
-                # print(body_loss).shape; exit()
 
                 # external_loss = LHD[1]*LHD[2]*penalty(bc_neu) + LHD[0]*LHD[1]*LHD[2]*body_loss
                 external_loss = LHD[0]*LHD[1]*LHD[2]*penalty(body_f)
@@ -99,7 +90,7 @@ class DeepEnergyMethod:
 
                 self.current_loss = loss
                 #       + f'loss: {loss.item():10.5f}')
-                print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}')
+                print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}, Int: {internal_loss:10.5f}, Ext: {external_loss:10.5f}')
                 # print(f'Iter: {i+1:2d}, Energy: {loss}')
                 return loss
 

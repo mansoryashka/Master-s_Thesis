@@ -335,12 +335,12 @@ if __name__ == '__main__':
     # plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers80')
     # exit()
 
-    N = 30
-    lrs = [.05, .1, .5]
+    N = 20
+    lrs = [.05, .1, .5, .9]
     num_layers = [3, 4, 5, 6]
-    num_neurons = 30
+    num_neurons = 40
     num_expreriments = 1
-    num_epochs = 60
+    num_epochs = 80
     U_norms = 0
     losses = 0
     st = time.time()
@@ -352,7 +352,7 @@ if __name__ == '__main__':
     U_norms /= num_expreriments
     losses /= num_expreriments
     np.save('losses_lrs_nl', losses)
-    plot_heatmap(U_norms, num_layers, lrs, rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers10')
+    plot_heatmap(U_norms, num_layers, lrs, rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers')
 
     # losses_lrs_nl = np.load(arrays_path / 'losses_lrs_nl.npy')
     # print(losses_lrs_nl)
