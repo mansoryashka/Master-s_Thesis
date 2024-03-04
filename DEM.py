@@ -64,40 +64,42 @@ class DeepEnergyMethod:
                 # print(torch.norm(dir_pred))
                 bc_dir = LHD[1]*LHD[2]*loss_squared_sum(dir_pred, dirBC_values)
                 boundary_loss = torch.sum(bc_dir)
-
                 # external loss
                 neu_pred = self.getU(self.model, neuBC_coords)
                 bc_neu = torch.matmul((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
-
-                # print('neu_pred: ', neu_pred.shape)
-                # print('neuBC_coords: ', neuBC_coords.shape)
-                # print('neuBC_values: ', neuBC_values.shape)
-                # print('bc_neu: ', bc_neu.shape)
+                # print(neu_pred.shape, neuBC_coords.shape, neuBC_values.shape)
+                # print(bc_neu.shape); exit()
                 # exit()
+
                 phi = u_pred
                 body_f = torch.matmul(phi.unsqueeze(1), fb.unsqueeze(2))
 
                 # external_loss = LHD[1]*LHD[2]*penalty(bc_neu) + LHD[0]*LHD[1]*LHD[2]*body_loss
                 external_loss = LHD[0]*LHD[1]*LHD[2]*penalty(body_f)
 
-                # print(neu_pred.shape, neuBC_coords.shape, neuBC_values.shape)
-                # print(bc_neu.shape); exit()
-                energy_loss = internal_loss - torch.sum(external_loss)
-                # loss = internal_loss - torch.sum(external_loss) + boundary_loss
-                loss = internal_loss - torch.sum(external_loss) + boundary_loss
+                factor = external_loss / (internal_loss + external_loss)
+
+
+                energy_loss = internal_loss - external_loss
+                loss = internal_loss - external_loss + boundary_loss
+
                 optimizer.zero_grad()
                 loss.backward()
 
+                self.internal_loss = internal_loss
+                self.external_loss = external_loss
+                self.energy_loss = energy_loss
+
                 self.current_loss = loss
                 #       + f'loss: {loss.item():10.5f}')
-                print(f'Iter: {i+1:2d}, Energy: {energy_loss.item():10.5f}, Int: {internal_loss:10.5f}, Ext: {external_loss:10.5f}')
                 # print(f'Iter: {i+1:2d}, Energy: {loss}')
                 return loss
 
             optimizer.step(closure)
             if i % 5 == 0:
+                print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}')
                 self.losses.append(self.current_loss.detach().cpu())
-        # return self.model
+        # return self.modeld
 
     def getU(self, model, x):
         u = model(x).to(dev)
@@ -116,8 +118,10 @@ class DeepEnergyMethod:
         xyz = np.concatenate((np.array([x1D]).T, np.array([y1D]).T, np.array([z1D]).T), axis=-1)
         xyz_tensor = torch.from_numpy(xyz).float().to(dev)
         xyz_tensor.requires_grad_(True)
-        # u_pred_torch = self.model(xyz_tensor)
+
         u_pred_torch = self.getU(self.model, xyz_tensor)
+        self.u_pred_torch = u_pred_torch.double()
+        self.u_pred_torch.requires_grad_(True)
         u_pred = u_pred_torch.detach().cpu().numpy()
         surUx = u_pred[:, 0].reshape(Ny, Nx, Nz)
         surUy = u_pred[:, 1].reshape(Ny, Nx, Nz)

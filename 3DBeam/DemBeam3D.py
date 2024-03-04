@@ -338,9 +338,11 @@ if __name__ == '__main__':
     N = 20
     lrs = [.05, .1, .5, .9]
     num_layers = [3, 4, 5, 6]
-    num_neurons = 40
+    # lrs = [.1, .8]
+    # num_layers = [3, 4]
+    num_neurons = 50
     num_expreriments = 1
-    num_epochs = 80
+    num_epochs = 100
     U_norms = 0
     losses = 0
     st = time.time()
