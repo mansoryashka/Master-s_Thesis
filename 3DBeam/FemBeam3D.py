@@ -13,7 +13,7 @@ nu = 0.3
 lmbd = E * nu / ((1 + nu)*(1 - 2*nu))
 mu = E / (2*(1 + nu))
 
-dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
+# dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
 
 def FEM_3D(N):
     # define mesh and domain w/trial and test functions
@@ -79,7 +79,7 @@ def FEM_3D(N):
     #             solver_parameters={"linear_solver": "mumps"})
 
     psi = 0.5*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 0.5*mu*(I1 - 3)
-    energy = psi*dolfin.dx(domain=mesh) - dolfin.dot(f, u)/J*dolfin.dx(domain=mesh)
+    energy = psi*dolfin.dx(domain=mesh) - dolfin.dot(f, u)*dolfin.dx(domain=mesh)
     total_internal_work = dolfin.derivative(energy, u, v)
     total_virtual_work = total_internal_work #- dolfin.inner(f, v)*ds(1)
 
@@ -88,8 +88,7 @@ def FEM_3D(N):
                                     # 'absolute_tolerance': 1e-6,
                                     'linear_solver': 'mumps'}})
 
-    dolfin.File('output/FEMBeam3D_30.pvd') << u
-    # dolfin.File('output/3dbeam_sig2.pvd') << u
+    dolfin.File('output/FEMBeam3D_noJ.pvd') << u
 
     x = np.linspace(0, l, 4*N_test+2)[1:-1]
     y = np.linspace(0, h, N_test+2)[1:-1]
@@ -101,10 +100,10 @@ def FEM_3D(N):
             for k in range(N_test):
                 u_fem[:, i, j, k] = u(x[i], y[j], z[k])
 
-    np.save(f'stored_arrays/u_fem_N{N}2', u_fem)
+    np.save(f'stored_arrays/u_fem_N{N}', u_fem)
 
 if __name__ == '__main__':
     # for N in [5, 10, 15, 20, 25, 30]:
-    for N in [30]:
+    for N in [20]:
         print('N = ', N)
         FEM_3D(N)
