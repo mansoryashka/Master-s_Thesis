@@ -102,10 +102,11 @@ def FEM_3D(N):
 
     np.save(f'stored_arrays/u_fem_N{N}', u_fem)
 
-    print(dolfin.assemble(psi*dolfin.dx))
-    print(dolfin.assemble(dolfin.dot(f, u)*dolfin.dx))
+    print(dolfin.assemble(psi*dolfin.dx))               # 6.924290983627352
+    print(dolfin.assemble(dolfin.dot(f, u)*dolfin.dx))  # 14.651664345327262
+
 if __name__ == '__main__':
     # for N in [5, 10, 15, 20, 25, 30]:
-    for N in [5]:
+    for N in [20]:
         print('N = ', N)
         FEM_3D(N)
