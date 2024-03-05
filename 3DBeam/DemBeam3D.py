@@ -212,7 +212,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lr, max_it=max_it, epochs=num_epochs)
                 # evaluate model
                 U_pred = DemBeam.evaluate_model(x, y, z)
-                write_vtk_v2(f'output/DemBeam_Jfb_lr{lr}_nl{l}', x, y, z, U_pred)
+                write_vtk_v2(f'output/DemBeam_Jfb_lr{lr}_nl{l}_100', x, y, z, U_pred)
                 u_norms[i, j] = L2norm3D(np.transpose(U_pred, [0, 2, 1, 3]) - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
                 losses[:, i, j] = np.array(DemBeam.losses)
     # train on number of neurons in hidden layers and number of hidden layers
@@ -340,9 +340,9 @@ if __name__ == '__main__':
     num_layers = [3, 4, 5, 6]
     lrs = [.5]
     num_layers = [3]
-    num_neurons = 50
+    num_neurons = 30
     num_expreriments = 1
-    num_epochs = 250
+    num_epochs = 100
     U_norms = 0
     losses = 0
     st = time.time()
