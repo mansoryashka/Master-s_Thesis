@@ -336,13 +336,13 @@ if __name__ == '__main__':
     # exit()
 
     N = 20
-    lrs = [.05, .1, .5, .9]
-    num_layers = [3, 4, 5, 6]
-    lrs = [.5]
-    num_layers = [3]
+    lrs = [0.001, 0.002, 0.005]
+    num_layers = [3, 4, 5]
+    # lrs = [.5]
+    # num_layers = [3]
     num_neurons = 30
     num_expreriments = 1
-    num_epochs = 100
+    num_epochs = 500
     U_norms = 0
     losses = 0
     st = time.time()
