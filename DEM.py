@@ -66,13 +66,14 @@ class DeepEnergyMethod:
                 boundary_loss = torch.sum(bc_dir)
                 # external loss
                 neu_pred = self.getU(self.model, neuBC_coords)
-                bc_neu = torch.matmul((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
+                bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
                 
 
                 phi = u_pred
                 body_f = torch.matmul(phi.unsqueeze(1), fb.unsqueeze(2))
-                # external_loss = LHD[1]*LHD[2]*penalty(bc_neu) + LHD[0]*LHD[1]*LHD[2]*body_loss
-                external_loss = LHD[0]*LHD[1]*LHD[2]*penalty(body_f)
+                external_loss = LHD[1]*LHD[2]*penalty(bc_neu) #+ LHD[0]*LHD[1]*LHD[2]*body_loss
+                # external_loss = LHD[0]*LHD[1]*LHD[2]*penalty(body_f)
+
 
                 loss = internal_loss - external_loss + boundary_loss
 
@@ -84,8 +85,7 @@ class DeepEnergyMethod:
                 self.energy_loss = loss
 
                 self.current_loss = loss
-                #       + f'loss: {loss.item():10.5f}')
-                # print(f'Iter: {i+1:2d}, Energy: {loss}')
+                # print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}')
                 return loss
 
             optimizer.step(closure)

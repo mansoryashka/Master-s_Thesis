@@ -47,7 +47,7 @@ d_boundary = 0.0
 d_cond = [0, 0, 0]
 
 n_boundary = L
-n_cond = [0, 0, 0]
+n_cond = [0, -5, 0]
 
 dir_bcs = {d_boundary: d_cond}
 neu_bcs = {n_boundary: n_cond}
@@ -339,10 +339,10 @@ if __name__ == '__main__':
     lrs = [.05, .1, .5, .9]
     num_layers = [3, 4, 5, 6]
     lrs = [.5]
-    num_layers = [6]
+    num_layers = [3]
     num_neurons = 50
     num_expreriments = 1
-    num_epochs = 300
+    num_epochs = 250
     U_norms = 0
     losses = 0
     st = time.time()
@@ -354,7 +354,7 @@ if __name__ == '__main__':
     U_norms /= num_expreriments
     losses /= num_expreriments
     np.save('losses_lrs_nl', losses)
-    plot_heatmap(U_norms, num_layers, lrs, rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers')
+    plot_heatmap(U_norms, num_layers, lrs, rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers1')
 
     # losses_lrs_nl = np.load(arrays_path / 'losses_lrs_nl.npy')
     # print(losses_lrs_nl)
