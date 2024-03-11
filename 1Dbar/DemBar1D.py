@@ -90,7 +90,7 @@ def train_model(data, model, lr=0.5, max_it=20, epochs=10):
                 # print('epoch: ', i, 'loss: ', loss)
                 optimizer.zero_grad()
                 loss.backward()
-            # print(f'Iter: {i+1:d}, Loss: {energy_loss.item():.5f}')
+            print(f'Iter: {i+1:d}, Loss: {energy_loss.item():.5f}')
             return loss
         optimizer.step(closure)
 
@@ -303,12 +303,12 @@ if __name__ == '__main__':
 
     ### Train and plot for learning rate and number of neurons
     ### make own function?
-    # lrs = [0.01, 0.05, .1, .5, 1]
-    # num_neurons = [5, 10, 15, 20, 30]
+    lrs = [0.5, 0.05, .1, .5, 1]
+    num_neurons = [5, 10, 15, 20, 30]
     # u_norms = np.zeros((len(lrs), len(num_neurons)))
     # du_norms = u_norms.copy()
-    # for _ in range(num_expreriments):
-    #     u_norms_i, du_norms_i = train_and_evaluate_model(Ns=1000, lrs=lrs, num_neurons=num_neurons)
+    for _ in range(1):
+        u_norms_i, du_norms_i = train_and_evaluate_model(Ns=1000, lrs=lrs, num_neurons=num_neurons, num_epochs=1500)
     #     u_norms += u_norms_i
     #     du_norms += du_norms_i
 
