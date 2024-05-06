@@ -159,7 +159,8 @@ def basic_simps(f, dx=1, axis=-1):
 def write_vtk_v2(filename, x_space, y_space, z_space, U):
     ### function from DEM paper ###
     xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
-    gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
+    # gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
+    gridToVTK(filename, yy, xx, zz, pointData={"displacement": U})
 
 ### Skrive blokkene til en egen funksjon? Kalles på helt likt inne i loopene ###
 def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, max_it=20):
