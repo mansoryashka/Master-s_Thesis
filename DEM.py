@@ -105,10 +105,16 @@ class DeepEnergyMethod:
         Ny = len(y)
         Nz = len(z)
         xGrid, yGrid, zGrid = np.meshgrid(x, y, z)
-        x1D = xGrid.flatten()
-        y1D = yGrid.flatten()
-        z1D = zGrid.flatten()
-        xyz = np.concatenate((np.array([x1D]).T, np.array([y1D]).T, np.array([z1D]).T), axis=-1)
+        # x1D = xGrid.flatten()
+        # y1D = yGrid.flatten()
+        # z1D = zGrid.flatten()
+        # xyz = np.concatenate((np.array([x1D]).T, np.array([y1D]).T, np.array([z1D]).T), axis=-1)
+
+        x1D = np.expand_dims(xGrid.flatten(), 1)
+        y1D = np.expand_dims(yGrid.flatten(), 1)
+        z1D = np.expand_dims(zGrid.flatten(), 1)
+        xyz = np.concatenate((x1D, y1D, z1D), axis=-1)
+
         xyz_tensor = torch.from_numpy(xyz).float().to(dev)
         xyz_tensor.requires_grad_(True)
 
@@ -116,9 +122,10 @@ class DeepEnergyMethod:
         self.u_pred_torch = u_pred_torch.double()
         self.u_pred_torch.requires_grad_(True)
         u_pred = u_pred_torch.detach().cpu().numpy()
-        surUx = u_pred[:, 0].reshape(Nx, Ny, Nz)
-        surUy = u_pred[:, 1].reshape(Nx, Ny, Nz)
-        surUz = u_pred[:, 2].reshape(Nx, Ny, Nz)
+        surUx = u_pred[:, 0].reshape(Ny, Nx, Nz)
+        surUy = u_pred[:, 1].reshape(Ny, Nx, Nz)
+        surUz = u_pred[:, 2].reshape(Ny, Nx, Nz)
+
         U = (np.float64(surUx), np.float64(surUy), np.float64(surUz))
         return U
 

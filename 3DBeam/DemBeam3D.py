@@ -102,7 +102,7 @@ def define_domain(L, H, D, N=25, dir_bcs=None, neu_bcs=None):
         'coords': nb_pts,
         'values': nb_vals
     }
-
+    print(domain.shape)
     return domain, dirichlet, neumann
 
 lmbd =  E * nu / ((1 + nu)*(1 - 2*nu))
@@ -132,35 +132,13 @@ def energy(u, x, J=False):
     return strainEnergy
 
 
-""" Simspson's method to be implemented later
+""" Simspson's method to be implemented later """
 
-def basic_simps(f, dx=1, axis=-1):
-    def _sliced_tuple(x, offset=0):
-        "Slice desired dimension of tensor"
-        x = np.array(x)
-        x[axis] = slice(0, f.shape[axis] - offset, 2)
-        x = tuple(x)
-        return x
-    
-    n_dims = len(f.shape)
-
-    slice_all = (slice(None),) * n_dims
-    s0 = slice_all
-    s1 = slice_all
-    s2 = slice_all
-
-    s0 = _sliced_tuple(s0, 0)
-    s1 = _sliced_tuple(s1, 1)
-    s2 = _sliced_tuple(s2, 2)
-
-    return np.sum(1/3 * dx * (f[s0] + 4 * f[s1] + f[s2]), axis)
-"""
 
 def write_vtk_v2(filename, x_space, y_space, z_space, U):
     ### function from DEM paper ###
     xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
-    # gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
-    gridToVTK(filename, yy, xx, zz, pointData={"displacement": U})
+    gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
 
 ### Skrive blokkene til en egen funksjon? Kalles på helt likt inne i loopene ###
 def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, max_it=20):
