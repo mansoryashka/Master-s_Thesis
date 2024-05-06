@@ -57,12 +57,13 @@ def define_domain(L, H, D, N=25, dir_bcs=None, neu_bcs=None):
     y = np.linspace(0, H, N)
     z = np.linspace(0, D, N)
 
-    Xm, Ym, Zm = np.meshgrid(x, y, z) 
+    Xm, Zm, Ym = np.meshgrid(x, z, y)
     Xm = np.expand_dims(Xm.flatten(), 1)
     Ym = np.expand_dims(Ym.flatten(), 1)
     Zm = np.expand_dims(Zm.flatten(), 1)
     domain = np.concatenate((Xm, Ym, Zm), axis=-1)
-
+    print(domain.shape)
+    # domain[:, 1], domain[:,2] = domain[:,2], domain[:,1]
     db_idx = np.where(Xm == d_boundary)[0]
     db_pts = domain[db_idx, :]
     db_vals = np.ones(np.shape(db_pts)) * d_cond
@@ -102,7 +103,7 @@ def define_domain(L, H, D, N=25, dir_bcs=None, neu_bcs=None):
         'coords': nb_pts,
         'values': nb_vals
     }
-    print(domain.shape)
+
     return domain, dirichlet, neumann
 
 lmbd =  E * nu / ((1 + nu)*(1 - 2*nu))
@@ -319,7 +320,7 @@ if __name__ == '__main__':
     # plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers80')
     # exit()
 
-    N = 20
+    N = 5
     # lrs = [0.001, 0.002, 0.005]
     # num_layers = [3, 4, 5]
     lrs = [.01, .02]
