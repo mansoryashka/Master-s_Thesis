@@ -179,7 +179,8 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
             # evaluate model
             U_pred = DemBeam.evaluate_model(x, y, z)
             # calculate L2norm
-            u_norms[i] = L2norm3D(np.transpose(U_pred, [0, 2, 1, 3]), 4*N_test, N_test, N_test, dx, dy, dz)
+            # u_norms[i] = L2norm3D(np.transpose(U_pred, [0, 2, 1, 3]) - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+            u_norms[i] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
             losses[:, i] = np.array(DemBeam.losses)
     # train on many learning rates and number of neurons in hidden layers
     # elif isinstance((lrs and num_neurons), (list, tuple)):
@@ -196,7 +197,8 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lr, max_it=max_it, epochs=num_epochs)
                 U_pred = DemBeam.evaluate_model(x, y, z)
 
-                u_norms[i, j] = L2norm3D(np.transpose(U_pred, [0, 2, 1, 3]) - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                # u_norms[i, j] = L2norm3D(np.transpose(U_pred, [0, 2, 1, 3]) - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
                 losses[:, i, j] = np.array(DemBeam.losses)
     # train on many learning rates and number of hidden layers
     # elif isinstance((lrs and num_layers), (list, tuple)):
@@ -213,7 +215,8 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 # evaluate model
                 U_pred = DemBeam.evaluate_model(x, y, z)
                 write_vtk_v2(f'output/DemBeam_Jfb_lr{lr}_nl{l}_100', x, y, z, U_pred)
-                u_norms[i, j] = L2norm3D(np.transpose(U_pred, [0, 2, 1, 3]) - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                # u_norms[i, j] = L2norm3D(np.transpose(U_pred, [0, 2, 1, 3]) - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
                 losses[:, i, j] = np.array(DemBeam.losses)
     # train on number of neurons in hidden layers and number of hidden layers
     # elif isinstance((num_neurons and num_layers), (list, tuple)):
@@ -231,7 +234,8 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 # evaluate model
                 U_pred = DemBeam.evaluate_model(x, y, z)
 
-                u_norms[i, j] = L2norm3D(np.transpose(U_pred, [0, 2, 1, 3]) - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                # u_norms[i, j] = L2norm3D(np.transpose(U_pred, [0, 2, 1, 3]) - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
                 losses[:, i, j] = np.array(DemBeam.losses)
     # train on many N values and learning rates
     # elif isinstance((Ns and lrs), (list, tuple)):
@@ -251,7 +255,8 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 # evaluate model
                 U_pred = DemBeam.evaluate_model(x, y, z)
                 # calculate L2norm
-                u_norms[i, j] = L2norm3D(np.transpose(U_pred, [0, 2, 1, 3]) - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                # u_norms[i, j] = L2norm3D(np.transpose(U_pred, [0, 2, 1, 3]) - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
                 losses[:, i, j] = np.array(DemBeam.losses)
     else:
         raise Exception('You have to provide a list of N values or one of the following:\n' + 
@@ -342,7 +347,7 @@ if __name__ == '__main__':
     # num_layers = [3]
     num_neurons = 30
     num_expreriments = 1
-    num_epochs = 500
+    num_epochs = 80
     U_norms = 0
     losses = 0
     st = time.time()

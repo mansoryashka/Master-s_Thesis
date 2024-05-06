@@ -116,9 +116,9 @@ class DeepEnergyMethod:
         self.u_pred_torch = u_pred_torch.double()
         self.u_pred_torch.requires_grad_(True)
         u_pred = u_pred_torch.detach().cpu().numpy()
-        surUx = u_pred[:, 0].reshape(Ny, Nx, Nz)
-        surUy = u_pred[:, 1].reshape(Ny, Nx, Nz)
-        surUz = u_pred[:, 2].reshape(Ny, Nx, Nz)
+        surUx = u_pred[:, 0].reshape(Nx, Ny, Nz)
+        surUy = u_pred[:, 1].reshape(Nx, Ny, Nz)
+        surUz = u_pred[:, 2].reshape(Nx, Ny, Nz)
         U = (np.float64(surUx), np.float64(surUy), np.float64(surUz))
         return U
 
