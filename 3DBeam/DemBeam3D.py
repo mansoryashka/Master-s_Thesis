@@ -320,14 +320,14 @@ if __name__ == '__main__':
     # plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers80')
     # exit()
 
-    N = 5
-    lrs = [0.001, 0.002, 0.005]
-    num_layers = [3, 4, 5]
-    # lrs = [.01, .02]
-    # num_layers = [3]
+    N = 25
+    # lrs = [0.001, 0.002, 0.005]
+    # num_layers = [3, 4, 5]
+    lrs = [.01, .02]
+    num_layers = [3, 5]
     num_neurons = 30
     num_expreriments = 1
-    num_epochs = 80
+    num_epochs = 50
     U_norms = 0
     losses = 0
     st = time.time()
