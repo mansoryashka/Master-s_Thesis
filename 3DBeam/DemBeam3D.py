@@ -43,6 +43,8 @@ dx = L/(4*N_test)
 dy = H/N_test
 dz = D/N_test
 
+dxdydz = [dx, dy, dz]
+
 d_boundary = 0.0
 d_cond = [0, 0, 0]
 
@@ -209,7 +211,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 model = MultiLayerNet(3, *([n]*l), 3)
                 DemBeam = DeepEnergyMethod(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
-                DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lrs, max_it=max_it, epochs=num_epochs)
+                DemBeam.train_model(domain, dirichlet, neumann, dxdydz, LHD, lr=lrs, max_it=max_it, epochs=num_epochs)
                 # evaluate model
                 U_pred = DemBeam.evaluate_model(x, y, z)
 
@@ -327,9 +329,9 @@ if __name__ == '__main__':
     N = 30
     lr = .5
     num_layers = [2, 3, 4, 5]
-    num_neurons = [30, 40, 50, 60]
+    num_neurons = [30, 40] #, 50, 60]
     num_expreriments = 1
-    num_epochs = 180
+    num_epochs = 20
     U_norms = 0
     losses = 0
     for i in range(num_expreriments):
@@ -339,7 +341,8 @@ if __name__ == '__main__':
     U_norms /= num_expreriments
     losses /= num_expreriments
     np.save(arrays_path / 'losses_nl_nn', losses)
-    plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers80')
+    plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers')
+    plot_losses(losses, [r'$# neurons$ = ', num_neurons], ['# of hidden layers', num_layers], 2, 1, num_epochs, [f'{num_layers[2]} hidden layers',rf'# neurons$: {num_neurons[1]}'], 'beam_loss_nn_nl')
     # exit()
 
     N = 25

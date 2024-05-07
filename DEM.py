@@ -32,9 +32,11 @@ class DeepEnergyMethod:
         self.model = model.to(dev)
         self.energy = energy
         
-    def train_model(self, data, dirichlet, neumann, LHD, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]])):
+    def train_model(self, data, dirichlet, neumann, dxdydz, LHD, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]])):
         # data
         # print(data)
+        N = np.array(LHD) / np.array(dxdydz)
+        print(N); exit()
         x = torch.from_numpy(data).float().to(dev)
         fb = torch.from_numpy(fb).float().to(dev)
         x.requires_grad_(True)
@@ -60,7 +62,7 @@ class DeepEnergyMethod:
                 IntEnergy, J = self.energy(u_pred, x, J=True)
 
                 # internal_loss = LHD[0]*LHD[1]*LHD[2]*penalty(IntEnergy)
-                internal_loss = LHD[0]*LHD[1]*LHD[2]*simpsons3D(IntEnergy, dx=1/25, dy=1/25, dz=1/25)
+                internal_loss = LHD[0]*LHD[1]*LHD[2]*simpsons3D(IntEnergy, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2])
 
                 # boundary loss
                 dir_pred = self.getU(self.model, dirBC_coords)
@@ -73,10 +75,10 @@ class DeepEnergyMethod:
                 
                 phi = u_pred + x
                 body_f = torch.matmul(phi.unsqueeze(1), fb.unsqueeze(2))
-                print(body_f.shape); exit()
+
                 # print(body_f.shape)
                 # external_loss = LHD[0]*LHD[1]*LHD[2]*penalty(body_f)
-                external_loss = LHD[0]*LHD[1]*LHD[2]*simpsons3D(body_f, dx=1/25, dy=1/25, dz=1/25)
+                external_loss = LHD[0]*LHD[1]*LHD[2]*simpsons3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2])
 
                 loss = internal_loss - external_loss + boundary_loss
                 optimizer.zero_grad()
