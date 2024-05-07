@@ -93,23 +93,23 @@ def FEM_3D(N):
     x = np.linspace(0, l, 4*N_test+2)[1:-1]
     y = np.linspace(0, h, N_test+2)[1:-1]
     z = np.linspace(0, d, N_test+2)[1:-1]
-    u_fem = np.zeros((3, 4*N_test, N_test, N_test))
+    u_fem = np.zeros((3, N_test, 4*N_test, N_test))
 
-    for i in range(4*N_test):
-        for j in range(N_test):
+    for j in range(N_test):
+        for i in range(4*N_test):
             for k in range(N_test):
-                u_fem[:, i, j, k] = u(x[i], y[j], z[k])
+                u_fem[:, j, i, k] = u(x[i], y[j], z[k])
 
     np.save(f'stored_arrays/u_fem_N{N}_fb', u_fem)
 
     print(dolfin.assemble(psi*dolfin.dx))               # 6.924290983627352
     print(dolfin.assemble(dolfin.dot(f, u)*dolfin.dx))      # 14.651664345327262
 
-    print(dolfin.assemble(psi*dolfin.dx))               # 2.873653069727217
-    print(dolfin.assemble(dolfin.dot(f, u)*ds(1)))      # 5.996554979767974
+    # print(dolfin.assemble(psi*dolfin.dx))               # 2.873653069727217
+    # print(dolfin.assemble(dolfin.dot(f, u)*ds(1)))      # 5.996554979767974
 
 if __name__ == '__main__':
-    # for N in [5, 10, 15, 20, 25, 30]:
-    for N in [20]:
+    for N in [5, 10, 15, 20, 25, 30]:
+    # for N in [5]:
         print('N = ', N)
         FEM_3D(N)

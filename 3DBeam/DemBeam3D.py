@@ -26,7 +26,7 @@ current_path = Path.cwd().resolve()
 figures_path = current_path / 'figures'
 arrays_path = current_path / 'stored_arrays'
 models_path = current_path / 'trained_models'
-# code to run on ML node with no hangup :
+# code to run on ML node with no hangup:
 # CUDA_VISIBLE_DEVICES=x TMP=./tmp nohup python yourscript.py > out1.log 2> error1.log &
 
 N_test = 30
@@ -47,7 +47,7 @@ d_boundary = 0.0
 d_cond = [0, 0, 0]
 
 n_boundary = L
-n_cond = [0, -5, 0]
+n_cond = [0, 0, 0]
 
 dir_bcs = {d_boundary: d_cond}
 neu_bcs = {n_boundary: n_cond}
@@ -62,7 +62,6 @@ def define_domain(L, H, D, N=25, dir_bcs=None, neu_bcs=None):
     Ym = np.expand_dims(Ym.flatten(), 1)
     Zm = np.expand_dims(Zm.flatten(), 1)
     domain = np.concatenate((Xm, Ym, Zm), axis=-1)
-    print(domain.shape)
     # domain[:, 1], domain[:,2] = domain[:,2], domain[:,1]
     db_idx = np.where(Xm == d_boundary)[0]
     db_pts = domain[db_idx, :]
@@ -290,56 +289,79 @@ def plot_losses(losses, parameter1, parameter2, dim1, dim2, num_epochs, title, f
     fig.savefig(figures_path / Path(filename + '.pdf'))
 
 if __name__ == '__main__':
-    u_fem30 = np.load('stored_arrays/u_fem_N20.npy')
-    print(f'FEM: {L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)} \n')
+    # N = 5
+    # x = []; y = []; z = []
+    # for i in range(5):
+    #     x.append(f'x{i}')
+    #     y.append(f'y{i}')
+    #     z.append(f'z{i}')
+    # for i in range(5, 10):
+    #     x.append(f'x{i}')
+
+
+    # x = np.array(x)
+    # y = np.array(y)
+    # z = np.array(z)
+
+    # X, Z, Y = np.meshgrid(x, z, y)
+    # Xm = np.expand_dims(X.flatten(), 1)
+    # Ym = np.expand_dims(Y.flatten(), 1)
+    # Zm = np.expand_dims(Z.flatten(), 1)
+
+    # dom = np.concatenate((Xm, Ym, Zm), -1)
+
+    # print(dom)
+    # print(X)
+    # print(dom[:,0].reshape(5, 10, 5)); exit()
+
+    "--------------------------------------------------------------------------"
+    # u_fem20 = np.load('stored_arrays/u_fem_N20.npy')
+    u_fem30 = np.load(arrays_path / 'u_fem_N20.npy')
+    # print(f'FEM: {L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)} \n')
+
 
     x = np.linspace(0, L, 4*N_test + 2)[1:-1]
     y = np.linspace(0, D, N_test + 2)[1:-1]
     z = np.linspace(0, H, N_test + 2)[1:-1]
-    # Ns = [20, 30, 40, 50]
 
-    # U_norms = train_and_evaluate(Ns, num_epochs=20, num_layers=3)
-    # print(U_norms)
-    # print((U_norms - L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz))/L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz))
-
-    # N = 30
-    # lr = .5
-    # num_layers = [2, 3, 4, 5]
-    # num_neurons = [30, 40, 50, 60]
-    # num_expreriments = 1
-    # num_epochs = 80
-    # U_norms = 0
-    # losses = 0
-    # for i in range(num_expreriments):
-    #     U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lr, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs)
-    #     U_norms += U_norms_i
-    #     losses += losses_i
-    # U_norms /= num_expreriments
-    # losses /= num_expreriments
-    # np.save(arrays_path / 'losses_nl_nn', losses)
-    # plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers80')
+    N = 30
+    lr = .5
+    num_layers = [2, 3, 4, 5]
+    num_neurons = [30, 40, 50, 60]
+    num_expreriments = 1
+    num_epochs = 180
+    U_norms = 0
+    losses = 0
+    for i in range(num_expreriments):
+        U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lr, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs)
+        U_norms += U_norms_i
+        losses += losses_i
+    U_norms /= num_expreriments
+    losses /= num_expreriments
+    np.save(arrays_path / 'losses_nl_nn', losses)
+    plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers80')
     # exit()
 
     N = 25
-    # lrs = [0.001, 0.002, 0.005]
+    # lrs = [0.001, 0.01, 0.1, 0.5, 1]
     # num_layers = [3, 4, 5]
-    lrs = [.01, .02]
-    num_layers = [3, 5]
-    num_neurons = 30
-    num_expreriments = 1
-    num_epochs = 50
-    U_norms = 0
-    losses = 0
-    st = time.time()
-    for i in range(num_expreriments):
-        U_norms_i, losses_i= train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs)
-        U_norms += U_norms_i
-        losses += losses_i
-    print(time.time() - st)
-    U_norms /= num_expreriments
-    losses /= num_expreriments
-    np.save(arrays_path / 'losses_lrs_nl', losses)
-    plot_heatmap(U_norms, num_layers, lrs, rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers1')
+    # lrs = [.5, 1]
+    # num_layers = [3]
+    # num_neurons = 30
+    # num_expreriments = 1
+    # num_epochs = 50
+    # U_norms = 0
+    # losses = 0
+    # st = time.time()
+    # for i in range(num_expreriments):
+    #     U_norms_i, losses_i= train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs)
+    #     U_norms += U_norms_i
+    #     losses += losses_i
+    # print(time.time() - st)
+    # U_norms /= num_expreriments
+    # losses /= num_expreriments
+    # np.save(arrays_path / 'losses_lrs_nl', losses)
+    # plot_heatmap(U_norms, num_layers, lrs, rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers')
 
     # losses_lrs_nl = np.load(arrays_path / 'losses_lrs_nl.npy')
     # print(losses_lrs_nl)

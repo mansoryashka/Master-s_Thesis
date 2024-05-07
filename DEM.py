@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.autograd import grad
-import scipy.integrate as sp
+# from scipy.integrate import simpson
+from scipy.integrate import trapezoid
+from simps import simpson
 
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 350
@@ -56,27 +58,27 @@ class DeepEnergyMethod:
                 u_pred.double()
 
                 IntEnergy, J = self.energy(u_pred, x, J=True)
-                # print(IntEnergy.shape); exit()
-                internal_loss = LHD[0]*LHD[1]*LHD[2]*penalty(IntEnergy)
+
+                # internal_loss = LHD[0]*LHD[1]*LHD[2]*penalty(IntEnergy)
+                internal_loss = LHD[0]*LHD[1]*LHD[2]*simpsons3D(IntEnergy, dx=1/25, dy=1/25, dz=1/25)
 
                 # boundary loss
                 dir_pred = self.getU(self.model, dirBC_coords)
-                # print(torch.norm(dir_pred))
                 bc_dir = LHD[1]*LHD[2]*loss_squared_sum(dir_pred, dirBC_values)
                 boundary_loss = torch.sum(bc_dir)
+
                 # external loss
                 neu_pred = self.getU(self.model, neuBC_coords)
                 bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
                 
-
-                phi = u_pred
+                phi = u_pred + x
                 body_f = torch.matmul(phi.unsqueeze(1), fb.unsqueeze(2))
-                external_loss = LHD[1]*LHD[2]*penalty(bc_neu) #+ LHD[0]*LHD[1]*LHD[2]*body_loss
+                print(body_f.shape); exit()
+                # print(body_f.shape)
                 # external_loss = LHD[0]*LHD[1]*LHD[2]*penalty(body_f)
-
+                external_loss = LHD[0]*LHD[1]*LHD[2]*simpsons3D(body_f, dx=1/25, dy=1/25, dz=1/25)
 
                 loss = internal_loss - external_loss + boundary_loss
-
                 optimizer.zero_grad()
                 loss.backward()
 
@@ -143,10 +145,39 @@ def L2norm3D(U, Nx, Ny, Nz, dx, dy, dz):
     Uz = np.expand_dims(U[2].flatten(), 1)
     Uxyz = np.concatenate((Ux, Uy, Uz), axis=1)
     n = Ux.shape[0]
-    udotu = np.zeros(n)
+    udotu = torch.zeros(n)
     for i in range(n):
         udotu[i] = np.dot(Uxyz[i,:], Uxyz[i,:].T)
     udotu = udotu.reshape(Nx, Ny, Nz)
-    L2norm = np.sqrt(sp.simps(sp.simps(sp.simps(udotu, dx=dz), dx=dy), dx=dx))
+    L2norm = np.sqrt(simpson(simpson(simpson(udotu, dx=dz), dx=dy), dx=dx))
     return L2norm
 
+def simpsons2D(U, x=None, y=None, dx=None, dy=None, N=25):
+    Nx = 4*N; Ny = N; Nz = N
+    # U = U.cpu().detach().numpy()
+    U = U.flatten().reshape(Ny, Nz)
+    if (x and y):
+        raise NotImplementedError('Not implemented yet. Please use dx and dy.')
+    elif (dx and dy):
+        return simpson(simpson(U, dx=dy), dx=dx)
+    
+def simpsons3D(U, x=None, y=None, z=None, dx=None, dy=None, dz=None, N=25):
+    Nx = 4*N; Ny = N; Nz = N
+    # U = U.cpu().detach().numpy()
+    # print(U.flatten().shape); exit()
+    U3D = U.flatten().reshape(Nx, Ny, Nz)
+    # breakpoint()
+    if (x and y and z):
+        raise NotImplementedError('Not implemented yet. Please use dx and dy.')
+    elif (dx and dy and dz):
+        # print('U', U.shape); exit()
+        # s1 = simpson(U, dx=dz)
+        # s2 = simpson(s1, dx=dy)
+        # s3 = simpson(s2, dx=dx)
+        # print(U.shape)
+        # print(s1.shape)
+        # print(s2.shape)
+        # print(s3)
+        # return simpson(simpson(simpson(U, dx=dz), dx=dy), dx=dx)
+        # print(dx)
+        return simpson(simpson(simpson(U3D, dx=dz), dx=dy), dx=dx)
