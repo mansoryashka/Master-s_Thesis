@@ -13,7 +13,7 @@ nu = 0.3
 lmbd = E * nu / ((1 + nu)*(1 - 2*nu))
 mu = E / (2*(1 + nu))
 
-# dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
+dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
 
 def FEM_3D(N):
     # define mesh and domain w/trial and test functions
@@ -88,7 +88,7 @@ def FEM_3D(N):
                                     # 'absolute_tolerance': 1e-6,
                                     'linear_solver': 'mumps'}})
 
-    dolfin.File('output/FEMBeam3D_noJ_fb.pvd') << u
+    dolfin.File('output/FEMBeam3D.pvd') << u
 
     x = np.linspace(0, l, 4*N_test+2)[1:-1]
     y = np.linspace(0, h, N_test+2)[1:-1]
@@ -100,7 +100,7 @@ def FEM_3D(N):
             for k in range(N_test):
                 u_fem[:, j, i, k] = u(x[i], y[j], z[k])
 
-    np.save(f'stored_arrays/u_fem_N{N}_fb', u_fem)
+    np.save(f'stored_arrays/u_fem_N{N}', u_fem)
 
     print(dolfin.assemble(psi*dolfin.dx))               # 6.924290983627352
     print(dolfin.assemble(dolfin.dot(f, u)*dolfin.dx))      # 14.651664345327262

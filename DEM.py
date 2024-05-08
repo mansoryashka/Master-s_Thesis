@@ -5,7 +5,7 @@ import torch
 from torch import nn
 from torch.autograd import grad
 # from scipy.integrate import simpson
-from scipy.integrate import trapezoid
+# from scipy.integrate import trapezoid
 from simps import simpson
 
 import matplotlib
