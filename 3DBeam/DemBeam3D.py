@@ -147,7 +147,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
     num_losses = int(num_epochs / 5) + 1
     # train on many N values
     if isinstance((Ns and not lrs), (list, tuple)):
-        print('Ns')
+        # print('Ns')
         u_norms = np.zeros(len(Ns))
         losses = np.zeros(num_losses, len(Ns))
         for i, N in enumerate(Ns):
@@ -206,7 +206,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
         u_norms = np.zeros((len(num_layers), len(num_neurons)))
         losses = np.zeros((num_losses, len(num_layers), len(num_neurons)))
         for j, n in enumerate(num_neurons):
-            print(n)
+            # print(n)
             for i, l in enumerate(num_layers):
                 model = MultiLayerNet(3, *([n]*l), 3)
                 DemBeam = DeepEnergyMethod(model, energy)
@@ -318,20 +318,20 @@ if __name__ == '__main__':
 
     "--------------------------------------------------------------------------"
     # u_fem20 = np.load('stored_arrays/u_fem_N20.npy')
-    u_fem30 = np.load(arrays_path / 'u_fem_N20.npy')
+    u_fem30 = np.load(arrays_path / 'u_fem_N20_fb.npy')
     # print(f'FEM: {L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)} \n')
 
 
     x = np.linspace(0, L, 4*N_test + 2)[1:-1]
     y = np.linspace(0, D, N_test + 2)[1:-1]
     z = np.linspace(0, H, N_test + 2)[1:-1]
-
+    start = time.time()
     N = 30
     lr = .5
     num_layers = [2, 3, 4, 5]
-    num_neurons = [30, 40] #, 50, 60]
+    num_neurons = [30, 40, 50, 60]
     num_expreriments = 1
-    num_epochs = 20
+    num_epochs = 200
     U_norms = 0
     losses = 0
     for i in range(num_expreriments):
@@ -342,9 +342,12 @@ if __name__ == '__main__':
     losses /= num_expreriments
     np.save(arrays_path / 'losses_nl_nn', losses)
     plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers')
-    plot_losses(losses, [r'$# neurons$ = ', num_neurons], ['# of hidden layers', num_layers], 2, 1, num_epochs, [f'{num_layers[2]} hidden layers',rf'# neurons$: {num_neurons[1]}'], 'beam_loss_nn_nl')
+    plot_losses(losses, [r'# neurons = ', num_neurons], ['# of hidden layers', num_layers], 2, 1, num_epochs, [f'{num_layers[2]} hidden layers',rf'# neurons: {num_neurons[1]}'], 'beam_loss_nn_nl')
     # exit()
-
+    tid = time.time() - start
+    print(f'tid: {tid:.2f}s')
+    print(f'tid: {tid/60:.2f}m')
+    print(f'tid: {tid/3600:.2f}t')
     N = 25
     # lrs = [0.001, 0.01, 0.1, 0.5, 1]
     # num_layers = [3, 4, 5]
