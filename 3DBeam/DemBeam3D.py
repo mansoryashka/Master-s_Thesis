@@ -129,12 +129,90 @@ def energy(u, x, J=False):
     detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
     trC = Fxx ** 2 + Fxy ** 2 + Fxz ** 2 + Fyx ** 2 + Fyy ** 2 + Fyz ** 2 + Fzx ** 2 + Fzy ** 2 + Fzz ** 2
     strainEnergy = 0.5 * lmbd * (torch.log(detF) * torch.log(detF)) - mu * torch.log(detF) + 0.5 * mu * (trC - 3)
+
     if J:
         return strainEnergy, detF
     return strainEnergy
 
+def VonMises_stress(u, x):
+    # print(x); exit()
+    Nx = 4*N_test; Ny = N_test; Nz = N_test
+    duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
+    duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
+    duzdxyz = grad(u[:, 2].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
 
-""" Simspson's method to be implemented later """
+    Fxx = duxdxyz[:, 0].unsqueeze(1) + 1
+    Fxy = duxdxyz[:, 1].unsqueeze(1) + 0
+    Fxz = duxdxyz[:, 2].unsqueeze(1) + 0
+    Fyx = duydxyz[:, 0].unsqueeze(1) + 0
+    Fyy = duydxyz[:, 1].unsqueeze(1) + 1
+    Fyz = duydxyz[:, 2].unsqueeze(1) + 0
+    Fzx = duzdxyz[:, 0].unsqueeze(1) + 0
+    Fzy = duzdxyz[:, 1].unsqueeze(1) + 0
+    Fzz = duzdxyz[:, 2].unsqueeze(1) + 1
+
+    detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
+    trC = Fxx ** 2 + Fxy ** 2 + Fxz ** 2 + Fyx ** 2 + Fyy ** 2 + Fyz ** 2 + Fzx ** 2 + Fzy ** 2 + Fzz ** 2
+    strainEnergy = 0.5 * lmbd * (torch.log(detF) * torch.log(detF)) - mu * torch.log(detF) + 0.5 * mu * (trC - 3)
+
+    detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
+    invF11 = (Fyy * Fzz - Fyz * Fzy) / detF
+    invF12 = -(Fxy * Fzz - Fxz * Fzy) / detF
+    invF13 = (Fxy * Fyz - Fxz * Fyy) / detF
+    invF21 = -(Fyx * Fzz - Fyz * Fzx) / detF
+    invF22 = (Fxx * Fzz - Fxz * Fzy) / detF
+    invF23 = -(Fxx * Fyz - Fxz * Fyx) / detF
+    invF31 = (Fyx * Fzy - Fyy * Fzy) / detF
+    invF32 = -(Fxx * Fzy - Fxy * Fzx) / detF
+    invF33 = (Fxx * Fyy - Fxy * Fyx) / detF
+
+    P11 = mu * Fxx + (lmbd * torch.log(detF) - mu) * invF11
+    P12 = mu * Fxy + (lmbd * torch.log(detF) - mu) * invF21
+    P13 = mu * Fxz + (lmbd * torch.log(detF) - mu) * invF31
+    P21 = mu * Fyx + (lmbd * torch.log(detF) - mu) * invF12
+    P22 = mu * Fyy + (lmbd * torch.log(detF) - mu) * invF22
+    P23 = mu * Fyz + (lmbd * torch.log(detF) - mu) * invF32
+    P31 = mu * Fzx + (lmbd * torch.log(detF) - mu) * invF13
+    P32 = mu * Fzy + (lmbd * torch.log(detF) - mu) * invF23
+    P33 = mu * Fzz + (lmbd * torch.log(detF) - mu) * invF33
+    
+    S11 = invF11 * P11 + invF12 * P21 + invF13 * P31
+    S12 = invF11 * P12 + invF12 * P22 + invF13 * P32
+    S13 = invF11 * P13 + invF12 * P23 + invF13 * P33
+    S21 = invF21 * P11 + invF22 * P21 + invF23 * P31
+    S22 = invF21 * P12 + invF22 * P22 + invF23 * P32
+    S23 = invF21 * P13 + invF22 * P23 + invF23 * P33
+    S31 = invF31 * P11 + invF32 * P21 + invF33 * P31
+    S32 = invF31 * P12 + invF32 * P22 + invF33 * P32
+    S33 = invF31 * P13 + invF32 * P23 + invF33 * P33
+    
+    S11_pred = S11.detach().cpu().numpy()
+    S12_pred = S12.detach().cpu().numpy()
+    S13_pred = S13.detach().cpu().numpy()
+    S21_pred = S21.detach().cpu().numpy()
+    S22_pred = S22.detach().cpu().numpy()
+    S23_pred = S23.detach().cpu().numpy()
+    S31_pred = S31.detach().cpu().numpy()
+    S32_pred = S32.detach().cpu().numpy()
+    S33_pred = S33.detach().cpu().numpy()
+    
+    surS11 = S11_pred.reshape(Ny, Nx, Nz)
+    surS12 = S12_pred.reshape(Ny, Nx, Nz)
+    surS13 = S13_pred.reshape(Ny, Nx, Nz)
+    surS21 = S21_pred.reshape(Ny, Nx, Nz)
+    surS22 = S22_pred.reshape(Ny, Nx, Nz)
+    surS23 = S23_pred.reshape(Ny, Nx, Nz)
+    surS31 = S31_pred.reshape(Ny, Nx, Nz)
+    surS32 = S32_pred.reshape(Ny, Nx, Nz)
+    surS33 = S33_pred.reshape(Ny, Nx, Nz)
+
+    SVonMises = np.float64(
+                np.sqrt(0.5 * ((surS11 - surS22) ** 2 
+                            + (surS22 - surS33) ** 2 
+                            + (surS33 - surS11) ** 2 
+                    + 6 * (surS12 ** 2 + surS23 ** 2 + surS31 ** 2)))
+                )
+    return SVonMises
 
 
 def write_vtk_v2(filename, x_space, y_space, z_space, U):
@@ -213,9 +291,10 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
                 DemBeam.train_model(domain, dirichlet, neumann, dxdydz, LHD, lr=lrs, max_it=max_it, epochs=num_epochs)
                 # evaluate model
-                U_pred = DemBeam.evaluate_model(x, y, z)
-
+                U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
+                VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
                 write_vtk_v2(f'output/DemBeam_nn{n}_nl{l}_noX', x, y, z, U_pred)
+                write_vtk_v2(f'output/DemBeam_nn{n}_nl{l}_VM', x, y, z, VonMises_pred)
                 # u_norms[i, j] = L2norm3D(np.transpose(U_pred, [0, 2, 1, 3]) - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
                 u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
                 losses[:, i, j] = np.array(DemBeam.losses)
