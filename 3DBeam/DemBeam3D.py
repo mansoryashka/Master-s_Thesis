@@ -195,7 +195,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lr, max_it=max_it, epochs=num_epochs)
                 # evaluate model
                 U_pred = DemBeam.evaluate_model(x, y, z)
-                write_vtk_v2(f'output/DemBeam_Jfb_lr{lr}_nl{l}_100', x, y, z, U_pred)
+                write_vtk_v2(f'output/DemBeam_lr{lr}_nl{l}', x, y, z, U_pred)
                 u_norms[i, j] = L2norm3D(np.transpose(U_pred, [0, 2, 1, 3]) - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
                 # u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
                 losses[:, i, j] = np.array(DemBeam.losses)
@@ -215,6 +215,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 # evaluate model
                 U_pred = DemBeam.evaluate_model(x, y, z)
 
+                write_vtk_v2(f'output/DemBeam_nn{n}_nl{l}', x, y, z, U_pred)
                 # u_norms[i, j] = L2norm3D(np.transpose(U_pred, [0, 2, 1, 3]) - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
                 u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
                 losses[:, i, j] = np.array(DemBeam.losses)
@@ -318,7 +319,7 @@ if __name__ == '__main__':
 
     "--------------------------------------------------------------------------"
     # u_fem20 = np.load('stored_arrays/u_fem_N20.npy')
-    u_fem30 = np.load(arrays_path / 'u_fem_N20_fb.npy')
+    u_fem30 = np.load(arrays_path / 'u_fem_N20.npy')
     # print(f'FEM: {L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)} \n')
 
 
@@ -328,8 +329,10 @@ if __name__ == '__main__':
     start = time.time()
     N = 30
     lr = .5
-    num_layers = [2, 3, 4, 5]
-    num_neurons = [30, 40, 50, 60]
+    # num_layers = [2, 3, 4, 5]
+    # num_neurons = [30, 40, 50, 60]
+    num_layers = [4, 5]
+    num_neurons = [30]
     num_expreriments = 1
     num_epochs = 200
     U_norms = 0
@@ -341,8 +344,8 @@ if __name__ == '__main__':
     U_norms /= num_expreriments
     losses /= num_expreriments
     np.save(arrays_path / 'losses_nl_nn', losses)
-    plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers')
-    plot_losses(losses, [r'# neurons = ', num_neurons], ['# of hidden layers', num_layers], 2, 1, num_epochs, [f'{num_layers[2]} hidden layers',rf'# neurons: {num_neurons[1]}'], 'beam_loss_nn_nl')
+    # plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers')
+    # plot_losses(losses, [r'# neurons = ', num_neurons], ['# of hidden layers', num_layers], 2, 1, num_epochs, [f'{num_layers[2]} hidden layers',rf'# neurons: {num_neurons[1]}'], 'beam_loss_nn_nl')
     # exit()
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
