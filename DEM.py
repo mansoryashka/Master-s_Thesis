@@ -42,6 +42,7 @@ class DeepEnergyMethod:
         fb = torch.from_numpy(fb).float().to(dev)
         x.requires_grad_(True)
         optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr, max_iter=max_it)
+        self.x = x
 
         # boundary
         dirBC_coords = torch.from_numpy(dirichlet['coords']).float().to(dev)
@@ -74,7 +75,7 @@ class DeepEnergyMethod:
                 neu_pred = self.getU(self.model, neuBC_coords)
                 bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
                 
-                phi = u_pred + x
+                phi = u_pred
                 body_f = torch.matmul(phi.unsqueeze(1), fb.unsqueeze(2))
 
                 # print(body_f.shape)
@@ -105,7 +106,7 @@ class DeepEnergyMethod:
         u_pred = torch.cat((Ux.T, Uy.T, Uz.T), dim=-1)
         return u_pred
 
-    def evaluate_model(self, x, y, z):
+    def evaluate_model(self, x, y, z, return_pred_tensor=False):
         Nx = len(x)
         Ny = len(y)
         Nz = len(z)
@@ -124,14 +125,17 @@ class DeepEnergyMethod:
         xyz_tensor.requires_grad_(True)
 
         u_pred_torch = self.getU(self.model, xyz_tensor)
-        self.u_pred_torch = u_pred_torch.double()
-        self.u_pred_torch.requires_grad_(True)
+        # self.u_pred_torch = u_pred_torch.double()
+        # self.u_pred_torch.requires_grad_(True)
         u_pred = u_pred_torch.detach().cpu().numpy()
         surUx = u_pred[:, 0].reshape(Ny, Nx, Nz)
         surUy = u_pred[:, 1].reshape(Ny, Nx, Nz)
         surUz = u_pred[:, 2].reshape(Ny, Nx, Nz)
 
         U = (np.float64(surUx), np.float64(surUy), np.float64(surUz))
+
+        if return_pred_tensor:
+            return U, u_pred_torch, xyz_tensor
         return U
 
 
