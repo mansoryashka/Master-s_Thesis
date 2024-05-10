@@ -416,7 +416,7 @@ if __name__ == '__main__':
     # num_neurons = [30, 40, 50, 60]
     num_layers = [3, 4, 5]
     num_neurons = [30, 40]
-    num_expreriments = 10
+    num_expreriments = 2
     num_epochs = 200
     U_norms = 0
     losses = 0
