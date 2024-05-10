@@ -97,8 +97,19 @@ def FEM_3D(N):
     V = dolfin.FunctionSpace(mesh, "Lagrange", 1)
     # W = dolfin.TensorFunctionSpace(mesh, "Lagrange", 1)
     VonMises = dolfin.project(von_Mises, V)
-    dolfin.File('output/FEMBeam3D10.pvd') << u
-    dolfin.File('output/FEMBeam3D_vonmises10.pvd') << VonMises
+
+    u.rename('Displacement', '')
+    VonMises.rename('VonMises stress', '')
+
+    outfile = dolfin.XDMFFile('output/FemBeam3D.xdmf')
+    outfile.parameters['flush_output'] = True
+    outfile.parameters['functions_share_mesh'] = True
+    outfile.write(u, 0.0)
+    outfile.write(VonMises, 0.0)
+
+
+    # dolfin.File('output/FEMBeam3D10.pvd') << u
+    # dolfin.File('output/FEMBeam3D_vonmises10.pvd') << VonMises
 
     x = np.linspace(0, l, 4*N_test+2)[1:-1]
     y = np.linspace(0, h, N_test+2)[1:-1]
@@ -111,6 +122,8 @@ def FEM_3D(N):
                 u_fem[:, j, i, k] = u(x[i], y[j], z[k])
 
     # np.save(f'stored_arrays/u_fem_N{N}', u_fem)
+
+
 
     print(dolfin.assemble(psi*dolfin.dx))               # 6.924290983627352
     print(dolfin.assemble(dolfin.dot(f, u)*dolfin.dx))      # 14.651664345327262
