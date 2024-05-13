@@ -32,14 +32,20 @@ class DeepEnergyMethod:
         self.model = model.to(dev)
         self.energy = energy
         
-    def train_model(self, data, dirichlet, neumann, dxdydz, LHD, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]])):
+    def train_model(self, data, dirichlet, neumann, shape, LHD, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]])):
         # data
         # print(data)
-        N = np.array(LHD) / np.array(dxdydz)
-        N = list(map(int, N))
+        # N = np.array(LHD) / np.array(dxdydz)
+        # N = list(map(int, N))
+        dxdydz = np.array(LHD) / (np.array(shape) - 1)
+        # print(shape)
+        # print(LHD)
+        # print(dxdydz); exit()
+        # N = list(map(int, dxdydz))
 
         x = torch.from_numpy(data).float().to(dev)
         fb = torch.from_numpy(fb).float().to(dev)
+        # fb2 = fb*torch.ones((np.prod(shape), 3)).to(dev)
         x.requires_grad_(True)
         optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr, max_iter=max_it)
         self.x = x
@@ -64,7 +70,8 @@ class DeepEnergyMethod:
                 IntEnergy, J = self.energy(u_pred, x, J=True)
 
                 # internal_loss = LHD[0]*LHD[1]*LHD[2]*penalty(IntEnergy)
-                internal_loss = LHD[0]*LHD[1]*LHD[2]*simpsons3D(IntEnergy, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], N=N[-1])
+                # print('internal')
+                internal_loss = simps3D(IntEnergy, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape)
 
                 # boundary loss
                 dir_pred = self.getU(self.model, dirBC_coords)
@@ -74,15 +81,16 @@ class DeepEnergyMethod:
                 # external loss
                 neu_pred = self.getU(self.model, neuBC_coords)
                 bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
-                
                 phi = u_pred
                 body_f = torch.matmul(phi.unsqueeze(1), fb.unsqueeze(2))
 
-                # print(body_f.shape)
+                # print(body_f.shape), exit()
                 # external_loss = LHD[0]*LHD[1]*LHD[2]*penalty(body_f)
-                external_loss = LHD[0]*LHD[1]*LHD[2]*simpsons3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], N=N[-1])
+                # body_f = torch.bmm((u_pred + x).unsqueeze(1), fb2.unsqueeze(2))
+                # print('external')
+                external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape)
 
-                loss = internal_loss - external_loss + boundary_loss
+                loss = internal_loss - external_loss# + boundary_loss
                 optimizer.zero_grad()
                 loss.backward()
 
@@ -168,23 +176,33 @@ def simpsons2D(U, x=None, y=None, dx=None, dy=None, N=25):
     elif (dx and dy):
         return simpson(simpson(U, dx=dy), dx=dx)
     
-def simpsons3D(U, x=None, y=None, z=None, dx=None, dy=None, dz=None, N=25):
-    Nx = 4*N; Ny = N; Nz = N
-    # U = U.cpu().detach().numpy()
-    # print(U.flatten().shape); exit()
+# def simpsons3D(U, x=None, y=None, z=None, dx=None, dy=None, dz=None, N=25):
+#     Nx = 4*N; Ny = N; Nz = N
+#     # U = U.cpu().detach().numpy()
+#     # print(U.flatten().shape); exit()
+#     U3D = U.flatten().reshape(Nx, Ny, Nz)
+#     # breakpoint()
+#     if (x and y and z):
+#         raise NotImplementedError('Not implemented yet. Please use dx and dy.')
+#     elif (dx and dy and dz):
+#         # print('U', U.shape); exit()
+#         # s1 = simpson(U, dx=dz)
+#         # s2 = simpson(s1, dx=dy)
+#         # s3 = simpson(s2, dx=dx)
+#         # print(U.shape)
+#         # print(s1.shape)
+#         # print(s2.shape)
+#         # print(s3)
+#         # return simpson(simpson(simpson(U, dx=dz), dx=dy), dx=dx)
+#         # print(dx)
+#         return simpson(simpson(simpson(U3D, dx=dz), dx=dy), dx=dx)
+    
+def simps3D(U, xyz=None, dx=None, dy=None, dz=None, shape=None):
+    # print('Mansur')
+    Nx = shape[0]
+    Ny = shape[1]
+    Nz = shape[2]
+    # print(U.shape)
     U3D = U.flatten().reshape(Nx, Ny, Nz)
-    # breakpoint()
-    if (x and y and z):
-        raise NotImplementedError('Not implemented yet. Please use dx and dy.')
-    elif (dx and dy and dz):
-        # print('U', U.shape); exit()
-        # s1 = simpson(U, dx=dz)
-        # s2 = simpson(s1, dx=dy)
-        # s3 = simpson(s2, dx=dx)
-        # print(U.shape)
-        # print(s1.shape)
-        # print(s2.shape)
-        # print(s3)
-        # return simpson(simpson(simpson(U, dx=dz), dx=dy), dx=dx)
-        # print(dx)
-        return simpson(simpson(simpson(U3D, dx=dz), dx=dy), dx=dx)
+    # print(U3D.shape)
+    return simpson(simpson(simpson(U3D, dx=dz), dx=dy), dx=dx)
