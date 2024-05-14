@@ -32,7 +32,7 @@ class DeepEnergyMethod:
         self.model = model.to(dev)
         self.energy = energy
         
-    def train_model(self, data, dirichlet, neumann, shape, LHD, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]])):
+    def train_model(self, data, dirichlet, neumann, shape, LHD, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]]), eval_data=None):
         # data
         # print(data)
         # N = np.array(LHD) / np.array(dxdydz)
@@ -60,6 +60,7 @@ class DeepEnergyMethod:
         neuBC_values = torch.from_numpy(neumann['values']).float().to(dev)
 
         self.losses = []
+        self.eval_losses = []
         start_time = time.time()
         for i in range(epochs+1):
             def closure():
@@ -69,7 +70,6 @@ class DeepEnergyMethod:
 
                 IntEnergy, J = self.energy(u_pred, x, J=True)
 
-                # internal_loss = LHD[0]*LHD[1]*LHD[2]*penalty(IntEnergy)
                 # print('internal')
                 internal_loss = simps3D(IntEnergy, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape)
 
@@ -81,16 +81,12 @@ class DeepEnergyMethod:
                 # external loss
                 neu_pred = self.getU(self.model, neuBC_coords)
                 bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
-                phi = u_pred + x
-                body_f = torch.matmul(phi.unsqueeze(1), fb.unsqueeze(2))
 
-                # print(body_f.shape), exit()
-                # external_loss = LHD[0]*LHD[1]*LHD[2]*penalty(body_f)
-                # body_f = torch.bmm((u_pred + x).unsqueeze(1), fb2.unsqueeze(2))
-                # print('external')
+                body_f = torch.matmul(u_pred.unsqueeze(1), fb.unsqueeze(2))
+
                 external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape)
 
-                loss = internal_loss - external_loss# + boundary_loss
+                loss = internal_loss - external_loss + boundary_loss
                 optimizer.zero_grad()
                 loss.backward()
 
@@ -99,13 +95,28 @@ class DeepEnergyMethod:
                 self.energy_loss = loss
 
                 self.current_loss = loss
-                # print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}')
                 return loss
-
+        
             optimizer.step(closure)
+
+            if eval_data:
+                eval_shape = [len(eval_data[0]), len(eval_data[1]), len(eval_data[2])]
+                _, u_eval, xyz_eval = self.evaluate_model(eval_data[0], eval_data[1], eval_data[2], True)
+                eval_internal = self.energy(u_eval, xyz_eval)
+                eval_loss1 = simps3D(eval_internal, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=eval_shape)
+
+                eval_BF = torch.matmul(u_eval.unsqueeze(1), fb.unsqueeze(2))
+                eval_loss2 = simps3D(eval_BF, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=eval_shape)
+                self.eval_loss = eval_loss1 - eval_loss2
+            # print(eval_loss1, eval_loss2)
+
             if i % 5 == 0:
-                print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}')
-                self.losses.append(self.current_loss.detach().cpu())
+                if eval_data:
+                    print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Eval loss: {self.eval_loss:10.5f}')
+                    self.losses.append([self.current_loss.detach().cpu(), self.eval_loss.detach().cpu()])
+                else:
+                    print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}')
+                    self.losses.append(self.current_loss.detach().cpu())
         # return self.modeld
 
     def getU(self, model, x):
@@ -119,10 +130,6 @@ class DeepEnergyMethod:
         Ny = len(y)
         Nz = len(z)
         xGrid, yGrid, zGrid = np.meshgrid(x, y, z)
-        # x1D = xGrid.flatten()
-        # y1D = yGrid.flatten()
-        # z1D = zGrid.flatten()
-        # xyz = np.concatenate((np.array([x1D]).T, np.array([y1D]).T, np.array([z1D]).T), axis=-1)
 
         x1D = np.expand_dims(xGrid.flatten(), 1)
         y1D = np.expand_dims(yGrid.flatten(), 1)
@@ -150,8 +157,8 @@ class DeepEnergyMethod:
 def loss_squared_sum(input, target):
     return torch.sum((input - target)**2, dim=1) / input.shape[1]*input.data.nelement()
 
-def penalty(input):
-    return torch.sum(input) / input.data.nelement()
+def penalty(input, LHD):
+    return LHD[0]*LHD[1]*LHD[2]*torch.sum(input) / input.data.nelement()
 
 def L2norm3D(U, Nx, Ny, Nz, dx, dy, dz):
     ### function from DEM paper ###
@@ -185,19 +192,10 @@ def simpsons2D(U, x=None, y=None, dx=None, dy=None, N=25):
 #     if (x and y and z):
 #         raise NotImplementedError('Not implemented yet. Please use dx and dy.')
 #     elif (dx and dy and dz):
-#         # print('U', U.shape); exit()
-#         # s1 = simpson(U, dx=dz)
-#         # s2 = simpson(s1, dx=dy)
-#         # s3 = simpson(s2, dx=dx)
-#         # print(U.shape)
-#         # print(s1.shape)
-#         # print(s2.shape)
-#         # print(s3)
-#         # return simpson(simpson(simpson(U, dx=dz), dx=dy), dx=dx)
-#         # print(dx)
 #         return simpson(simpson(simpson(U3D, dx=dz), dx=dy), dx=dx)
     
 def simps3D(U, xyz=None, dx=None, dy=None, dz=None, shape=None):
+    # print(shape[0]); exit()
     # print('Mansur')
     Nx = shape[0]
     Ny = shape[1]

@@ -64,7 +64,7 @@ def define_domain(L, H, D, N=25, dir_bcs=None, neu_bcs=None):
     Ym = np.expand_dims(Ym.flatten(), 1)
     Zm = np.expand_dims(Zm.flatten(), 1)
     domain = np.concatenate((Xm, Ym, Zm), axis=-1)
-    # domain[:, 1], domain[:,2] = domain[:,2], domain[:,1]
+    
     db_idx = np.where(Xm == d_boundary)[0]
     db_pts = domain[db_idx, :]
     db_vals = np.ones(np.shape(db_pts)) * d_cond
@@ -77,7 +77,7 @@ def define_domain(L, H, D, N=25, dir_bcs=None, neu_bcs=None):
     nb_pts_x, nb_pts_y, nb_pts_z = nb_pts.T
 
     fig = plt.figure(figsize=(5,3))
-    # fig.tight_layout()
+    
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(Xm, Ym, Zm, facecolor='tab:blue', s=0.005)
     ax.scatter(db_pts_x, db_pts_y, db_pts_z, facecolor='tab:green', s=0.5)
@@ -135,7 +135,6 @@ def energy(u, x, J=False):
     return strainEnergy
 
 def VonMises_stress(u, x):
-    # print(x); exit()
     Nx = 4*N_test; Ny = N_test; Nz = N_test
     duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
     duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
@@ -150,10 +149,6 @@ def VonMises_stress(u, x):
     Fzx = duzdxyz[:, 0].unsqueeze(1) + 0
     Fzy = duzdxyz[:, 1].unsqueeze(1) + 0
     Fzz = duzdxyz[:, 2].unsqueeze(1) + 1
-
-    detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
-    trC = Fxx ** 2 + Fxy ** 2 + Fxz ** 2 + Fyx ** 2 + Fyy ** 2 + Fyz ** 2 + Fzx ** 2 + Fzy ** 2 + Fzz ** 2
-    strainEnergy = 0.5 * lmbd * (torch.log(detF) * torch.log(detF)) - mu * torch.log(detF) + 0.5 * mu * (trC - 3)
 
     detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
     invF11 = (Fyy * Fzz - Fyz * Fzy) / detF
@@ -216,105 +211,104 @@ def VonMises_stress(u, x):
 
 
 def write_vtk_v2(filename, x_space, y_space, z_space, U):
-    ### function from DEM paper ###
     xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
     if isinstance(U, dict):
-        # raise ImportError('Wrong number of input')
         gridToVTK(filename, xx, yy, zz, pointData=U)
     else:
         gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
 
 
 ### Skrive blokkene til en egen funksjon? Kalles på helt likt inne i loopene ###
-def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, max_it=20, shape=[20, 20, 20]):
+def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, max_it=20, shape=[20, 20, 20], eval_data=None):
     num_losses = int(num_epochs / 5) + 1
+    if eval_data:
+        nr_losses = 2
+    else:
+        nr_losses = 1
     # train on many N values
     if isinstance((Ns and not lrs), (list, tuple)):
         # print('Ns')
         u_norms = np.zeros(len(Ns))
-        losses = np.zeros(num_losses, len(Ns))
+        losses = np.zeros((nr_losses, num_losses, len(Ns)))
         for i, N in enumerate(Ns):
             # define model, DEM and domain
             model = MultiLayerNet(3, *([num_neurons]*num_layers), 3)
             DemBeam = DeepEnergyMethod(model, energy)
             domain, dirichlet, neumann = define_domain(L, H, D, N=N)
             # train model
-            DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lrs, max_it=max_it, epochs=num_epochs)
+            DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lrs, max_it=max_it, epochs=num_epochs, eval_data=eval_data)
             # evaluate model
             U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
             VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
             # store solution
-            write_vtk_v2(f'output/DemBeam_N{N}', x, y, z, U_pred)
+            write_vtk_v2(f'output/DemBeam_N{N}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
             # calculate L2norm
             u_norms[i] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
-            losses[:, i] = np.array(DemBeam.losses)
+            losses[:, :, i] = np.array(DemBeam.losses).T
     # train on many learning rates and number of neurons in hidden layers
-    # elif isinstance((lrs and num_neurons), (list, tuple)):
     elif isinstance(lrs, (list, tuple)) and isinstance(num_neurons, (list, tuple)):
         print('lrs, num_n')
         u_norms = np.zeros((len(lrs), len(num_neurons)))
-        losses = np.zeros((num_losses, len(lrs), len(num_neurons)))
+        losses = np.zeros((nr_losses, num_losses, len(lrs), len(num_neurons)))
         for j, n in enumerate(num_neurons):
             for i, lr in enumerate(lrs):
                 model = MultiLayerNet(3, *([n]*num_layers), 3)
                 DemBeam = DeepEnergyMethod(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
 
-                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs, eval_data=eval_data)
                 U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
                 VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
 
                 # store solution
-                write_vtk_v2(f'output/DemBeam_lr{lr}_nn{n}', x, y, z, U_pred)
+                write_vtk_v2(f'output/DemBeam_lr{lr}_nn{n}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
                 u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
-                losses[:, i, j] = np.array(DemBeam.losses)
+                losses[:, :, i, j] = np.array(DemBeam.losses).T
     # train on many learning rates and number of hidden layers
-    # elif isinstance((lrs and num_layers), (list, tuple)):
     elif isinstance(lrs, (list, tuple)) and isinstance(num_layers, (list, tuple)):
         print('lrs, num_l')
         u_norms = np.zeros((len(lrs), len(num_layers)))
-        losses = np.zeros((num_losses, len(lrs), len(num_layers)))
+        losses = np.zeros((nr_losses, num_losses, len(lrs), len(num_layers)))
         for j, l in enumerate(num_layers):
             for i, lr in enumerate(lrs):
                 model = MultiLayerNet(3, *([num_neurons]*l), 3)
                 DemBeam = DeepEnergyMethod(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
-                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs,  eval_data=eval_data)
                 # evaluate model
                 U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
                 VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
                 # store solution
-                write_vtk_v2(f'output/DemBeam_lr{lr}_nl{l}_withX', x, y, z, U_pred)
+                write_vtk_v2(f'output/DemBeam_lr{lr}_nl{l}_withX', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
 
                 u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
-                losses[:, i, j] = np.array(DemBeam.losses)
+                losses[:, :, i, j] = np.array(DemBeam.losses).T
     # train on number of neurons in hidden layers and number of hidden layers
-    # elif isinstance((num_neurons and num_layers), (list, tuple)):
     elif isinstance(num_neurons, (list, tuple)) and isinstance(num_layers, (list, tuple)):
         print('num_n, num_l')
         u_norms = np.zeros((len(num_layers), len(num_neurons)))
-        losses = np.zeros((num_losses, len(num_layers), len(num_neurons)))
+        losses = np.zeros((nr_losses, num_losses, len(num_layers), len(num_neurons)))
         for j, n in enumerate(num_neurons):
             # print(n)
             for i, l in enumerate(num_layers):
                 model = MultiLayerNet(3, *([n]*l), 3)
                 DemBeam = DeepEnergyMethod(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
-                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lrs, max_it=max_it, epochs=num_epochs)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lrs, max_it=max_it, epochs=num_epochs, eval_data=eval_data)
                 # evaluate model
                 U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
                 VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
                 # store solution
-                write_vtk_v2(f'output/DemBeam_nn{n}_nl{l}', x, y, z, {'displacement': U_pred, 'VonMises stress': VonMises_pred})
+                write_vtk_v2(f'output/DemBeam_nn{n}_nl{l}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
                 u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
-                losses[:, i, j] = np.array(DemBeam.losses)
+                
+                losses[:, :, i, j] = np.array(DemBeam.losses).T
     # train on many N values and learning rates
-    # elif isinstance((Ns and lrs), (list, tuple)):
     elif isinstance(Ns, (list, tuple)) and isinstance(lrs, (list, tuple)):
         # print(type(Ns), type(lrs), isinstance((Ns and lrs), list), Ns); exit()
         print('Ns and lrs')
         u_norms = np.zeros((len(lrs), len(Ns)))
-        losses = np.zeros((num_losses, len(lrs), len(Ns)))
+        losses = np.zeros((nr_losses, num_losses, len(lrs), len(Ns)))
         for j, N in enumerate(Ns):
             for i, lr in enumerate(lrs):
                 # define model, DEM and domain
@@ -322,15 +316,15 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 DemBeam = DeepEnergyMethod(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=N)
                 # train model
-                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs, eval_data=eval_data)
                 # evaluate model
                 U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
                 VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
                 # store solution
-                write_vtk_v2(f'output/DemBeam_lr{lr}_N{N}', x, y, z, {'displacement': U_pred, 'VonMises stress': VonMises_pred})
+                write_vtk_v2(f'output/DemBeam_lr{lr}_N{N}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
                 # calculate L2norm
                 u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
-                losses[:, i, j] = np.array(DemBeam.losses)
+                losses[:, :, i, j] = np.array(DemBeam.losses).T
     else:
         raise Exception('You have to provide a list of N values or one of the following:\n' + 
                         '\t- lrs AND num_neurons\n\t- lrs AND num_layers\n\t- num_neurons AND num_layers')
@@ -366,6 +360,9 @@ def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, c
 def plot_losses(losses, parameter1, parameter2, dim1, dim2, num_epochs, title, filename):
 # def plot_losses(losses, dim1, dim2, num_epochs, title, filename):
     ### find out how to use different markers for each line ###
+    print(losses)
+    losses += np.abs(np.min(losses[~np.isnan(losses)])) + 1
+    print(losses)
     fig, [ax1, ax2] = plt.subplots(1, 2, figsize=(10, 5))
     linestyles = ['--v', '--o', '--x', '--s', '--P', '--*']
     xdim, ydim, _ = losses.shape
@@ -410,68 +407,79 @@ if __name__ == '__main__':
 
     "--------------------------------------------------------------------------"
     # u_fem20 = np.load('stored_arrays/u_fem_N20.npy')
-    u_fem30 = np.load(arrays_path / 'u_fem_N20.npy')
+    u_fem30 = np.load(arrays_path / 'u_fem_N30.npy')
     # print(f'FEM: {L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)} \n')
 
 
     x = np.linspace(0, L, 4*N_test + 2)[1:-1]
     y = np.linspace(0, D, N_test + 2)[1:-1]
     z = np.linspace(0, H, N_test + 2)[1:-1]
-    start = time.time()
-    N = 20
-    lr = .5
 
+    x_eval = np.linspace(0, L, 4*N_test + 4)[2:-2]
+    y_eval = np.linspace(0, D, N_test + 4)[2:-2]
+    z_eval = np.linspace(0, H, N_test + 4)[2:-2]
+
+    # print(x, '\n', y, '\n', z); exit()
+    start = time.time()
+    N = 30
+    lr = .1
+
+    shape = [4*N, N, N]
+    num_layers = [2, 3, 4, 5]
+    num_neurons = [30, 40, 50, 60]
+    num_expreriments = 10
+    num_epochs = 500
+    U_norms = 0
+    losses = 0
+    for i in range(num_expreriments):
+        U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lr, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape, eval_data=[x_eval, y_eval, z_eval])
+        U_norms += U_norms_i
+        losses += losses_i
+    U_norms /= num_expreriments
+    losses /= num_expreriments
+    np.save(arrays_path / 'losses_nl_nn', losses)
+    plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers')
+    # plot_losses(losses[0], [r'# neurons = ', num_neurons], ['# of hidden layers', num_layers], 2, 1, num_epochs, [f'{num_layers[2]} hidden layers',rf'# neurons: {num_neurons[1]}'], 'beam_loss_nn_nl')
+    # # exit()
+    # print(U_norms)
+    tid = time.time() - start
+    print(f'tid: {tid:.2f}s')
+    print(f'tid: {tid/60:.2f}m')
+    print(f'tid: {tid/3600:.2f}t')
+    losses = np.load(arrays_path / 'losses_nl_nn.npy')
+    training, eval = losses
+    plot_losses(training, [r'# neurons = ', num_neurons], ['# of hidden layers', num_layers], 2, 1, num_epochs, [f'{num_layers[2]} hidden layers',rf'# neurons: {num_neurons[1]}'], 'beam_loss_nn_nl')
+    plot_losses(eval, [r'# neurons = ', num_neurons], ['# of hidden layers', num_layers], 2, 1, num_epochs, [f'{num_layers[2]} hidden layers',rf'# neurons: {num_neurons[1]}'], 'beam_loss_nn_nl_eval')
+
+
+    # N = 30
     # shape = [4*N, N, N]
+    # lrs = [0.001, 0.01, 0.1, 0.5]
     # num_layers = [2, 3, 4, 5]
-    # num_neurons = [30, 40, 50, 60]
+
+    # num_layers = [2]
+    # # lrs = [.5, 1]
+    # # num_layers = [3]
+    # num_neurons = 30
     # num_expreriments = 1
     # num_epochs = 500
     # U_norms = 0
     # losses = 0
+    # st = time.time()
     # for i in range(num_expreriments):
-    #     U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lr, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape)
+    #     U_norms_i, losses_i= train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape)
     #     U_norms += U_norms_i
     #     losses += losses_i
+    # print(time.time() - st)
     # U_norms /= num_expreriments
     # losses /= num_expreriments
-    # np.save(arrays_path / 'losses_nl_nn', losses)
-    # plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers')
-    # plot_losses(losses, [r'# neurons = ', num_neurons], ['# of hidden layers', num_layers], 2, 1, num_epochs, [f'{num_layers[2]} hidden layers',rf'# neurons: {num_neurons[1]}'], 'beam_loss_nn_nl')
-    # exit()
+    # # np.save(arrays_path / 'losses_lrs_nl', losses)
+    # # plot_heatmap(U_norms, num_layers, lrs, rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers')
     # print(U_norms)
     # tid = time.time() - start
     # print(f'tid: {tid:.2f}s')
     # print(f'tid: {tid/60:.2f}m')
     # print(f'tid: {tid/3600:.2f}t')
-
-    N = 30
-    shape = [4*N, N, N]
-    lrs = [0.001] #, 0.01, 0.1, 0.5, 1]
-    # num_layers = [2, 3, 4, 5]
-
-    num_layers = [5]
-    # lrs = [.5, 1]
-    # num_layers = [3]
-    num_neurons = 30
-    num_expreriments = 1
-    num_epochs = 500
-    U_norms = 0
-    losses = 0
-    st = time.time()
-    for i in range(num_expreriments):
-        U_norms_i, losses_i= train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape)
-        U_norms += U_norms_i
-        losses += losses_i
-    print(time.time() - st)
-    U_norms /= num_expreriments
-    losses /= num_expreriments
-    # np.save(arrays_path / 'losses_lrs_nl', losses)
-    # plot_heatmap(U_norms, num_layers, lrs, rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 'Number of layers', r'$\eta$', 'beam_heatmap_lrs_num_layers')
-    print(U_norms)
-    tid = time.time() - start
-    print(f'tid: {tid:.2f}s')
-    print(f'tid: {tid/60:.2f}m')
-    print(f'tid: {tid/3600:.2f}t')
 
     # losses_lrs_nl = np.load(arrays_path / 'losses_lrs_nl.npy')
     # print(losses_lrs_nl)
