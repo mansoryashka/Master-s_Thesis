@@ -81,7 +81,7 @@ class DeepEnergyMethod:
                 # external loss
                 neu_pred = self.getU(self.model, neuBC_coords)
                 bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
-                phi = u_pred
+                phi = u_pred + x
                 body_f = torch.matmul(phi.unsqueeze(1), fb.unsqueeze(2))
 
                 # print(body_f.shape), exit()
