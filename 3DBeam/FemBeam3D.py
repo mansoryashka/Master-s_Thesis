@@ -121,7 +121,7 @@ def FEM_3D(N):
             for k in range(N_test):
                 u_fem[:, j, i, k] = u(x[i], y[j], z[k])
 
-    # np.save(f'stored_arrays/u_fem_N{N}', u_fem)
+    np.save(f'stored_arrays/u_fem_N{N}', u_fem)
 
 
 
@@ -132,7 +132,7 @@ def FEM_3D(N):
     # print(dolfin.assemble(dolfin.dot(f, u)*ds(1)))      # 5.996554979767974
 
 if __name__ == '__main__':
-    # for N in [5, 10, 15, 20, 25, 30]:
-    for N in [10]:
+    for N in [5, 10, 15, 20, 25, 30]:
+    # for N in [10]:
         print('N = ', N)
         FEM_3D(N)
