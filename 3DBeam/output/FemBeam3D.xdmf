@@ -4,18 +4,18 @@
   <Domain>
     <Grid Name="TimeSeries" GridType="Collection" CollectionType="Temporal">
       <Grid Name="mesh" GridType="Uniform">
-        <Topology NumberOfElements="648000" TopologyType="Tetrahedron" NodesPerElement="4">
-          <DataItem Dimensions="648000 4" NumberType="UInt" Format="HDF">FemBeam3D.h5:/Mesh/0/mesh/topology</DataItem>
+        <Topology NumberOfElements="3000" TopologyType="Tetrahedron" NodesPerElement="4">
+          <DataItem Dimensions="3000 4" NumberType="UInt" Format="HDF">FemBeam3D.h5:/Mesh/0/mesh/topology</DataItem>
         </Topology>
         <Geometry GeometryType="XYZ">
-          <DataItem Dimensions="116281 3" Format="HDF">FemBeam3D.h5:/Mesh/0/mesh/geometry</DataItem>
+          <DataItem Dimensions="756 3" Format="HDF">FemBeam3D.h5:/Mesh/0/mesh/geometry</DataItem>
         </Geometry>
         <Time Value="0" />
         <Attribute Name="Displacement" AttributeType="Vector" Center="Node">
-          <DataItem Dimensions="116281 3" Format="HDF">FemBeam3D.h5:/VisualisationVector/0</DataItem>
+          <DataItem Dimensions="756 3" Format="HDF">FemBeam3D.h5:/VisualisationVector/0</DataItem>
         </Attribute>
         <Attribute Name="VonMises stress" AttributeType="Scalar" Center="Node">
-          <DataItem Dimensions="116281 1" Format="HDF">FemBeam3D.h5:/VisualisationVector/1</DataItem>
+          <DataItem Dimensions="756 1" Format="HDF">FemBeam3D.h5:/VisualisationVector/1</DataItem>
         </Attribute>
       </Grid>
     </Grid>

@@ -34,59 +34,33 @@ def FEM_3D(N):
 
     bc = dolfin.DirichletBC(V, dolfin.Constant((0.0, 0.0, 0.0)), boundary)
 
-    # F = dolfin.grad(u) + dolfin.Identity(3)
-    # J = dolfin.det(F)
-    # B = F * F.T
-    # C = F.T * F
-    # I1 = dolfin.tr(C)
-
     F = dolfin.grad(u) + dolfin.Identity(3)
     J = dolfin.det(F)
     C = F.T * F
+    E = 0.5 * (C - dolfin.Identity(3))
     I1 = dolfin.tr(C)
-    # E = 0.5 * (C - dolfin.Identity(3))
+
+    # F_bar = dolfin.grad(u) + dolfin.Identity(3)
+    # J = dolfin.det(F_bar)
+    # C_bar = F_bar.T * F_bar
+
+    F_bar = J**(-1./3)*F
+    C_bar = J**(-2./3)*C
+    I1 = dolfin.tr(C_bar)
+    E = 0.5 * (C_bar - dolfin.Identity(3))
 
     f = dolfin.Constant((0.0, -5.0, 0.0))
 
 
-    # # define epsilon and sigma
-    # def epsilon(u):
-    #     return 0.5*(ufl.nabla_grad(u) + ufl.nabla_grad(u).T)
-
-    # def sigma(u):
-    #     return lmbd*dolfin.tr(epsilon(u))*dolfin.Identity(3) + 2*mu*epsilon(u)
-
-    # def sigma(u):
-    #     F = dolfin.nabla_grad(u) + dolfin.Identity(3)
-    #     J = dolfin.det(F)
-    #     P =  mu * F + (lmbd * dolfin.ln(J) - mu) * dolfin.inv(F.T)
-    #     sigma = 1/J * P * F.T
-    #     return sigma
-
-    # #a = dolfin.inner(sigma(u), dolfin.grad(v))*dolfin.dx(domain=mesh)
-    # F = dolfin.variable(dolfin.grad(u) + dolfin.Identity(3))
-    # J = dolfin.det(F)
-    # C = F.T * F
-    # I1 = dolfin.tr(C)
-
-    # psi = 0.5*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 0.5*mu*(I1 - 3)
-    # P = dolfin.diff(psi, F)
-    # L = dolfin.inner(f, v)*ds(1)
-
-    # J2 = dolfin.derivative(dolfin.inner(P, dolfin.grad(v)) * dolfin.dx(domain=mesh), u)
-    # dolfin.solve(J2 == L, u, bcs=bc,
-    #             solver_parameters={"linear_solver": "mumps"})
-
     psi = 0.5*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 0.5*mu*(I1 - 3)
     energy = psi*dolfin.dx - dolfin.dot(f, u)*dolfin.dx
     total_internal_work = dolfin.derivative(energy, u, v)
-    total_virtual_work = total_internal_work #- dolfin.inner(f, v)*ds(1)
+    total_virtual_work = total_internal_work
 
     dolfin.solve(total_virtual_work == 0, u, bc,
                 solver_parameters={'newton_solver': {
                                     # 'absolute_tolerance': 1e-6,
                                     'linear_solver': 'mumps'}})
-
 
 
     P = mu * F + (lmbd * dolfin.ln(dolfin.det(F)) - mu) * dolfin.inv(F).T
@@ -107,10 +81,6 @@ def FEM_3D(N):
     outfile.write(u, 0.0)
     outfile.write(VonMises, 0.0)
 
-
-    # dolfin.File('output/FEMBeam3D10.pvd') << u
-    # dolfin.File('output/FEMBeam3D_vonmises10.pvd') << VonMises
-
     x = np.linspace(0, l, 4*N_test+2)[1:-1]
     y = np.linspace(0, h, N_test+2)[1:-1]
     z = np.linspace(0, d, N_test+2)[1:-1]
@@ -121,7 +91,7 @@ def FEM_3D(N):
             for k in range(N_test):
                 u_fem[:, j, i, k] = u(x[i], y[j], z[k])
 
-    np.save(f'stored_arrays/u_fem_N{N}', u_fem)
+    # np.save(f'stored_arrays/u_fem_N{N}', u_fem)
 
 
 
@@ -132,7 +102,7 @@ def FEM_3D(N):
     # print(dolfin.assemble(dolfin.dot(f, u)*ds(1)))      # 5.996554979767974
 
 if __name__ == '__main__':
-    for N in [5, 10, 15, 20, 25, 30]:
-    # for N in [10]:
+    # for N in [5, 10, 15, 20, 25, 30]:
+    for N in [15]:
         print('N = ', N)
         FEM_3D(N)
