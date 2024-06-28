@@ -446,8 +446,9 @@ if __name__ == '__main__':
     # print(f'tid: {tid:.2f}s')
     # print(f'tid: {tid/60:.2f}m')
     # print(f'tid: {tid/3600:.2f}t')
-    # losses = np.load(arrays_path / 'losses_nl_nn.npy')
-    # training, eval = losses
+    losses = np.load(arrays_path / 'losses_nl_nn.npy')
+    training, eval = losses
+    print(eval[-1])
     # plot_losses(training, [r'# neurons = ', num_neurons], ['# of hidden layers', num_layers], 2, 1, num_epochs, [f'{num_layers[2]} hidden layers',rf'# neurons: {num_neurons[1]}'], 'beam_loss_nn_nl')
     # plot_losses(eval, [r'# neurons = ', num_neurons], ['# of hidden layers', num_layers], 2, 1, num_epochs, [f'{num_layers[2]} hidden layers',rf'# neurons: {num_neurons[1]}'], 'beam_loss_nn_nl_eval')
 
@@ -476,8 +477,10 @@ if __name__ == '__main__':
     # print(f'tid: {tid:.2f}s')
     # print(f'tid: {tid/60:.2f}m')
     # print(f'tid: {tid/3600:.2f}t')
-    # losses = np.load(arrays_path / 'losses_lrs_nl.npy')
-    # training, eval = losses
+    losses = np.load(arrays_path / 'losses_lrs_nl.npy')
+    training, eval = losses
+    print(eval[-1])
+
     # plot_losses(training, [r'# hidden layers', num_layers], [rf'$\eta$', lrs], 2, 1, num_epochs, [rf'$\eta$ = {lrs[2]}',rf'# hidden layers: {num_layers[1]}'], 'beam_loss_lrs_nl')
     # plot_losses(eval, [r'# hidden layers', num_layers], [rf'$\eta$', lrs], 2, 1, num_epochs, [rf'$\eta$ = {lrs[2]}',rf'# hidden layers: {num_layers[1]}'], 'beam_loss_lrs_nl_eval')
 
@@ -504,34 +507,35 @@ if __name__ == '__main__':
     # losses /= num_expreriments
     # np.save(arrays_path / 'losses_lrs_nn', losses)
     # plot_heatmap(U_norms, num_neurons, lrs, rf'$L^2$ norm of error with N={N} and {num_layers} hidden layers', 'Number of neurons in hidden layers', r'$\eta$', 'beam_heatmap_lrs_num_neurons')
-    # losses = np.load(arrays_path / 'losses_lrs_nn.npy')
-    # training, eval = losses
+    losses = np.load(arrays_path / 'losses_lrs_nn.npy')
+    training, eval = losses
+    print(eval[-1])
     # plot_losses(training, [r'# neurons = ', num_neurons], [rf'$\eta$', lrs], 2, 1, num_epochs, [rf'$\eta$ = {lrs[2]}' ,rf' neurons: {num_neurons[1]}'], 'beam_loss_lrs_nn')
     # plot_losses(eval, [r'# neurons = ', num_neurons], [rf'$\eta$', lrs], 2, 1, num_epochs, [rf'$\eta$ = {lrs[2]}',rf'# neurons: {num_neurons[1]}'], 'beam_loss_lrs_nn_eval')
 
 
-    # print(en)
-    Ns = [20, 30, 40, 50, 60]
-    lrs = [.01, .05, .1, .5]
-    num_layers = 3
-    num_neurons = 30
-    num_expreriments = 10
-    num_epochs = 1000
-    U_norms = 0
-    losses = 0
-    for i in range(num_expreriments):
-        U_norms_i, losses_i = train_and_evaluate(Ns=Ns, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, eval_data=[x_eval, y_eval, z_eval])
-        U_norms += U_norms_i
-        losses += losses_i
-    U_norms /= num_expreriments
-    losses /= num_expreriments
-    np.save(arrays_path / 'losses_lrs_N', losses)
-    plot_heatmap(U_norms, Ns, lrs, rf'$L^2$ norm of error with {num_neurons} hidden neurons and {num_layers} hidden layers', 'N', r'$\eta$', 'beam_heatmap_lrs_N')
+    # Ns = [20, 30, 40, 50, 60]
+    # lrs = [.01, .05, .1, .5]
+    # num_layers = 3
+    # num_neurons = 30
+    # num_expreriments = 10
+    # num_epochs = 1000
+    # U_norms = 0
+    # losses = 0
+    # for i in range(num_expreriments):
+    #     U_norms_i, losses_i = train_and_evaluate(Ns=Ns, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, eval_data=[x_eval, y_eval, z_eval])
+    #     U_norms += U_norms_i
+    #     losses += losses_i
+    # U_norms /= num_expreriments
+    # losses /= num_expreriments
+    # np.save(arrays_path / 'losses_lrs_N', losses)
+    # plot_heatmap(U_norms, Ns, lrs, rf'$L^2$ norm of error with {num_neurons} hidden neurons and {num_layers} hidden layers', 'N', r'$\eta$', 'beam_heatmap_lrs_N')
     losses = np.load(arrays_path / 'losses_lrs_N.npy')
     training, eval = losses
-    plot_losses(training, [r'N', Ns], [rf'$\eta$', lrs], 2, 1, num_epochs, [rf'$\eta$ = {lrs[2]}', rf'N = {Ns[1]}'], 'beam_loss_lrs_N')
-    plot_losses(eval, [r'N', Ns], [rf'$\eta$', lrs], 2, 1, num_epochs, [rf'$\eta$ = {lrs[2]}', rf'# neurons: {Ns[1]}'], 'beam_loss_lrs_N_eval')
-    tid = time.time() - start
-    print(f'tid: {tid:.2f}s')
-    print(f'tid: {tid/60:.2f}m')
-    print(f'tid: {tid/3600:.2f}t')
+    print(eval[-1])
+    # plot_losses(training, [r'N', Ns], [rf'$\eta$', lrs], 2, 1, num_epochs, [rf'$\eta$ = {lrs[2]}', rf'N = {Ns[1]}'], 'beam_loss_lrs_N')
+    # plot_losses(eval, [r'N', Ns], [rf'$\eta$', lrs], 2, 1, num_epochs, [rf'$\eta$ = {lrs[2]}', rf'# neurons: {Ns[1]}'], 'beam_loss_lrs_N_eval')
+    # tid = time.time() - start
+    # print(f'tid: {tid:.2f}s')
+    # print(f'tid: {tid/60:.2f}m')
+    # print(f'tid: {tid/3600:.2f}t')
