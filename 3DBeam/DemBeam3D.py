@@ -279,7 +279,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
                 VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
                 # store solution
-                write_vtk_v2(f'output/DemBeam_lr{lr}_nl{l}_withX', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
+                write_vtk_v2(f'output/DemBeam_lr{lr}_nl{l}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
 
                 u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
                 losses[:, :, i, j] = np.array(DemBeam.losses).T
@@ -465,7 +465,7 @@ if __name__ == '__main__':
     num_layers = [2]
     num_neurons = 30
     num_expreriments = 1
-    num_epochs = 730
+    num_epochs = 55
     U_norms = 0
     losses = 0
     st = time.time()
