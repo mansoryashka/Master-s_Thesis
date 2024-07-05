@@ -13,11 +13,15 @@ nu = 0.3
 lmbd = E * nu / ((1 + nu)*(1 - 2*nu))
 mu = E / (2*(1 + nu))
 
+print(lmbd, mu)
+#exit()
+
 dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
 
 def FEM_3D(N):
     # define mesh and domain w/trial and test functions
     mesh = dolfin.BoxMesh(dolfin.Point(0, 0, 0), dolfin.Point(l, h, d), 4*N, N, N)
+    # breakpoint()
 
     V = dolfin.VectorFunctionSpace(mesh, 'P', 1)
     u = dolfin.Function(V)  
@@ -37,22 +41,20 @@ def FEM_3D(N):
     F = dolfin.grad(u) + dolfin.Identity(3)
     J = dolfin.det(F)
     C = F.T * F
-    E = 0.5 * (C - dolfin.Identity(3))
     I1 = dolfin.tr(C)
+    # E = 0.5 * (C - dolfin.Identity(3))
 
-    # F_bar = dolfin.grad(u) + dolfin.Identity(3)
-    # J = dolfin.det(F_bar)
-    # C_bar = F_bar.T * F_bar
-
-    F_bar = J**(-1./3)*F
-    C_bar = J**(-2./3)*C
-    I1 = dolfin.tr(C_bar)
-    E = 0.5 * (C_bar - dolfin.Identity(3))
+    """ SKRIV HVORFOR DETTE IKKE FUNKA. SKRIV AV KAPPA-MODELLEN FUNKA BEDRE FOR KOMPRESSIBEL MATERIALMODELL"""
+    # F_bar = F / J**(1/3)
+    # C_bar = F_bar.T*F_bar
+    # I1 = dolfin.tr(C_bar)
+    # E = 0.5 * (C_bar - dolfin.Identity(3))
 
     f = dolfin.Constant((0.0, -5.0, 0.0))
 
 
     psi = 0.5*lmbd*dolfin.ln(J)**2 - mu*dolfin.ln(J) + 0.5*mu*(I1 - 3)
+    # psi = 100*(J-1)**2 + 0.5*mu*(I1 - 3)
     energy = psi*dolfin.dx - dolfin.dot(f, u)*dolfin.dx
     total_internal_work = dolfin.derivative(energy, u, v)
     total_virtual_work = total_internal_work
@@ -91,7 +93,7 @@ def FEM_3D(N):
             for k in range(N_test):
                 u_fem[:, j, i, k] = u(x[i], y[j], z[k])
 
-    # np.save(f'stored_arrays/u_fem_N{N}', u_fem)
+    np.save(f'stored_arrays/u_fem_N{N}', u_fem)
 
 
 
@@ -102,7 +104,7 @@ def FEM_3D(N):
     # print(dolfin.assemble(dolfin.dot(f, u)*ds(1)))      # 5.996554979767974
 
 if __name__ == '__main__':
-    # for N in [5, 10, 15, 20, 25, 30]:
-    for N in [15]:
+    for N in [5, 10, 15, 20, 25, 30]:
+    # for N in [5]:
         print('N = ', N)
         FEM_3D(N)
