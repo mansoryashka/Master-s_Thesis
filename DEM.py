@@ -32,7 +32,7 @@ class DeepEnergyMethod:
         self.model = model.to(dev)
         self.energy = energy
         
-    def train_model(self, data, dirichlet, neumann, shape, LHD, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]]), eval_data=None):
+    def train_model(self, data, dirichlet, neumann, shape, LHD, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]]), eval_data=None, k=5):
         # data
         # print(data)
         # N = np.array(LHD) / np.array(dxdydz)
@@ -110,9 +110,11 @@ class DeepEnergyMethod:
                 self.eval_loss = eval_loss1 - eval_loss2
             # print(eval_loss1, eval_loss2)
 
-            if i % 5 == 0:
+            if i % k == 0:
                 if eval_data:
-                    print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Eval loss: {self.eval_loss:10.5f}')
+                    # print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Eval loss: {self.eval_loss:10.5f}')
+                    if i >= k:
+                        print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, loss change: {self.current_loss.detach().cpu() - self.losses[-1][0]:10.6f}')
                     self.losses.append([self.current_loss.detach().cpu(), self.eval_loss.detach().cpu()])
                 else:
                     print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}')
