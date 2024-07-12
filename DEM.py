@@ -33,19 +33,11 @@ class DeepEnergyMethod:
         self.energy = energy
         
     def train_model(self, data, dirichlet, neumann, shape, LHD, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]]), eval_data=None, k=5):
-        # data
-        # print(data)
-        # N = np.array(LHD) / np.array(dxdydz)
-        # N = list(map(int, N))
         dxdydz = np.array(LHD) / (np.array(shape) - 1)
-        # print(shape)
-        # print(LHD)
-        # print(dxdydz); exit()
-        # N = list(map(int, dxdydz))
+
 
         x = torch.from_numpy(data).float().to(dev)
         fb = torch.from_numpy(fb).float().to(dev)
-        # fb2 = fb*torch.ones((np.prod(shape), 3)).to(dev)
         x.requires_grad_(True)
         optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr, max_iter=max_it)
         self.x = x
@@ -96,7 +88,7 @@ class DeepEnergyMethod:
 
                 self.current_loss = loss
                 return loss
-        
+            print(closure(), self.energy_loss, self.current_loss)
             optimizer.step(closure)
 
             if eval_data:
@@ -108,18 +100,16 @@ class DeepEnergyMethod:
                 eval_BF = torch.matmul(u_eval.unsqueeze(1), fb.unsqueeze(2))
                 eval_loss2 = simps3D(eval_BF, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=eval_shape)
                 self.eval_loss = eval_loss1 - eval_loss2
-            # print(eval_loss1, eval_loss2)
 
             if i % k == 0:
                 if eval_data:
-                    # print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Eval loss: {self.eval_loss:10.5f}')
-                    if i >= k:
-                        print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, loss change: {self.current_loss.detach().cpu() - self.losses[-1][0]:10.6f}')
+                    print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Eval loss: {self.eval_loss:10.5f}')
                     self.losses.append([self.current_loss.detach().cpu(), self.eval_loss.detach().cpu()])
                 else:
                     print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}')
                     self.losses.append(self.current_loss.detach().cpu())
-        # return self.modeld
+            
+        # return self.model
 
     def getU(self, model, x):
         u = model(x).to(dev)
