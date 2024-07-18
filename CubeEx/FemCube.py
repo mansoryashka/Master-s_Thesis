@@ -218,7 +218,7 @@ def FEM_Cube(N):
 
     # Now we can form to total internal virtual work which is the
     # derivative of the energy in the system
-    quad_degree = 4
+    quad_degree = 2
     internal_virtual_work = dolfin.derivative(
         elastic_energy * dolfin.dx(metadata={"quadrature_degree": quad_degree}), u, u_test
     )
@@ -226,8 +226,8 @@ def FEM_Cube(N):
     # We can also apply a force on the right boundary using a Neumann boundary condition
     # traction = dolfin.Constant(1.0)
     traction = dolfin.Constant(-0.5)
-    N = dolfin.FacetNormal(mesh)
-    n = traction * ufl.cofac(F) * N
+    Norm = dolfin.FacetNormal(mesh)
+    n = traction * Norm
     ds = dolfin.ds(domain=mesh, subdomain_data=ffun)
     external_virtual_work = dolfin.inner(u_test, n) * ds(right_marker)
 
@@ -240,31 +240,34 @@ def FEM_Cube(N):
                     # 'absolute_tolerance': 1e-6,
                     'linear_solver': 'mumps'}})
 
-    return u
 
-# We can visualize the solution in Paraview
-# with dolfin.XDMFFile("output/um50.xdmf") as u_file:
-#     u_file.write_checkpoint(
-#         u,
-#         function_name="u",
-#         time_step=0.0,
-#         encoding=dolfin.XDMFFile.Encoding.HDF5,
-#         append=False,
-#     )
+    # We can visualize the solution in Paraview
+    with dolfin.XDMFFile("output/u.xdmf") as u_file:
+        u_file.write_checkpoint(
+            u,
+            function_name="u",
+            time_step=0.0,
+            encoding=dolfin.XDMFFile.Encoding.HDF5,
+            append=False,
+        )
+
+    N_test = 20
+    x = y = z = np.linspace(0, 1, N_test+2)[1:-1]
+    u_fem = np.zeros((3, N_test, N_test, N_test))
+    for i in range(N_test):
+        for j in range(N_test):
+            for k in range(N_test):
+                u_fem[:, i, j, k] = u(x[i], y[j], z[k])
+    np.save(f'stored_arrays/u_fem{N}', u_fem)
+
+    print(dolfin.assemble(elastic_energy*dolfin.dx))
+    print(dolfin.assemble(dolfin.inner(u, n)*ds(right_marker)))
+    return u
 
 
 if __name__ == '__main__':
     import numpy as np
-    Ns = [5, 10, 15]
-    # Ns = [20]
-    N_test = 20
-    x = y = z = np.linspace(0, 1, N_test+2)[1:-1]
+    Ns = [5, 10, 15, 20]
     for N in Ns:
+        # print('N = ', N)
         u = FEM_Cube(N)
-
-        u_fem = np.zeros((3, N_test, N_test, N_test))
-        for i in range(N_test):
-            for j in range(N_test):
-                for k in range(N_test):
-                    u_fem[:, i, j, k] = u(x[i], y[j], z[k])
-        np.save(f'stored_arrays/u_fem{N}', u_fem)
