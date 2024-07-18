@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.autograd import grad
+from pathlib import Path
 # from scipy.integrate import simpson
 # from scipy.integrate import trapezoid
 from simps import simpson
@@ -15,6 +16,16 @@ torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
 dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 # dev = torch.device('cpu')
+
+current_path = Path.cwd().resolve()
+figures_path = current_path / 'figures'
+arrays_path = current_path / 'stored_arrays'
+models_path = current_path / 'trained_models' / 'run1'
+msg = "You have to run the files from their respective folders!"
+
+assert figures_path.exists(), msg
+assert arrays_path.exists(), msg
+assert models_path.exists(), msg
 
 class MultiLayerNet(nn.Module):
     def __init__(self, *neurons):
@@ -40,6 +51,7 @@ class DeepEnergyMethod:
         fb = torch.from_numpy(fb).float().to(dev)
         x.requires_grad_(True)
         optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr, max_iter=max_it)
+        
         self.x = x
 
         # boundary
@@ -53,7 +65,15 @@ class DeepEnergyMethod:
 
         self.losses = []
         self.eval_losses = []
+        prev_loss = torch.tensor([0.0]).to(dev)
         start_time = time.time()
+
+        nn = self.model.linears[0].out_features
+        nl = len(self.model.linears) - 1
+        j = 0
+        while Path(models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}').exists():
+            j += 1
+        
         for i in range(epochs+1):
             def closure():
                 # internal loss
@@ -76,7 +96,7 @@ class DeepEnergyMethod:
 
                 body_f = torch.matmul(u_pred.unsqueeze(1), fb.unsqueeze(2))
 
-                external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape)
+                external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape) + simps2D(bc_neu, dx=dxdydz[1], dy=dxdydz[2], shape=[shape[1], shape[2]])
 
                 loss = internal_loss - external_loss + boundary_loss
                 optimizer.zero_grad()
@@ -88,9 +108,21 @@ class DeepEnergyMethod:
 
                 self.current_loss = loss
                 return loss
-            print(closure(), self.energy_loss, self.current_loss)
+            
             optimizer.step(closure)
 
+            loss_change = torch.abs(self.current_loss - prev_loss)
+            prev_loss = self.current_loss
+
+            if i == 100:
+                best_change = loss_change
+                best_epoch = i
+            elif i > 100:
+                if loss_change <= best_change:
+                    best_change = loss_change
+                    best_epoch = i
+                    torch.save(self.model.state_dict(), 
+                               models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
             if eval_data:
                 eval_shape = [len(eval_data[0]), len(eval_data[1]), len(eval_data[2])]
                 _, u_eval, xyz_eval = self.evaluate_model(eval_data[0], eval_data[1], eval_data[2], True)
@@ -103,12 +135,12 @@ class DeepEnergyMethod:
 
             if i % k == 0:
                 if eval_data:
-                    print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Eval loss: {self.eval_loss:10.5f}')
+                    print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Eval loss: {self.eval_loss:10.5f}, Loss_change: {loss_change.item():8.5f}')
                     self.losses.append([self.current_loss.detach().cpu(), self.eval_loss.detach().cpu()])
                 else:
                     print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}')
                     self.losses.append(self.current_loss.detach().cpu())
-            
+        print(best_change, best_epoch)
         # return self.model
 
     def getU(self, model, x):
@@ -166,10 +198,10 @@ def L2norm3D(U, Nx, Ny, Nz, dx, dy, dz):
     L2norm = np.sqrt(simpson(simpson(simpson(udotu, dx=dz), dx=dy), dx=dx))
     return L2norm
 
-def simpsons2D(U, x=None, y=None, dx=None, dy=None, N=25):
-    Nx = 4*N; Ny = N; Nz = N
-    # U = U.cpu().detach().numpy()
-    U = U.flatten().reshape(Ny, Nz)
+def simps2D(U, xy=None, dx=None, dy=None, shape=None):
+    Nx = shape[0]
+    Ny = shape[1]
+    U = U.flatten().reshape(Nx, Ny)
     if (x and y):
         raise NotImplementedError('Not implemented yet. Please use dx and dy.')
     elif (dx and dy):

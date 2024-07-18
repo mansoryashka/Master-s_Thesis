@@ -136,116 +136,151 @@ def energy(u, x):
     J = detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
     trC = Fxx ** 2 + Fxy ** 2 + Fxz ** 2 + Fyx ** 2 + Fyy ** 2 + Fyz ** 2 + Fzx ** 2 + Fzy ** 2 + Fzz ** 2
 
-    # compressibility = kappa * (J * torch.log(J) - J + 1)
     compressibility = kappa * (J - 1)**2
     neo_hookean = 0.5 * mu * (trC - 3)
     active_stress_energy = 0.5 * Ta / J * (Fxx*Fxx + Fyx*Fyx + Fzx*Fzx - 1)
 
-    # strainEnergy = 0.5 * lmbd * (torch.log(detF) * torch.log(detF)) - mu * torch.log(detF) + 0.5 * mu * (trC - 3)
+    return compressibility + neo_hookean + active_stress_energy
+
+def energy2(u, x):
+    kappa = 1e3
+    Ta = 1.0
+
+    duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
+    duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
+    duzdxyz = grad(u[:, 2].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
+
+    Fxx = duxdxyz[:, 0].unsqueeze(1) + 1
+    Fxy = duxdxyz[:, 1].unsqueeze(1) + 0
+    Fxz = duxdxyz[:, 2].unsqueeze(1) + 0
+    Fyx = duydxyz[:, 0].unsqueeze(1) + 0
+    Fyy = duydxyz[:, 1].unsqueeze(1) + 1
+    Fyz = duydxyz[:, 2].unsqueeze(1) + 0
+    Fzx = duzdxyz[:, 0].unsqueeze(1) + 0
+    Fzy = duzdxyz[:, 1].unsqueeze(1) + 0
+    Fzz = duzdxyz[:, 2].unsqueeze(1) + 1
+
+    J = detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
+    trC = Fxx ** 2 + Fxy ** 2 + Fxz ** 2 + Fyx ** 2 + Fyy ** 2 + Fyz ** 2 + Fzx ** 2 + Fzy ** 2 + Fzz ** 2
+
+    compressibility = kappa * (J - 1)**2
+    neo_hookean = 0.5 * mu * (trC - 3)
+    active_stress_energy = 0.5 * Ta / J * (Fxx*Fxx + Fyx*Fyx + Fzx*Fzx - 1)
+
     return compressibility + neo_hookean + active_stress_energy
 
 
 ### Skrive blokkene til en egen funksjon? Kalles på helt likt inne i loopene ###
-def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, max_it=20):
+def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, max_it=20, shape=[20, 20, 20], eval_data=None, k=5):
+    num_losses = int(num_epochs / k) + 1
+    if eval_data:
+        nr_losses = 2
+    else:
+        nr_losses = 1
     # train on many N values
     if isinstance((Ns and not lrs), (list, tuple)):
-        print('Ns')
+        # print('Ns')
         u_norms = np.zeros(len(Ns))
+        losses = np.zeros((nr_losses, num_losses, len(Ns)))
         for i, N in enumerate(Ns):
             # define model, DEM and domain
             model = MultiLayerNet(3, *([num_neurons]*num_layers), 3)
             DemBeam = DeepEnergyMethod(model, energy)
             domain, dirichlet, neumann = define_domain(L, H, D, N=N)
             # train model
-            DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lrs, max_it=max_it, epochs=num_epochs)
+            DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lrs, max_it=max_it, epochs=num_epochs, eval_data=eval_data, k=k)
             # evaluate model
-            U_pred = DemBeam.evaluate_model(x, y, z)
+            U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
+            VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
+            # store solution
+            write_vtk_v2(f'output/DemBeam_N{N}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
             # calculate L2norm
-            u_norms[i] = L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz)
+            u_norms[i] = L2norm3D(U_pred - u_fem20, 4*N_test, N_test, N_test, dx, dy, dz)
+            losses[:, :, i] = np.array(DemBeam.losses).T
     # train on many learning rates and number of neurons in hidden layers
-    # elif isinstance(lrs (list, tuple)):
-    elif isinstance(lrs, (list, tuple)) and isinstance(num_neurons, (list, tuple)) :
+    elif isinstance(lrs, (list, tuple)) and isinstance(num_neurons, (list, tuple)):
         print('lrs, num_n')
         u_norms = np.zeros((len(lrs), len(num_neurons)))
-        for j, n in enumerate(num_neurons):
-            for i, lr in enumerate(lrs):
+        losses = np.zeros((nr_losses, num_losses, len(lrs), len(num_neurons)))
+        for i, lr in enumerate(lrs):
+            for j, n in enumerate(num_neurons):
                 model = MultiLayerNet(3, *([n]*num_layers), 3)
                 DemBeam = DeepEnergyMethod(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
 
-                DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lr, max_it=max_it, epochs=num_epochs)
-                U_pred = DemBeam.evaluate_model(x, y, z)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs, eval_data=eval_data, k=k)
+                U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
+                VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
 
-                u_norms[i, j] = L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz)
+                # store solution
+                write_vtk_v2(f'output/DemBeam_lr{lr}_nn{n}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
+                u_norms[i, j] = L2norm3D(U_pred - u_fem20, 4*N_test, N_test, N_test, dx, dy, dz)
+                losses[:, :, i, j] = np.array(DemBeam.losses).T
     # train on many learning rates and number of hidden layers
-    # elif isinstance((lrs and num_layers), (list, tuple)):
-    elif isinstance(lrs, (list, tuple)) and isinstance(num_layers, (list, tuple)) :
+    elif isinstance(lrs, (list, tuple)) and isinstance(num_layers, (list, tuple)):
         print('lrs, num_l')
         u_norms = np.zeros((len(lrs), len(num_layers)))
-        for j, l in enumerate(num_layers):
-            for i, lr in enumerate(lrs):
+        losses = np.zeros((nr_losses, num_losses, len(lrs), len(num_layers)))
+        for i, lr in enumerate(lrs):
+            for j, l in enumerate(num_layers):
                 model = MultiLayerNet(3, *([num_neurons]*l), 3)
                 DemBeam = DeepEnergyMethod(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
-                DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lr, max_it=max_it, epochs=num_epochs)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs,  eval_data=eval_data, k=k)
                 # evaluate model
-                U_pred = DemBeam.evaluate_model(x, y, z)
+                U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
+                VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
+                # store solution
+                write_vtk_v2(f'output/DemBeam_lr{lr}_nl{l}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
 
-                u_norms[i, j] = L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz)
+                u_norms[i, j] = L2norm3D(U_pred - u_fem20, 4*N_test, N_test, N_test, dx, dy, dz)
+                losses[:, :, i, j] = np.array(DemBeam.losses).T
     # train on number of neurons in hidden layers and number of hidden layers
-    # elif isinstance((num_neurons and num_layers), (list, tuple)):
-    elif isinstance(num_neurons, (list, tuple)) and isinstance(num_layers, (list, tuple)) :
+    elif isinstance(num_neurons, (list, tuple)) and isinstance(num_layers, (list, tuple)):
         print('num_n, num_l')
-        u_norms = np.zeros((len(num_neurons), len(num_layers)))
-        for j, n in enumerate(num_neurons):
-            for i, l in enumerate(num_layers):
+        u_norms = np.zeros((len(num_layers), len(num_neurons)))
+        losses = np.zeros((nr_losses, num_losses, len(num_layers), len(num_neurons)))
+        for i, l in enumerate(num_layers):
+            for j, n in enumerate(num_neurons):
                 model = MultiLayerNet(3, *([n]*l), 3)
                 DemBeam = DeepEnergyMethod(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
-                DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lrs, max_it=max_it, epochs=num_epochs)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lrs, max_it=max_it, epochs=num_epochs, eval_data=eval_data, k=k)
                 # evaluate model
-                U_pred = DemBeam.evaluate_model(x, y, z)
-
-                u_norms[i, j] = L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz)
-        torch.save(model.state_dict(), models_path / 'stored_model')
+                U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
+                VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
+                # store solution
+                write_vtk_v2(f'output/DemBeam_nn{n}_nl{l}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
+                u_norms[i, j] = L2norm3D(U_pred - u_fem20, 4*N_test, N_test, N_test, dx, dy, dz)
+                
+                losses[:, :, i, j] = np.array(DemBeam.losses).T
     # train on many N values and learning rates
-    # elif isinstance((Ns and lrs), (list, tuple)):
-    elif isinstance(Ns, (list, tuple)) and isinstance(lrs, (list, tuple)) :
+    elif isinstance(Ns, (list, tuple)) and isinstance(lrs, (list, tuple)):
         # print(type(Ns), type(lrs), isinstance((Ns and lrs), list), Ns); exit()
         print('Ns and lrs')
         u_norms = np.zeros((len(lrs), len(Ns)))
+        losses = np.zeros((nr_losses, num_losses, len(lrs), len(Ns)))
         for j, N in enumerate(Ns):
+            shape = [4*N, N, N]
             for i, lr in enumerate(lrs):
                 # define model, DEM and domain
                 model = MultiLayerNet(3, *([num_neurons]*num_layers), 3)
                 DemBeam = DeepEnergyMethod(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=N)
                 # train model
-                DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lr, max_it=max_it, epochs=num_epochs)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs, eval_data=eval_data, k=k)
                 # evaluate model
-                U_pred = DemBeam.evaluate_model(x, y, z)
+                U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
+                VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
+                # store solution
+                write_vtk_v2(f'output/DemBeam_lr{lr}_N{N}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
                 # calculate L2norm
-                u_norms[i, j] = L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz)
-    elif isinstance(Ns, (list, tuple)) and isinstance(num_neurons, (list, tuple)) :
-        # print(type(Ns), type(lrs), isinstance((Ns and lrs), list), Ns); exit()
-        print('Ns and lrs')
-        u_norms = np.zeros((len(Ns), len(num_neurons)))
-        for j, n in enumerate(num_neurons):
-            for i, N in enumerate(Ns):
-                # define model, DEM and domain
-                model = MultiLayerNet(3, *([n]*num_layers), 3)
-                DemBeam = DeepEnergyMethod(model, energy)
-                domain, dirichlet, neumann = define_domain(L, H, D, N=N)
-                # train model
-                DemBeam.train_model(domain, dirichlet, neumann, LHD, lr=lrs, max_it=max_it, epochs=num_epochs)
-                # evaluate model
-                U_pred = DemBeam.evaluate_model(x, y, z)
-                # calculate L2norm
-                u_norms[i, j] = L2norm3D(U_pred, N_test, N_test, N_test, dx, dy, dz)
+                u_norms[i, j] = L2norm3D(U_pred - u_fem20, 4*N_test, N_test, N_test, dx, dy, dz)
+                losses[:, :, i, j] = np.array(DemBeam.losses).T
     else:
         raise Exception('You have to provide a list of N values or one of the following:\n' + 
                         '\t- lrs AND num_neurons\n\t- lrs AND num_layers\n\t- num_neurons AND num_layers')
-    return u_norms
+    return u_norms, losses
 
 def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, cmap='cividis', data_max=1):
     fig, ax = plt.subplots(figsize=(5,5))
