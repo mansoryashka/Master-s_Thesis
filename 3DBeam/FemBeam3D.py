@@ -88,8 +88,8 @@ def FEM_3D(N):
     z = np.linspace(0, d, N_test+2)[1:-1]
     u_fem = np.zeros((3, N_test, 4*N_test, N_test))
 
-    for j in range(N_test):
-        for i in range(4*N_test):
+    for i in range(4*N_test):
+        for j in range(N_test):
             for k in range(N_test):
                 u_fem[:, j, i, k] = u(x[i], y[j], z[k])
 

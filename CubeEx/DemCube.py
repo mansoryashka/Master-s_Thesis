@@ -274,7 +274,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
             DemBeam = DeepEnergyMethodCube(model, energy)
             domain, dirichlet, neumann = define_domain(L, H, D, N=N)
             # train model
-            DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lrs, max_it=max_it, epochs=num_epochs, eval_data=eval_data, k=k)
+            DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lrs, max_it=max_it, epochs=num_epochs, eval_data=eval_data, k=k, fb=np.asarray([[0, 0, 0]]))
             # evaluate model
             U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
             # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
@@ -295,7 +295,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 DemBeam = DeepEnergyMethodCube(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
 
-                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs, eval_data=eval_data, k=k)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs, eval_data=eval_data, k=k, fb=np.asarray([[0, 0, 0]]))
                 U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
 
@@ -314,7 +314,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 model = MultiLayerNet(3, *([num_neurons]*l), 3)
                 DemBeam = DeepEnergyMethodCube(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
-                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs,  eval_data=eval_data, k=k)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs,  eval_data=eval_data, k=k, fb=np.asarray([[0, 0, 0]]))
                 # evaluate model
                 U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
@@ -358,7 +358,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 DemBeam = DeepEnergyMethodCube(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=N)
                 # train model
-                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs, eval_data=eval_data, k=k)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lr, max_it=max_it, epochs=num_epochs, eval_data=eval_data, k=k, fb=np.asarray([[0, 0, 0]]))
                 # evaluate model
                 U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
@@ -387,7 +387,6 @@ def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, c
     ax.set_ylabel(ylabel)
     fig.savefig(figures_path / Path(figname + '.pdf'))
 
-
 if __name__ == '__main__':
     u_fem20 = np.load(arrays_path / 'u_fem20.npy')
     # print(f'FEM: {L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)}')
@@ -400,57 +399,74 @@ if __name__ == '__main__':
     y_eval = np.linspace(0, D, N_test + 4)[1:-1]
     z_eval = np.linspace(0, H, N_test + 4)[1:-1]
 
-    N = 20
-    lr = 0.1
-    shape = [N_test, N_test, N_test]
+    # N = 20
+    # lr = 0.1
+    # shape = [N_test, N_test, N_test]
     # num_layers = [2, 3, 4, 5]
     # num_neurons = [20, 30, 40, 50]
-    num_layers = [2, 3]
-    num_neurons = [20, 30]
-    num_expreriments = 2
-    num_epochs = 150
+    # num_expreriments = 20
+    # num_epochs = 500
+    # U_norms = 0
+    # losses = 0
+    # start = time.time()
+    # for i in range(num_expreriments):
+    #     U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lr, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape, eval_data=[x_eval, y_eval, z_eval], k=1)
+    #     U_norms += U_norms_i
+    #     losses += losses_i
+    # # # losses = np.asarray(losses)
+    # U_norms /= num_expreriments
+    # losses /= num_expreriments
+    # print(U_norms)
+    # np.save(arrays_path / 'losses_nl_nn', losses)
+    # plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'cube_heatmap_num_neurons_layers')
+    # tid = time.time() - start
+    # print(f'tid: {tid:.2f}s')
+    # print(f'tid: {tid/60:.2f}m')
+    # print(f'tid: {tid/3600:.2f}t')
+
+    # N = 20
+    # shape = [N_test, N_test, N_test]
+    # lrs = [.01, .05, .1, .5]
+    # num_neurons = [20, 30, 40, 50]
+    # num_layers = 3
+    # num_expreriments = 20
+    # num_epochs = 500
+    # U_norms = 0
+    # losses = 0
+    # start = time.time()
+    # for i in range(num_expreriments):
+    #     U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape, eval_data=[x_eval, y_eval, z_eval], k=1)
+    #     U_norms += U_norms_i
+    #     losses += losses_i
+    # tid = time.time() - start
+    # print(f'tid: {tid:.2f}s')
+    # print(f'tid: {tid/60:.2f}m')
+    # print(f'tid: {tid/3600:.2f}t')
+    # U_norms /= num_expreriments
+    # losses /= num_expreriments
+    # print(U_norms)
+    # plot_heatmap(U_norms, num_neurons, lrs, rf'$L^2$ norm of error with N={N} and {num_layers} hidden layers', 'Number of neurons in hidden layers', r'$\eta$', 'cube_heatmap_lrs_num_neurons')
+    # np.save(arrays_path / 'losses_lrs_nn', losses)
+
+    shape = [N_test, N_test, N_test]
+    N = 20
+    lrs = [.005, .01, .05, .1, .5]
+    num_neurons = [20, 30, 40, 50]
+    num_layers = 3
+    num_expreriments = 20
+    num_epochs = 500
     U_norms = 0
     losses = 0
     start = time.time()
     for i in range(num_expreriments):
-        U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lr, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape, eval_data=[x_eval, y_eval, z_eval], k=1)
+        U_norms_i, losses_i = train_and_evaluate(Ns=Ns, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, eval_data=[x_eval, y_eval, z_eval], k=1)
         U_norms += U_norms_i
         losses += losses_i
-    # # losses = np.asarray(losses)
     U_norms /= num_expreriments
     losses /= num_expreriments
-    print(U_norms)
-    np.save(arrays_path / 'losses_nl_nn', losses)
-    plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'cube_heatmap_num_neurons_layers')
+    np.save(arrays_path / 'losses_lrs_N', losses)
+    plot_heatmap(U_norms, Ns, lrs, rf'$L^2$ norm of error with {num_neurons} hidden neurons and {num_layers} hidden layers', 'N', r'$\eta$', 'cube_heatmap_lrs_N')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
     print(f'tid: {tid/3600:.2f}t')
-
-    # N = 20
-    # lrs = [.05, .1, .5, .9]
-    # num_layers = 3
-    # num_neurons = [20, 30, 40, 50]
-    # num_expreriments = 30
-    # U_norms = 0
-    # for i in range(num_expreriments):
-    #     U_norms += train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=60)
-    # U_norms /= num_expreriments
-    # e_norms = (U_norms - L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)) / L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)
-    # plot_heatmap(e_norms, num_neurons, lrs, rf'$L^2$ error norm with N={N} and {num_layers} hidden layers', 'Number of neurons in hidden layers', r'$\eta$', 'cube_heatmap_lrs_num_neurons')
-    # plot_heatmap(np.abs(e_norms), num_neurons, lrs, rf'$L^2$ error norm with N={N} and {num_layers} hidden layers', 'Number of neurons in hidden layers', r'$\eta$', 'cube_heatmap_lrs_num_neuronsABS')
-    # print(U_norms)
-    # print(e_norms)
-
-    # N = [20, 30, 40, 50]
-    # lr = 0.5
-    # num_layers = 3
-    # num_neurons = [10, 20, 30, 40, 50]
-    # num_expreriments = 30
-    # U_norms = 0
-    # for i in range(num_expreriments):
-    #     U_norms += train_and_evaluate(Ns=N, lrs=lr, num_neurons=num_neurons, num_layers=num_layers, num_epochs=60)
-    # U_norms /= num_expreriments
-    # e_norms = (U_norms - L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)) / L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)
-    # plot_heatmap(e_norms, num_neurons, N, rf'$L^2$ error norm with $\eta$ = {lr} and {num_layers} hidden layers', 'Number of neurons in hidden layers', 'N', 'cube_heatmap_N_num_neurons')
-    # plot_heatmap(np.abs(e_norms), num_neurons, N, rf'$L^2$ error norm with $\eta$ = {lr} and {num_layers} hidden layers', 'Number of neurons in hidden layers', 'N', 'cube_heatmap_N_num_neuronsABS')
