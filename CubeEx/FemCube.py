@@ -257,11 +257,11 @@ def FEM_Cube(N):
     for i in range(N_test):
         for j in range(N_test):
             for k in range(N_test):
-                u_fem[:, i, j, k] = u(x[i], y[j], z[k])
+                u_fem[:, j, i, k] = u(x[i], y[j], z[k])
     np.save(f'stored_arrays/u_fem{N}', u_fem)
 
-    print(dolfin.assemble(elastic_energy*dolfin.dx))
-    print(dolfin.assemble(dolfin.inner(u, n)*ds(right_marker)))
+    print(dolfin.assemble(elastic_energy*dolfin.dx))            # -38.89300569089483
+    print(dolfin.assemble(dolfin.inner(u, n)*ds(right_marker))) # 0.0427946693202464
     return u
 
 
