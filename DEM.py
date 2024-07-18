@@ -4,9 +4,8 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.autograd import grad
+from pyevtk.hl import gridToVTK
 from pathlib import Path
-# from scipy.integrate import simpson
-# from scipy.integrate import trapezoid
 from simps import simpson
 
 import matplotlib
@@ -202,7 +201,7 @@ def simps2D(U, xy=None, dx=None, dy=None, shape=None):
     Nx = shape[0]
     Ny = shape[1]
     U = U.flatten().reshape(Nx, Ny)
-    if (x and y):
+    if (xy):
         raise NotImplementedError('Not implemented yet. Please use dx and dy.')
     elif (dx and dy):
         return simpson(simpson(U, dx=dy), dx=dx)
@@ -228,3 +227,10 @@ def simps3D(U, xyz=None, dx=None, dy=None, dz=None, shape=None):
     U3D = U.flatten().reshape(Nx, Ny, Nz)
     # print(U3D.shape)
     return simpson(simpson(simpson(U3D, dx=dz), dx=dy), dx=dx)
+
+def write_vtk_v2(filename, x_space, y_space, z_space, U):
+    xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
+    if isinstance(U, dict):
+        gridToVTK(filename, xx, yy, zz, pointData=U)
+    else:
+        gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})

@@ -4,8 +4,6 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn
 from torch.autograd import grad
-import scipy.integrate as sp
-from pyevtk.hl import gridToVTK
 from pathlib import Path
 
 import matplotlib
@@ -16,7 +14,7 @@ sns.set()
 
 import sys
 sys.path.insert(0, "..")
-from DEM import DeepEnergyMethod, MultiLayerNet, dev, L2norm3D
+from DEM import DeepEnergyMethod, MultiLayerNet, dev, L2norm3D, write_vtk_v2
 
 # np.random.seed(2023)
 torch.manual_seed(2023)
@@ -210,13 +208,6 @@ def VonMises_stress(u, x):
                 )
     return SVonMises
 
-
-def write_vtk_v2(filename, x_space, y_space, z_space, U):
-    xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
-    if isinstance(U, dict):
-        gridToVTK(filename, xx, yy, zz, pointData=U)
-    else:
-        gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
 
 
 ### Skrive blokkene til en egen funksjon? Kalles på helt likt inne i loopene ###
