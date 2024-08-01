@@ -449,9 +449,9 @@ if __name__ == '__main__':
     # np.save(arrays_path / 'losses_lrs_nn', losses)
 
     shape = [N_test, N_test, N_test]
-    N = 20
+    Ns = [10, 20, 30, 40]
     lrs = [.005, .01, .05, .1, .5]
-    num_neurons = [20, 30, 40, 50]
+    num_neurons = 20
     num_layers = 3
     num_expreriments = 20
     num_epochs = 500
