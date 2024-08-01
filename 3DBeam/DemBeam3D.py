@@ -75,24 +75,26 @@ def define_domain(L, H, D, N=25, dir_bcs=None, neu_bcs=None):
     db_pts_x, db_pts_y, db_pts_z = db_pts.T
     nb_pts_x, nb_pts_y, nb_pts_z = nb_pts.T
 
-    fig = plt.figure(figsize=(5,3))
     
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(Xm, Ym, Zm, facecolor='tab:blue', s=0.005)
-    ax.scatter(db_pts_x, db_pts_y, db_pts_z, facecolor='tab:green', s=0.5)
-    ax.scatter(nb_pts_x, nb_pts_y, nb_pts_z, facecolor='tab:red', s=0.5)
-    ax.set_box_aspect((4,1,1))
-    ax.set_xticks([0.0, 4.0])
-    ax.set_zticks([0.0, 1.0])
-    ax.set_yticks([0.0, 1.0])
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_zlabel('z')
-    ax.view_init(elev=20, azim=-75)
-    fig.savefig('fig.png')
-    plt.close()
-    # plt.show()
-    # exit()
+    if not Path(current_path / 'domain.png').exists():
+        fig = plt.figure(figsize=(5, 3))
+        fig.tight_layout()
+        ax = fig.add_subplot(111, projection='3d')
+        
+        ax.scatter(Xm, Ym, Zm, facecolor='tab:blue', s=0.5, alpha=0.1)
+        ax.scatter(db_pts_x, db_pts_y, db_pts_z, facecolor='tab:green', s=0.5)
+        # ax.scatter(nb_pts_x, nb_pts_y, nb_pts_z, facecolor='tab:red', s=0.5)
+        ax.set_box_aspect((4,1,1))
+        ax.set_xticks([0.0, 4.0])
+        ax.set_zticks([0.0, 1.0])
+        ax.set_yticks([0.0, 1.0])
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
+        ax.view_init(elev=25, azim=-55)
+        
+        fig.savefig('domain.png')
+        plt.close()
 
     dirichlet = {
         'coords': db_pts,
@@ -346,7 +348,7 @@ def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, c
                 )
     ### skriv tester for om title, labels og filnavn blir sendt inn!!! ###
     ax.set_title(title)
-    ax.set_xlabel(xlabel)  
+    ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     fig.savefig(figures_path / Path(figname + '.pdf'))
 
@@ -380,13 +382,7 @@ if __name__ == '__main__':
     "--------------------------------------------------------------------------"
     # u_fem20 = np.load('stored_arrays/u_fem_N20.npy')
     u_fem30 = np.load(arrays_path / 'u_fem_N30.npy')
-    # print(f'FEM: {L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)} \n')
-    # fig = plt.figure()
-    # ax = fig.add_subplot()
-    # u_femAB = u_fem30[1, 14, 59, :] 
-    # ax.plot(u_femAB)
-    # fig.savefig(figures_path/'AB_plot.pdf')
-    # exit()
+
     x = np.linspace(0, L, 4*N_test + 2)[1:-1]
     y = np.linspace(0, D, N_test + 2)[1:-1]
     z = np.linspace(0, H, N_test + 2)[1:-1]
