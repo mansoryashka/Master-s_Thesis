@@ -54,62 +54,71 @@ for i, nl in enumerate(num_layers):
         # print(best_norm, best_model.relative_to(run_path))
 
 print(cum_norms/20, '\n')
-print(cum_norms/40)
+# print(cum_norms/40)
 
+print(
 """ Run 2 """
-# N = 30
-# lrs = [0.001, 0.01, 0.1, 0.5]
-# num_layers = [2, 3, 4, 5]
-# nn = 50
+)
+N = 30
+lrs = [0.001, 0.01, 0.1, 0.5]
+num_layers = [2, 3, 4, 5]
+nn = 50
+cum_norms = np.zeros((4, 4))
+run_path = models_path / 'run2'
+for i, lr in enumerate(lrs):
+    for k, nl in enumerate(num_layers):
+        best_norm = np.inf
+        for j in range(20):
+            current_model_path = run_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{N}_{j}'
+            assert current_model_path.exists()
+            model = MultiLayerNet(3, *[nn]*nl, 3)
+            model.load_state_dict(torch.load(current_model_path))
 
-# run_path = models_path / 'run2'
-# for lr in lrs:
-#     for nl in num_layers:
-#         best_norm = np.inf
-#         for j in range(20):
-#             current_model_path = run_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{N}_{j}'
-#             assert current_model_path.exists()
-#             model = MultiLayerNet(3, *[nn]*nl, 3)
-#             model.load_state_dict(torch.load(current_model_path))
+            DemBeam = DeepEnergyMethod(model, energy)
+            current_pred = DemBeam.evaluate_model(x, y, z)
+            norm = L2norm3D(current_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+            cum_norms[i, k] += norm
+            if norm < best_norm:
+                best_norm = norm
+                best_model = current_model_path
+            # print(f'N: {N}, lr: {lr:6f}, # layers: {nl:5d}, # neurons: {nn:5d}, norm: {norm:10.7f}')
+        # print(best_norm, best_model.relative_to(run_path))
+print(cum_norms/20, '\n')
+# print(cum_norms/40)
 
-#             DemBeam = DeepEnergyMethod(model, energy)
-#             current_pred = DemBeam.evaluate_model(x, y, z)
-#             norm = L2norm3D(current_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
-#             if norm < best_norm:
-#                 best_norm = norm
-#                 best_model = current_model_path
-#             # print(f'N: {N}, lr: {lr:6f}, # layers: {nl:5d}, # neurons: {nn:5d}, norm: {norm:10.7f}')
+print(
+""" Run 3 """
+)
+N = 30
+lrs = [.01, .05, .1, .5]
+num_neurons = [20, 30, 40, 50]
+nl = 2
+
+cum_norms = np.zeros((4, 4))
+run_path = models_path / 'run3'
+for i, lr in enumerate(lrs):
+    for k, nn in enumerate(num_neurons):
+        best_norm = np.inf
+        for j in range(20):
+            current_model_path = run_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{N}_{j}'
+            # assert current_model_path.exists()
+            if not current_model_path.exists():
+                print(current_model_path.relative_to(run_path), ' does not exist!!')
+                continue
+            model = MultiLayerNet(3, *[nn]*nl, 3)
+            model.load_state_dict(torch.load(current_model_path))
+
+            DemBeam = DeepEnergyMethod(model, energy)
+            current_pred = DemBeam.evaluate_model(x, y, z)
+            norm = L2norm3D(current_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+            cum_norms[i, k] += norm
+            if norm < best_norm:
+                best_norm = norm
+                best_model = current_model_path
+            # print(f'N: {N}, lr: {lr:6f}, # layers: {nl:5d}, # neurons: {nn:5d}, norm: {norm:10.7f}')
 #         print(best_norm, best_model.relative_to(run_path))
-
-# print(
-# """ Run 3 """
-# )
-# N = 30
-# lrs = [.01, .05, .1, .5]
-# num_neurons = [20, 30, 40, 50]
-# nl = 2
-
-# run_path = models_path / 'run3'
-# for lr in lrs:
-#     for nn in num_neurons:
-#         best_norm = np.inf
-#         for j in range(20):
-#             current_model_path = run_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{N}_{j}'
-#             # assert current_model_path.exists()
-#             if not current_model_path.exists():
-#                 print(current_model_path.relative_to(run_path), ' does not exist!!')
-#                 continue
-#             model = MultiLayerNet(3, *[nn]*nl, 3)
-#             model.load_state_dict(torch.load(current_model_path))
-
-#             DemBeam = DeepEnergyMethod(model, energy)
-#             current_pred = DemBeam.evaluate_model(x, y, z)
-#             norm = L2norm3D(current_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
-#             if norm < best_norm:
-#                 best_norm = norm
-#                 best_model = current_model_path
-#             # print(f'N: {N}, lr: {lr:6f}, # layers: {nl:5d}, # neurons: {nn:5d}, norm: {norm:10.7f}')
-#         print(best_norm, best_model.relative_to(run_path))
+print(cum_norms/20, '\n')
+# print(cum_norms/40)
 
 print(
 """ Run 4 """
@@ -145,11 +154,11 @@ for i, lr in enumerate(lrs):
             if norm < best_norm:
                 best_norm = norm
                 best_model = current_model_path
-            print(f'N: {N}, lr: {lr:6f}, # layers: {nl:5d}, # neurons: {nn:5d}, norm: {norm:10.7f}')
+            # print(f'N: {N}, lr: {lr:6f}, # layers: {nl:5d}, # neurons: {nn:5d}, norm: {norm:10.7f}')
         # print(best_norm, best_model.relative_to(run_path))
 
 print(cum_norms/20, '\n')
-print(cum_norms/40)
+# print(cum_norms/40)
 
 """
 [[0.00673402 0.00435929 0.00329564 0.00292316 0.0027569 ]

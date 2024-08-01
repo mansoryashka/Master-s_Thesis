@@ -116,6 +116,8 @@ class DeepEnergyMethod:
             if i == 100:
                 best_change = loss_change
                 best_epoch = i
+                torch.save(self.model.state_dict(), 
+                            models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
             elif i > 100:
                 if loss_change <= best_change:
                     best_change = loss_change
