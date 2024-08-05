@@ -113,17 +113,17 @@ class DeepEnergyMethod:
             loss_change = torch.abs(self.current_loss - prev_loss)
             prev_loss = self.current_loss
 
-            if i == 100:
-                best_change = loss_change
-                best_epoch = i
-                torch.save(self.model.state_dict(), 
-                            models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
-            elif i > 100:
-                if loss_change <= best_change:
-                    best_change = loss_change
-                    best_epoch = i
-                    torch.save(self.model.state_dict(), 
-                               models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
+            # if i == 100:
+            #     best_change = loss_change
+            #     best_epoch = i
+            #     torch.save(self.model.state_dict(), 
+            #                 models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
+            # elif i > 100:
+            #     if loss_change <= best_change:
+            #         best_change = loss_change
+            #         best_epoch = i
+            #         torch.save(self.model.state_dict(), 
+            #                    models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
             if eval_data:
                 eval_shape = [len(eval_data[0]), len(eval_data[1]), len(eval_data[2])]
                 _, u_eval, xyz_eval = self.evaluate_model(eval_data[0], eval_data[1], eval_data[2], True)

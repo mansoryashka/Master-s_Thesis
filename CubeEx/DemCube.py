@@ -379,7 +379,7 @@ def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, c
     yticks = [str(j) for j in yparameter]
     sns.heatmap(data, annot=True, ax=ax, cmap=cmap,
                 xticklabels=xticks, yticklabels=yticks, cbar=False,
-                vmax=np.max(data[~np.isinf(data)])
+                vmax=np.max(data[~np.isnan(data)])
                 )
     ### skriv tester for om title, labels og filnavn blir sendt inn!!! ###
     ax.set_title(title)
@@ -424,34 +424,10 @@ if __name__ == '__main__':
     # print(f'tid: {tid/60:.2f}m')
     # print(f'tid: {tid/3600:.2f}t')
 
-    # N = 20
-    # shape = [N_test, N_test, N_test]
-    # lrs = [.01, .05, .1, .5]
-    # num_neurons = [20, 30, 40, 50]
-    # num_layers = 3
-    # num_expreriments = 20
-    # num_epochs = 500
-    # U_norms = 0
-    # losses = 0
-    # start = time.time()
-    # for i in range(num_expreriments):
-    #     U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape, eval_data=[x_eval, y_eval, z_eval], k=1)
-    #     U_norms += U_norms_i
-    #     losses += losses_i
-    # tid = time.time() - start
-    # print(f'tid: {tid:.2f}s')
-    # print(f'tid: {tid/60:.2f}m')
-    # print(f'tid: {tid/3600:.2f}t')
-    # U_norms /= num_expreriments
-    # losses /= num_expreriments
-    # print(U_norms)
-    # plot_heatmap(U_norms, num_neurons, lrs, rf'$L^2$ norm of error with N={N} and {num_layers} hidden layers', 'Number of neurons in hidden layers', r'$\eta$', 'cube_heatmap_lrs_num_neurons')
-    # np.save(arrays_path / 'losses_lrs_nn', losses)
-
+    N = 20
     shape = [N_test, N_test, N_test]
-    Ns = [10, 20, 30, 40]
-    lrs = [.005, .01, .05, .1, .5]
-    num_neurons = 20
+    lrs = [.01, .05, .1, .5]
+    num_neurons = [20, 30, 40, 50]
     num_layers = 3
     num_expreriments = 20
     num_epochs = 500
@@ -459,14 +435,39 @@ if __name__ == '__main__':
     losses = 0
     start = time.time()
     for i in range(num_expreriments):
-        U_norms_i, losses_i = train_and_evaluate(Ns=Ns, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, eval_data=[x_eval, y_eval, z_eval], k=1)
+        U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape, eval_data=[x_eval, y_eval, z_eval], k=1)
         U_norms += U_norms_i
         losses += losses_i
-    U_norms /= num_expreriments
-    losses /= num_expreriments
-    np.save(arrays_path / 'losses_lrs_N', losses)
-    plot_heatmap(U_norms, Ns, lrs, rf'$L^2$ norm of error with {num_neurons} hidden neurons and {num_layers} hidden layers', 'N', r'$\eta$', 'cube_heatmap_lrs_N')
+        print(i, U_norms_i)
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
     print(f'tid: {tid/3600:.2f}t')
+    U_norms /= num_expreriments
+    losses /= num_expreriments
+    print(U_norms)
+    plot_heatmap(U_norms, num_neurons, lrs, rf'$L^2$ norm of error with N={N} and {num_layers} hidden layers', 'Number of neurons in hidden layers', r'$\eta$', 'cube_heatmap_lrs_num_neurons')
+    np.save(arrays_path / 'losses_lrs_nn', losses)
+
+    # shape = [N_test, N_test, N_test]
+    # Ns = [10, 20, 30, 40]
+    # lrs = [.005, .01, .05, .1, .5]
+    # num_neurons = 20
+    # num_layers = 3
+    # num_expreriments = 20
+    # num_epochs = 500
+    # U_norms = 0
+    # losses = 0
+    # start = time.time()
+    # for i in range(num_expreriments):
+    #     U_norms_i, losses_i = train_and_evaluate(Ns=Ns, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, eval_data=[x_eval, y_eval, z_eval], k=1)
+    #     U_norms += U_norms_i
+    #     losses += losses_i
+    # U_norms /= num_expreriments
+    # losses /= num_expreriments
+    # np.save(arrays_path / 'losses_lrs_N', losses)
+    # plot_heatmap(U_norms, Ns, lrs, rf'$L^2$ norm of error with {num_neurons} hidden neurons and {num_layers} hidden layers', 'N', r'$\eta$', 'cube_heatmap_lrs_N')
+    # tid = time.time() - start
+    # print(f'tid: {tid:.2f}s')
+    # print(f'tid: {tid/60:.2f}m')
+    # print(f'tid: {tid/3600:.2f}t')

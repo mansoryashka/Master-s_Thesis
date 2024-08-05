@@ -344,7 +344,7 @@ def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, c
                 xticklabels=xticks, yticklabels=yticks, cbar=False,
                 # vmax=np.max(data[data < data_max])
                 # vmax=np.max(data[~np.isnan(data)])
-                vmax=np.max(data[~np.isinf(data)])
+                vmax=np.max(data[~np.isnan(data)])
                 )
     ### skriv tester for om title, labels og filnavn blir sendt inn!!! ###
     ax.set_title(title)
@@ -401,7 +401,7 @@ if __name__ == '__main__':
     num_layers = [2, 3, 4, 5]
     num_neurons = [30, 40, 50, 60]
     num_expreriments = 20
-    num_epochs = 500
+    num_epochs = 50
     U_norms = 0
     losses = 0
     for i in range(num_expreriments):
@@ -412,8 +412,8 @@ if __name__ == '__main__':
     U_norms /= num_expreriments
     losses /= num_expreriments
     print(U_norms)
-    np.save(arrays_path / 'losses_nl_nn', losses)
-    plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers')
+    # np.save(arrays_path / 'losses_nl_nn', losses)
+    plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'beam_heatmap_num_neurons_layers50')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
