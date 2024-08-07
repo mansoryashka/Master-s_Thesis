@@ -1,0 +1,19 @@
+nohup: ignoring input
+Traceback (most recent call last):
+  File "/itf-fi-ml/home/mansurd/Master/3DBeam/DemBeam3D.py", line 407, in <module>
+    U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lr, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape, eval_data=[x_eval, y_eval, z_eval])
+  File "/itf-fi-ml/home/mansurd/Master/3DBeam/DemBeam3D.py", line 290, in train_and_evaluate
+    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=lrs, max_it=max_it, epochs=num_epochs, eval_data=eval_data)
+  File "/itf-fi-ml/home/mansurd/Master/3DBeam/../DEM.py", line 114, in train_model
+    optimizer.step(closure)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/optim/optimizer.py", line 109, in wrapper
+    return func(*args, **kwargs)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/autograd/grad_mode.py", line 27, in decorate_context
+    return func(*args, **kwargs)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/optim/lbfgs.py", line 311, in step
+    orig_loss = closure()
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/autograd/grad_mode.py", line 27, in decorate_context
+    return func(*args, **kwargs)
+  File "/itf-fi-ml/home/mansurd/Master/3DBeam/../DEM.py", line 94, in closure
+    neu_pred = self.getU(self.model, neuBC_coords_i)
+UnboundLocalError: local variable 'neuBC_coords_i' referenced before assignment

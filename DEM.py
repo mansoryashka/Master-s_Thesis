@@ -7,6 +7,7 @@ from torch.autograd import grad
 from pyevtk.hl import gridToVTK
 from pathlib import Path
 from simps import simpson
+torch.autograd.set_detect_anomaly(True)
 
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 350
@@ -31,10 +32,11 @@ class MultiLayerNet(nn.Module):
         super(MultiLayerNet, self).__init__()
         #### throw error if depth < 3 ####
         self.linears = nn.ModuleList([nn.Linear(neurons[i-1], neurons[i]) for i in range(1, len(neurons))])
-
     def forward(self, x):
         for layer in self.linears:
-            x = torch.tanh(layer(x))
+            # x = torch.tanh(layer(x))
+
+            x = torch.tanh(torch.nn.functional.linear(x, layer.weight.clone(), layer.bias))
         return x
 
 class DeepEnergyMethod:
@@ -42,7 +44,7 @@ class DeepEnergyMethod:
         self.model = model.to(dev)
         self.energy = energy
         
-    def train_model(self, data, dirichlet, neumann, shape, LHD, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]]), eval_data=None, k=5):
+    def train_model(self, data, dirichlet, neumann, shape, LHD, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]]), eval_data=None):
         dxdydz = np.array(LHD) / (np.array(shape) - 1)
 
 
@@ -61,6 +63,8 @@ class DeepEnergyMethod:
         neuBC_coords = torch.from_numpy(neumann['coords']).float().to(dev)
         neuBC_coords.requires_grad_(True)
         neuBC_values = torch.from_numpy(neumann['values']).float().to(dev)
+        neuBC_coords_i = neuBC_coords[:]
+        neuBC_coords_i.requires_grad_(True)
 
         self.losses = []
         self.eval_losses = []
@@ -90,16 +94,20 @@ class DeepEnergyMethod:
                 boundary_loss = torch.sum(bc_dir)
 
                 # external loss
-                neu_pred = self.getU(self.model, neuBC_coords)
+                # neu_pred = self.getU(self.model, neuBC_coords)
+                # bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
+                neu_pred = self.getU(self.model, neuBC_coords_i)
                 bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
 
+                self.neu_pred = neu_pred
                 body_f = torch.matmul(u_pred.unsqueeze(1), fb.unsqueeze(2))
 
                 external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape) + simps2D(bc_neu, dx=dxdydz[1], dy=dxdydz[2], shape=[shape[1], shape[2]])
 
                 loss = internal_loss - external_loss + boundary_loss
                 optimizer.zero_grad()
-                loss.backward()
+                # loss.backward()
+                loss.backward(retain_graph=True)
 
                 self.internal_loss = internal_loss
                 self.external_loss = external_loss
@@ -107,8 +115,9 @@ class DeepEnergyMethod:
 
                 self.current_loss = loss
                 return loss
-            
+
             optimizer.step(closure)
+            neuBC_coords_i = self.neu_pred + neuBC_coords
 
             loss_change = torch.abs(self.current_loss - prev_loss)
             prev_loss = self.current_loss
@@ -134,14 +143,12 @@ class DeepEnergyMethod:
                 eval_loss2 = simps3D(eval_BF, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=eval_shape)
                 self.eval_loss = eval_loss1 - eval_loss2
 
-            if i % k == 0:
-                if eval_data:
-                    print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Eval loss: {self.eval_loss:10.5f}, Loss_change: {loss_change.item():8.5f}')
-                    self.losses.append([self.current_loss.detach().cpu(), self.eval_loss.detach().cpu()])
-                else:
-                    print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}')
-                    self.losses.append(self.current_loss.detach().cpu())
-        print(best_change, best_epoch)
+                print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Eval loss: {self.eval_loss:10.5f}, Loss_change: {loss_change.item():8.5f}')
+                self.losses.append([self.current_loss.detach().cpu(), self.eval_loss.detach().cpu()])
+            else:
+                print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}')
+                self.losses.append(self.current_loss.detach().cpu())
+        # print(best_change, best_epoch)
         # return self.model
 
     def getU(self, model, x):
@@ -151,32 +158,7 @@ class DeepEnergyMethod:
         return u_pred
 
     def evaluate_model(self, x, y, z, return_pred_tensor=False):
-        Nx = len(x)
-        Ny = len(y)
-        Nz = len(z)
-        xGrid, yGrid, zGrid = np.meshgrid(x, y, z)
-
-        x1D = np.expand_dims(xGrid.flatten(), 1)
-        y1D = np.expand_dims(yGrid.flatten(), 1)
-        z1D = np.expand_dims(zGrid.flatten(), 1)
-        xyz = np.concatenate((x1D, y1D, z1D), axis=-1)
-
-        xyz_tensor = torch.from_numpy(xyz).float().to(dev)
-        xyz_tensor.requires_grad_(True)
-
-        u_pred_torch = self.getU(self.model, xyz_tensor)
-        # self.u_pred_torch = u_pred_torch.double()
-        # self.u_pred_torch.requires_grad_(True)
-        u_pred = u_pred_torch.detach().cpu().numpy()
-        surUx = u_pred[:, 0].reshape(Ny, Nx, Nz)
-        surUy = u_pred[:, 1].reshape(Ny, Nx, Nz)
-        surUz = u_pred[:, 2].reshape(Ny, Nx, Nz)
-
-        U = (np.float64(surUx), np.float64(surUy), np.float64(surUz))
-
-        if return_pred_tensor:
-            return U, u_pred_torch, xyz_tensor
-        return U
+        raise NotImplementedError("You need to implement an 'evaluate_model' method in the subclass!")
 
 
 def loss_squared_sum(input, target):
