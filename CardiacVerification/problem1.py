@@ -5,9 +5,12 @@ import torch
 from torch import nn
 from torch.autograd import grad
 
-
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 350
+
+import sys
+sys.path.insert(0, "../3DBeam")
+from DemBeam3D import DeepEnergyMethodBeam
 
 current_path = Path.cwd()
 
