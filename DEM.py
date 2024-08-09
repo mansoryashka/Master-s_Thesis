@@ -98,11 +98,11 @@ class DeepEnergyMethod:
                 # bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
                 neu_pred = self.getU(self.model, neuBC_coords_i)
                 bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
-
                 self.neu_pred = neu_pred
                 body_f = torch.matmul(u_pred.unsqueeze(1), fb.unsqueeze(2))
 
-                external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape) + simps2D(bc_neu, dx=dxdydz[1], dy=dxdydz[2], shape=[shape[1], shape[2]])
+                # external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape) + simps2D(bc_neu, dx=dxdydz[1], dy=dxdydz[2], shape=[shape[1], shape[2]])
+                external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape) + simps2D(bc_neu, dx=dxdydz[0], dy=dxdydz[1], shape=[shape[0], shape[1]])
 
                 loss = internal_loss - external_loss + boundary_loss
                 optimizer.zero_grad()

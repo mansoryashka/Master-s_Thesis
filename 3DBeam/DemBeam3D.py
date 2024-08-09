@@ -514,12 +514,12 @@ if __name__ == '__main__':
 
     # Ns = [20, 30, 40, 50, 60]
     # lrs = [.01, .05, .1, .5]
-    Ns = [50, 60]
+    Ns = [20, 30]
     lrs = [.01, .05]
     num_layers = 2
     num_neurons = 50
     num_expreriments = 5
-    num_epochs = 300
+    num_epochs = 100
     U_norms = 0
     losses = 0
     start = time.time()
@@ -530,7 +530,7 @@ if __name__ == '__main__':
     U_norms /= num_expreriments
     losses /= num_expreriments
     np.save(arrays_path / 'losses_lrs_N', losses)
-    plot_heatmap(U_norms, Ns, lrs, rf'$L^2$ norm of error with {num_neurons} hidden neurons and {num_layers} hidden layers', 'N', r'$\eta$', 'beam_heatmap_lrs_N200')
+    plot_heatmap(U_norms, Ns, lrs, rf'$L^2$ norm of error with {num_neurons} hidden neurons and {num_layers} hidden layers', 'N', r'$\eta$', 'beam_heatmap_lrs_N100')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')

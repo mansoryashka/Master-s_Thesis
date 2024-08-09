@@ -10,7 +10,7 @@ matplotlib.rcParams['figure.dpi'] = 350
 
 import sys
 sys.path.insert(0, "../3DBeam")
-from DemBeam3D import DeepEnergyMethodBeam
+from DemBeam3D import DeepEnergyMethodBeam, train_and_evaluate, MultiLayerNet, write_vtk_v2, dev
 
 current_path = Path.cwd()
 
@@ -37,7 +37,7 @@ d_boundary = 0.0
 d_cond = [0, 0, 0]
 
 n_boundary = 0.0
-n_cond = 4
+n_cond = [0, 4, 0]
 
 def define_domain(L, H, D, N=10):
     x = np.linspace(0, L, 10*N)
@@ -143,3 +143,18 @@ def energy(u, x, J=False):
         return total_energy, J
     return total_energy
 
+if __name__ == '__main__':
+    N = 10
+    LHD = [L, H, D]
+    shape = [10*N, N, N]
+
+    x_test = np.linspace(0, L, 10*N)
+    y_test = np.linspace(0, H, N+3)[1:-2]
+    z_test = np.linspace(0, D, N+3)[1:-2]
+
+    model = MultiLayerNet(3, *[30]*3, 3)
+    DemBeam = DeepEnergyMethodBeam(model, energy)
+    domain, dirichlet, neumann = define_domain(L, H, D, N=N)
+    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=0.1, epochs=10, fb=np.array([[0, 0, 0]]))
+    U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
+    write_vtk_v2('output/problem1', x_test, y_test, z_test, U_pred)
