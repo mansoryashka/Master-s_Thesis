@@ -127,8 +127,6 @@ class DeepEnergyMethodBeam(DeepEnergyMethod):
         xyz_tensor.requires_grad_(True)
 
         u_pred_torch = self.getU(self.model, xyz_tensor)
-        # self.u_pred_torch = u_pred_torch.double()
-        # self.u_pred_torch.requires_grad_(True)
         u_pred = u_pred_torch.detach().cpu().numpy()
         surUx = u_pred[:, 0].reshape(Ny, Nx, Nz)
         surUy = u_pred[:, 1].reshape(Ny, Nx, Nz)
