@@ -40,8 +40,11 @@ def neo_hookean(F: ufl.Coefficient, mu: float = 15.0) -> ufl.Coefficient:
     ufl.Coefficient
         Strain energy density
     """
+    J = dolfin.det(F)
+    F_bar = F / J**(1/3)
     C = F.T * F
-    I1 = dolfin.tr(C)
+    C_bar = F_bar.T * F_bar
+    I1 = dolfin.tr(C_bar)
     return 0.5 * mu * (I1 - 3)
 
 
@@ -101,9 +104,12 @@ def transverse_holzapfel_ogden(
         Strain energy density
     """
 
+    J = dolfin.det(F)
+    F_bar = F / J**(1/3)
     C = F.T * F
-    I1 = dolfin.tr(C)
-    I4f = dolfin.inner(C * f0, f0)
+    C_bar = F_bar.T * F_bar
+    I1 = dolfin.tr(C_bar)
+    I4f = dolfin.inner(C_bar * f0, f0)
 
     return (a / (2.0 * b)) * (dolfin.exp(b * (I1 - 3)) - 1.0) + (
         a_f / (2.0 * b_f)
@@ -131,7 +137,8 @@ def active_stress_energy(
     """
 
     J = dolfin.det(F)
-    I4f = dolfin.inner(F * f0, F * f0)
+    F_bar = F / J**(1/3)
+    I4f = dolfin.inner(F_bar * f0, F_bar * f0)
     return 0.5 * Ta / J * (I4f - 1)
 
 
@@ -155,7 +162,7 @@ def compressibility(F: ufl.Coefficient, kappa: float = 1e3) -> ufl.Coefficient:
     """
     J = dolfin.det(F)
     # return kappa * (J * dolfin.ln(J) - J + 1)
-    return kappa * (J - 1)**2
+    return kappa / 2 * (J - 1)**2
 
 def FEM_Cube(N):
     # Create a Unit Cube Mesh
@@ -177,8 +184,8 @@ def FEM_Cube(N):
     f0 = dolfin.Constant([1.0, 0.0, 0.0])
 
     E = 1000
-    nu = 0.3
-    mu = E / (2*(1 + nu))
+    nu = 0.9
+    mu = E / (2 * (1 + nu))
 
     # Collect the contributions to the total energy (here using the Holzapfel Ogden model)
     elastic_energy = (
@@ -262,12 +269,12 @@ def FEM_Cube(N):
 
     print(dolfin.assemble(elastic_energy*dolfin.dx))            # -38.89300569089483
     print(dolfin.assemble(dolfin.inner(u, n)*ds(right_marker))) # 0.0427946693202464
-    return u
 
 
 if __name__ == '__main__':
     import numpy as np
-    Ns = [5, 10, 15, 20]
+    # Ns = [5, 10, 15, 20]
+    Ns = [10]
     for N in Ns:
-        # print('N = ', N)
-        u = FEM_Cube(N)
+        print('N = ', N)
+        FEM_Cube(N)
