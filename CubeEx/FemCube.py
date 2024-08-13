@@ -41,9 +41,10 @@ def neo_hookean(F: ufl.Coefficient, mu: float = 15.0) -> ufl.Coefficient:
         Strain energy density
     """
     J = dolfin.det(F)
-    F_bar = F / J**(1/3)
+    F_bar = F
     C = F.T * F
     C_bar = F_bar.T * F_bar
+    # C_bar = C
     I1 = dolfin.tr(C_bar)
     return 0.5 * mu * (I1 - 3)
 
@@ -106,8 +107,10 @@ def transverse_holzapfel_ogden(
 
     J = dolfin.det(F)
     F_bar = F / J**(1/3)
+    # F_bar = F 
     C = F.T * F
     C_bar = F_bar.T * F_bar
+    # C_bar = C
     I1 = dolfin.tr(C_bar)
     I4f = dolfin.inner(C_bar * f0, f0)
 
@@ -138,6 +141,7 @@ def active_stress_energy(
 
     J = dolfin.det(F)
     F_bar = F / J**(1/3)
+    # F_bar = F 
     I4f = dolfin.inner(F_bar * f0, F_bar * f0)
     return 0.5 * Ta / J * (I4f - 1)
 
@@ -179,7 +183,7 @@ def FEM_Cube(N):
     F = dolfin.grad(u) + dolfin.Identity(3)
 
     # Active tension
-    Ta = dolfin.Constant(1.0)
+    Ta = dolfin.Constant(0.0)
     # Set fiber direction to be constant in the x-direction
     f0 = dolfin.Constant([1.0, 0.0, 0.0])
 
@@ -234,7 +238,7 @@ def FEM_Cube(N):
     # traction = dolfin.Constant(1.0)
     traction = dolfin.Constant(-0.5)
     Norm = dolfin.FacetNormal(mesh)
-    n = traction * Norm
+    n = traction * ufl.cofac(F) * Norm
     ds = dolfin.ds(domain=mesh, subdomain_data=ffun)
     external_virtual_work = dolfin.inner(u_test, n) * ds(right_marker)
 

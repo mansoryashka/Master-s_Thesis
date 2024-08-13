@@ -3,18 +3,18 @@
   <Domain>
     <Grid GridType="Collection" CollectionType="Temporal" Name="u">
       <Grid Name="u_0" GridType="Uniform">
-        <Topology NumberOfElements="48000" TopologyType="Tetrahedron" NodesPerElement="4">
-          <DataItem Dimensions="48000 4" NumberType="UInt" Format="HDF">u.h5:u/u_0/mesh/topology</DataItem>
+        <Topology NumberOfElements="6000" TopologyType="Tetrahedron" NodesPerElement="4">
+          <DataItem Dimensions="6000 4" NumberType="UInt" Format="HDF">u.h5:u/u_0/mesh/topology</DataItem>
         </Topology>
         <Geometry GeometryType="XYZ">
-          <DataItem Dimensions="9261 3" Format="HDF">u.h5:u/u_0/mesh/geometry</DataItem>
+          <DataItem Dimensions="1331 3" Format="HDF">u.h5:u/u_0/mesh/geometry</DataItem>
         </Geometry>
         <Time Value="0.000000" />
         <Attribute ItemType="FiniteElementFunction" ElementFamily="CG" ElementDegree="2" ElementCell="tetrahedron" Name="u" Center="Other" AttributeType="Vector">
-          <DataItem Dimensions="1440000 1" NumberType="UInt" Format="HDF">u.h5:u/u_0/cell_dofs</DataItem>
-          <DataItem Dimensions="206763 1" NumberType="Float" Format="HDF">u.h5:u/u_0/vector</DataItem>
-          <DataItem Dimensions="48001 1" NumberType="UInt" Format="HDF">u.h5:u/u_0/x_cell_dofs</DataItem>
-          <DataItem Dimensions="48000 1" NumberType="UInt" Format="HDF">u.h5:u/u_0/cells</DataItem>
+          <DataItem Dimensions="180000 1" NumberType="UInt" Format="HDF">u.h5:u/u_0/cell_dofs</DataItem>
+          <DataItem Dimensions="27783 1" NumberType="Float" Format="HDF">u.h5:u/u_0/vector</DataItem>
+          <DataItem Dimensions="6001 1" NumberType="UInt" Format="HDF">u.h5:u/u_0/x_cell_dofs</DataItem>
+          <DataItem Dimensions="6000 1" NumberType="UInt" Format="HDF">u.h5:u/u_0/cells</DataItem>
         </Attribute>
       </Grid>
     </Grid>

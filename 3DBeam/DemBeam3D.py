@@ -76,7 +76,8 @@ def define_domain(L, H, D, N=25, dir_bcs=None, neu_bcs=None):
     nb_pts_x, nb_pts_y, nb_pts_z = nb_pts.T
 
     
-    if not Path(current_path / 'domain.png').exists():
+    # if not Path(current_path / 'domain.png').exists():
+    if True:
         fig = plt.figure(figsize=(5, 3))
         fig.tight_layout()
         ax = fig.add_subplot(111, projection='3d')
@@ -92,7 +93,7 @@ def define_domain(L, H, D, N=25, dir_bcs=None, neu_bcs=None):
         ax.set_ylabel('y')
         ax.set_zlabel('z')
         ax.view_init(elev=25, azim=-55)
-        
+        plt.show(); exit()
         fig.savefig('domain.png')
         plt.close()
 
