@@ -57,7 +57,7 @@ def define_domain(N=15, M=5):
     # z = np.where(np.abs(z - 5) < 0.1, 5, z)
 
     # define Dirichlet and Neumann BCs
-    dir_BC = lambda z: np.abs(z - 5) < .5
+    dir_BC = lambda z: np.abs(z - 5) < .2
     neu_BC = RS == rs_endo
 
     # define inner points
@@ -178,13 +178,13 @@ def define_domain(N=15, M=5):
     z_perp = np.expand_dims(z_perp.flatten(), 1)
     n_cond = np.concatenate((x_perp, y_perp, z_perp), -1)
     
-    n_cond = 1E4**(1/3)*np.concatenate((x_perp, y_perp, z_perp), -1)
+    # n_cond = 1E4**(1/3)*np.concatenate((x_perp, y_perp, z_perp), -1)
 
     x2 = np.expand_dims(x2.flatten(), 1)
     y2 = np.expand_dims(y2.flatten(), 1)
     z2 = np.expand_dims(z2.flatten(), 1)
     nb_pts = np.concatenate((x2, y2, z2), -1)
-    # n_cond = 1E4**(1/3)*np.ones(np.shape(nb_pts))
+    n_cond = 1E4**(1/3)*np.ones(np.shape(nb_pts))
     nb_vals = n_cond
 
     dirichlet = {
@@ -230,8 +230,6 @@ class DeepEnergyMethodLV(DeepEnergyMethodBeam):
         return U
 
 def write_vtk_v3(filename, x_space, y_space, z_space, U):
-    # print(U.shape)
-    print(x_space.shape, y_space.shape, z_space.shape)
     # xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
     xx, yy, zz = x_space, y_space, z_space
     if isinstance(U, dict):
