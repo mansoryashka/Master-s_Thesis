@@ -246,9 +246,9 @@ class DeepEnergyMethodLV(DeepEnergyMethodBeam):
         # u_pred = u_pred_torch.detach().cpu().numpy()
 
         # print(U.flags['C_CONTIGUOUS'])
-        surUx = U[:, 0].reshape(Nx, Ny, Nz)
-        surUy = U[:, 1].reshape(Nx, Ny, Nz)
-        surUz = U[:, 2].reshape(Nx, Ny, Nz)
+        surUx = U[:, 0].reshape(Ny, Nx, Nz)
+        surUy = U[:, 1].reshape(Ny, Nx, Nz)
+        surUz = U[:, 2].reshape(Ny, Nx, Nz)
         # print(np.float64(np.copy(surUx)).flags['C_CONTIGUOUS']); exit()
         U_out = (np.float64(np.copy(surUx)), np.float64(np.copy(surUy)), np.float64(np.copy(surUz)))
         return U_out
@@ -279,7 +279,7 @@ if __name__ == '__main__':
     LHD = [(rs_epi-rs_endo), rl_epi-rl_endo, rs_epi-rs_endo]
     model = MultiLayerNet(3, 30, 30, 30, 30, 30, 3)
     DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=1, fb=np.array([[0, 0, 0]]))
+    # DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=1, fb=np.array([[0, 0, 0]]))
 
     K = N
     rs_endo = 7
