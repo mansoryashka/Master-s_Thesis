@@ -240,13 +240,13 @@ if __name__ == '__main__':
     rl_endo = 17
     rs_epi = 10
     rl_epi = 20
-    N = 12; M = 3
+    N = 25; M = 5
     domain, dirichlet, neumann = define_domain(N, M)
     shape = [N, M, N]
     LHD = [rs_epi-rs_endo, rs_epi-rs_endo, rl_epi-rl_endo]
-    model = MultiLayerNet(3, 40, 40, 40, 3)
+    model = MultiLayerNet(3, 30, 30, 30, 30, 30, 3)
     DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=10, fb=np.array([[0, 0, 0]]))
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=50, fb=np.array([[0, 0, 0]]))
 
     K = N
     rs_endo = 7
