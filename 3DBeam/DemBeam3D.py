@@ -93,7 +93,6 @@ def define_domain(L, H, D, N=25, dir_bcs=None, neu_bcs=None):
         ax.set_ylabel('y')
         ax.set_zlabel('z')
         ax.view_init(elev=25, azim=-55)
-        plt.show(); exit()
         fig.savefig('domain.png')
         plt.close()
 
@@ -442,8 +441,9 @@ if __name__ == '__main__':
     y = np.linspace(0, D, N_test + 2)[1:-1]
     z = np.linspace(0, H, N_test + 2)[1:-1]
 
-    U = DemBeam.evaluate_model2(x, y, z)
+    U = DemBeam.evaluate_model2(x, y, z, domain)
     write_vtk_v2('filemane', x, y, z, U)
+    print('ferdig')
     exit()
 
     x_eval = np.linspace(0, L, 4*N_test + 4)[2:-2]
