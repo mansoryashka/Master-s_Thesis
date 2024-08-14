@@ -199,7 +199,7 @@ def define_domain(N=15, M=5):
 class DeepEnergyMethodLV(DeepEnergyMethodBeam):
     def getU(self, model, x):
         u = model(x).to(dev)
-        Ux, Uy, Uz = (x[:, 2] - 5) * u.T.unsqueeze(1)
+        Ux, Uy, Uz = (x[:, 1] - 5) * u.T.unsqueeze(1)
         u_pred = torch.cat((Ux.T, Uy.T, Uz.T), dim=-1)
         return u_pred
     
