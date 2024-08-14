@@ -199,7 +199,7 @@ def define_domain(N=15, M=5):
 class DeepEnergyMethodLV(DeepEnergyMethodBeam):
     def getU(self, model, x):
         u = model(x).to(dev)
-        Ux, Uy, Uz = (x[:, 1] - 5) * u.T.unsqueeze(1)
+        Ux, Uy, Uz = (x[:, 2] - 6) * u.T.unsqueeze(1)
         u_pred = torch.cat((Ux.T, Uy.T, Uz.T), dim=-1)
         return u_pred
     
@@ -244,7 +244,7 @@ if __name__ == '__main__':
     LHD = [rs_epi-rs_endo, rs_epi-rs_endo, rl_epi-rl_endo]
     model = MultiLayerNet(3, 40, 40, 40, 3)
     DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=20, fb=np.array([[0, 0, 0]]))
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=10, fb=np.array([[0, 0, 0]]))
 
     K = N
     rs_endo = 7
