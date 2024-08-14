@@ -54,7 +54,7 @@ def define_domain(N=15, M=5):
 
     """ Finn ut hvorfor max(z) = 5.10!!! """
     # set z_max to 5
-    z = np.where(np.abs(z - 5) < 0.1, 5, z)
+    # z = np.where(np.abs(z - 5) < 0.1, 5, z)
 
     # define Dirichlet and Neumann BCs
     dir_BC = lambda z: np.abs(z - 5) < .5
