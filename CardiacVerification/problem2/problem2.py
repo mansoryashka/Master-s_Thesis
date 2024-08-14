@@ -93,9 +93,9 @@ def define_domain(N=15, M=5):
     y_epi = rs_epi*np.outer(np.sin(v_epi), np.sin(u_epi))
     z_epi = rl_epi*np.outer(np.ones(np.size(v_epi)), np.cos(u_epi))
 
-    x_perp = np.copy(x_endo[:, :])
-    y_perp = np.copy(y_endo[:, :])
-    z_perp = np.copy(z_endo[:, :])
+    x_perp = np.copy(x_endo)
+    y_perp = np.copy(y_endo)
+    z_perp = np.copy(z_endo)
     # x_perp[1:, 0] = 0
     # y_perp[1:, 0] = 0
     # z_perp[1:, 0] = 0
@@ -244,7 +244,7 @@ if __name__ == '__main__':
     LHD = [rs_epi-rs_endo, rs_epi-rs_endo, rl_epi-rl_endo]
     model = MultiLayerNet(3, 40, 40, 40, 3)
     DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=10, fb=np.array([[0, 0, 0]]))
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=100, fb=np.array([[0, 0, 0]]))
 
     K = N
     rs_endo = 7
@@ -275,9 +275,9 @@ if __name__ == '__main__':
     z = RL*np.outer(np.ones(np.size(v)), np.cos(u))
     # print(x.flags)
 
-    x = np.copy(x.reshape((N, M, int(K/M), N))[..., 1, :])
-    y = np.copy(y.reshape((N, M, int(K/M), N))[..., 1, :])
-    z = np.copy(z.reshape((N, M, int(K/M), N))[..., 1, :])
+    x = np.copy(x.reshape((N, M, int(K/M), N))[..., -1, :])
+    y = np.copy(y.reshape((N, M, int(K/M), N))[..., -1, :])
+    z = np.copy(z.reshape((N, M, int(K/M), N))[..., -1, :])
     # print(x.flags)
     # print(y.flags)
     # print(z.flags)
