@@ -218,7 +218,7 @@ class DeepEnergyMethodLV(DeepEnergyMethodBeam):
 
         u_pred_torch = self.getU(self.model, xyz_tensor)
         u_pred = u_pred_torch.detach().cpu().numpy()
-        print(u_pred.shape); exit()
+        
         surUx = u_pred[:, 0].reshape(Ny, Nx, Nz)
         surUy = u_pred[:, 1].reshape(Ny, Nx, Nz)
         surUz = u_pred[:, 2].reshape(Ny, Nx, Nz)
@@ -270,14 +270,15 @@ if __name__ == '__main__':
         RL[int(N*K/M)*i:int(N*K/M)*(i+1)] = rl[i]
 
 
+    middle = int(np.floor(K/M/2))
     x = RS*np.outer(np.cos(v), np.sin(u))
     y = RS*np.outer(np.sin(v), np.sin(u))
     z = RL*np.outer(np.ones(np.size(v)), np.cos(u))
     # print(x.flags)
 
-    x = np.copy(x.reshape((N, M, int(K/M), N))[..., -1, :])
-    y = np.copy(y.reshape((N, M, int(K/M), N))[..., -1, :])
-    z = np.copy(z.reshape((N, M, int(K/M), N))[..., -1, :])
+    x = np.copy(x.reshape((N, M, int(K/M), N))[..., middle, :])
+    y = np.copy(y.reshape((N, M, int(K/M), N))[..., middle, :])
+    z = np.copy(z.reshape((N, M, int(K/M), N))[..., middle, :])
     # print(x.flags)
     # print(y.flags)
     # print(z.flags)
