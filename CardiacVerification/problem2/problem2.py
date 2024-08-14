@@ -5,16 +5,10 @@ import torch
 from torch import nn
 from torch.autograd import grad
 
-<<<<<<< HEAD
-=======
-import matplotlib
-matplotlib.rcParams['figure.dpi'] = 350
->>>>>>> 5631b203f55e0aad458a11e55ce16ca1b711e427
 
 import sys
 sys.path.insert(0, "../../3DBeam")
 sys.path.insert(0, "../..")
-<<<<<<< HEAD
 sys.path.insert(0, "../problem1")
 from DemBeam3D import DeepEnergyMethodBeam, train_and_evaluate, MultiLayerNet, write_vtk_v2, dev
 from problem1 import energy
@@ -182,7 +176,7 @@ def define_domain(N=15, M=5):
     y_perp = np.expand_dims(y_perp.flatten(), 1)
     z_perp = np.expand_dims(z_perp.flatten(), 1)
 
-    n_cond = np.concatenate((x_perp, y_perp, z_perp), -1)
+    n_cond = 1E4*np.concatenate((x_perp, y_perp, z_perp), -1)
 
     x2 = np.expand_dims(x2.flatten(), 1)
     y2 = np.expand_dims(y2.flatten(), 1)
@@ -213,7 +207,7 @@ class DeepEnergyMethodLV(DeepEnergyMethodBeam):
         Nx = len(x)
         Ny = len(y)
         Nz = len(z)
-
+        Nx = N; Ny = M; Nz = N
         x1D = np.expand_dims(x.flatten(), 1)
         y1D = np.expand_dims(y.flatten(), 1)
         z1D = np.expand_dims(z.flatten(), 1)
@@ -224,6 +218,7 @@ class DeepEnergyMethodLV(DeepEnergyMethodBeam):
 
         u_pred_torch = self.getU(self.model, xyz_tensor)
         u_pred = u_pred_torch.detach().cpu().numpy()
+        print(u_pred.shape); exit()
         surUx = u_pred[:, 0].reshape(Ny, Nx, Nz)
         surUy = u_pred[:, 1].reshape(Ny, Nx, Nz)
         surUz = u_pred[:, 2].reshape(Ny, Nx, Nz)
@@ -232,17 +227,24 @@ class DeepEnergyMethodLV(DeepEnergyMethodBeam):
         return U
 
 if __name__ == '__main__':
+    # x = np.arange(1000).reshape((10, 10, 10))
+    # print(x.flags['C_CONTIGUOUS'])
+    # x = x[:, 1, :]
+    # print(x.flags['C_CONTIGUOUS'])
+    # x = np.copy(x)
+    # print(x.flags['C_CONTIGUOUS'])
+    # exit()
     rs_endo = 7
     rl_endo = 17
     rs_epi = 10
     rl_epi = 20
-    N = 8; M = 2
+    N = 12; M = 3
     domain, dirichlet, neumann = define_domain(N, M)
     shape = [N, N, M]
     LHD = [rs_epi-rs_endo, rs_epi-rs_endo, rl_epi-rl_endo]
     model = MultiLayerNet(3, 40, 40, 40, 3)
     DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=2, fb=np.array([[0, 0, 0]]))
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=10, fb=np.array([[0, 0, 0]]))
 
     K = N
     rs_endo = 7
@@ -271,6 +273,23 @@ if __name__ == '__main__':
     x = RS*np.outer(np.cos(v), np.sin(u))
     y = RS*np.outer(np.sin(v), np.sin(u))
     z = RL*np.outer(np.ones(np.size(v)), np.cos(u))
+    # print(x.flags)
+
+    x = np.copy(x.reshape((N, M, int(K/M), N))[..., 1, :])
+    y = np.copy(y.reshape((N, M, int(K/M), N))[..., 1, :])
+    z = np.copy(z.reshape((N, M, int(K/M), N))[..., 1, :])
+    # print(x.flags)
+    # print(y.flags)
+    # print(z.flags)
+    # x = x.ravel()
+    # y = y.ravel()
+    # z = z.ravel()
 
     U_pred = DemLV.evaluate_model(x, y, z)
+
+    domain2 = (
+        np.float64(np.copy(domain[:, 0].reshape((N, M, N)))), 
+        np.float64(np.copy(domain[:, 1].reshape((N, M, N)))), 
+        np.float64(np.copy(domain[:, 2].reshape((N, M, N))))
+        )
     write_vtk_v2('output/DemLV', x, y, z, U_pred)

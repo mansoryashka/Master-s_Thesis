@@ -210,7 +210,10 @@ def simps3D(U, xyz=None, dx=None, dy=None, dz=None, shape=None):
     return simpson(simpson(simpson(U3D, dx=dz), dx=dy), dx=dx)
 
 def write_vtk_v2(filename, x_space, y_space, z_space, U):
-    xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
+    # print(U.shape)
+    print(x_space.shape, y_space.shape, z_space.shape)
+    # xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
+    xx, yy, zz = x_space, y_space, z_space
     if isinstance(U, dict):
         gridToVTK(filename, xx, yy, zz, pointData=U)
     else:
