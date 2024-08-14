@@ -34,9 +34,9 @@ class MultiLayerNet(nn.Module):
         self.linears = nn.ModuleList([nn.Linear(neurons[i-1], neurons[i]) for i in range(1, len(neurons))])
     def forward(self, x):
         for layer in self.linears:
-            # x = torch.tanh(layer(x))
+            x = torch.tanh(layer(x))
 
-            x = torch.tanh(torch.nn.functional.linear(x, layer.weight.clone(), layer.bias))
+            # x = torch.tanh(torch.nn.functional.linear(x, layer.weight.clone(), layer.bias))
         return x
 
 class DeepEnergyMethod:
@@ -90,6 +90,7 @@ class DeepEnergyMethod:
 
                 # boundary loss
                 dir_pred = self.getU(self.model, dirBC_coords)
+
                 bc_dir = LHD[1]*LHD[2]*loss_squared_sum(dir_pred, dirBC_values)
                 boundary_loss = torch.sum(bc_dir)
 
@@ -100,14 +101,14 @@ class DeepEnergyMethod:
                 # bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
                 # self.neu_pred = neu_pred
                 body_f = torch.matmul(u_pred.unsqueeze(1), fb.unsqueeze(2))
-
+                # print(body_f.shape)
                 # external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape) + simps2D(bc_neu, dx=dxdydz[1], dy=dxdydz[2], shape=[shape[1], shape[2]])
                 external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape) + simps2D(bc_neu, dx=dxdydz[0], dy=dxdydz[1], shape=[shape[0], shape[1]])
 
                 loss = internal_loss - external_loss + boundary_loss
                 optimizer.zero_grad()
-                # loss.backward()
-                loss.backward(retain_graph=True)
+                loss.backward()
+                # loss.backward(retain_graph=True)
 
                 self.internal_loss = internal_loss
                 self.external_loss = external_loss
@@ -117,7 +118,7 @@ class DeepEnergyMethod:
                 return loss
 
             optimizer.step(closure)
-            neuBC_coords_i = self.neu_pred + neuBC_coords
+            # neuBC_coords_i = self.neu_pred + neuBC_coords
 
             loss_change = torch.abs(self.current_loss - prev_loss)
             prev_loss = self.current_loss
@@ -202,14 +203,10 @@ def simps2D(U, xy=None, dx=None, dy=None, shape=None):
 #         return simpson(simpson(simpson(U3D, dx=dz), dx=dy), dx=dx)
     
 def simps3D(U, xyz=None, dx=None, dy=None, dz=None, shape=None):
-    # print(shape[0]); exit()
-    # print('Mansur')
     Nx = shape[0]
     Ny = shape[1]
     Nz = shape[2]
-    # print(U.shape)
     U3D = U.flatten().reshape(Nx, Ny, Nz)
-    # print(U3D.shape)
     return simpson(simpson(simpson(U3D, dx=dz), dx=dy), dx=dx)
 
 def write_vtk_v2(filename, x_space, y_space, z_space, U):
