@@ -219,9 +219,9 @@ class DeepEnergyMethodLV(DeepEnergyMethodBeam):
         u_pred_torch = self.getU(self.model, xyz_tensor)
         u_pred = u_pred_torch.detach().cpu().numpy()
         
-        surUx = u_pred[:, 0].reshape(Ny, Nx, Nz)
-        surUy = u_pred[:, 1].reshape(Ny, Nx, Nz)
-        surUz = u_pred[:, 2].reshape(Ny, Nx, Nz)
+        surUx = u_pred[:, 0].reshape(Nx, Ny, Nz)
+        surUy = u_pred[:, 1].reshape(Nx, Ny, Nz)
+        surUz = u_pred[:, 2].reshape(Nx, Ny, Nz)
 
         U = (np.float64(surUx), np.float64(surUy), np.float64(surUz))
         return U
@@ -244,7 +244,7 @@ if __name__ == '__main__':
     LHD = [rs_epi-rs_endo, rs_epi-rs_endo, rl_epi-rl_endo]
     model = MultiLayerNet(3, 40, 40, 40, 3)
     DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=100, fb=np.array([[0, 0, 0]]))
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=20, fb=np.array([[0, 0, 0]]))
 
     K = N
     rs_endo = 7
