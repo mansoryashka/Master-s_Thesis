@@ -184,8 +184,8 @@ def define_domain(N=15, M=5):
     y2 = np.expand_dims(y2.flatten(), 1)
     z2 = np.expand_dims(z2.flatten(), 1)
     nb_pts = np.concatenate((x2, y2, z2), -1)
-    # n_cond = 1E4**(1/3)*np.ones(np.shape(nb_pts))
-    n_cond = 1E4**(1/3)*np.zeros(np.shape(nb_pts))
+    n_cond = 1E6*np.ones(np.shape(nb_pts))
+    # print(n_cond); exit()
     nb_vals = n_cond
 
     dirichlet = {
