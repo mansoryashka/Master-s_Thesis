@@ -44,9 +44,9 @@ class DeepEnergyMethod:
         self.model = model.to(dev)
         self.energy = energy
         
-    def train_model(self, data, dirichlet, neumann, shape, LHD, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]]), eval_data=None):
+    def train_model(self, data, dirichlet, neumann, shape, LHD, xyz=None, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]]), eval_data=None):
         dxdydz = np.array(LHD) / (np.array(shape) - 1)
-
+        # print(dxdydz); exit()
 
         x = torch.from_numpy(data).float().to(dev)
         fb = torch.from_numpy(fb).float().to(dev)
@@ -86,7 +86,8 @@ class DeepEnergyMethod:
                 IntEnergy, J = self.energy(u_pred, x, J=True)
 
                 # print('internal')
-                internal_loss = simps3D(IntEnergy, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape)
+                # internal_loss = simps3D(IntEnergy, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape)
+                internal_loss = simps3D(IntEnergy, xyz=xyz, shape=shape)
 
                 # boundary loss
                 dir_pred = self.getU(self.model, dirBC_coords)
@@ -103,7 +104,7 @@ class DeepEnergyMethod:
                 body_f = torch.matmul(u_pred.unsqueeze(1), fb.unsqueeze(2))
                 # print(body_f.shape)
                 # external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape) + simps2D(bc_neu, dx=dxdydz[1], dy=dxdydz[2], shape=[shape[1], shape[2]])
-                external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape) + simps2D(bc_neu, dx=dxdydz[0], dy=dxdydz[1], shape=[shape[0], shape[1]])
+                external_loss = simps3D(body_f, xyz=xyz, shape=shape) + simps2D(bc_neu, xy=xyz[1:], shape=[shape[0], shape[2]])
 
                 loss = internal_loss - external_loss + boundary_loss
                 optimizer.zero_grad()
@@ -186,9 +187,9 @@ def simps2D(U, xy=None, dx=None, dy=None, shape=None):
     Nx = shape[0]
     Ny = shape[1]
     U = U.flatten().reshape(Nx, Ny)
-    if (xy):
-        raise NotImplementedError('Not implemented yet. Please use dx and dy.')
-    elif (dx and dy):
+    if xy:
+        return simpson(simpson(U, x=xy[1]), x=xy[0])
+    else:
         return simpson(simpson(U, dx=dy), dx=dx)
     
 # def simpsons3D(U, x=None, y=None, z=None, dx=None, dy=None, dz=None, N=25):
@@ -207,13 +208,13 @@ def simps3D(U, xyz=None, dx=None, dy=None, dz=None, shape=None):
     Ny = shape[1]
     Nz = shape[2]
     U3D = U.flatten().reshape(Nx, Ny, Nz)
+    if xyz is not None:
+        print('fikk xyz')
+        return simpson(simpson(simpson(U3D, x=xyz[2]), x=xyz[1]), x=xyz[0])
     return simpson(simpson(simpson(U3D, dx=dz), dx=dy), dx=dx)
 
 def write_vtk_v2(filename, x_space, y_space, z_space, U):
-    # print(U.shape)
-    print(x_space.shape, y_space.shape, z_space.shape)
-    # xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
-    xx, yy, zz = x_space, y_space, z_space
+    xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
     if isinstance(U, dict):
         gridToVTK(filename, xx, yy, zz, pointData=U)
     else:

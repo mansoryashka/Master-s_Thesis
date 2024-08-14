@@ -93,6 +93,7 @@ def define_domain(L, H, D, N=25, dir_bcs=None, neu_bcs=None):
         ax.set_ylabel('y')
         ax.set_zlabel('z')
         ax.view_init(elev=25, azim=-55)
+        plt.show(); exit()
         fig.savefig('domain.png')
         plt.close()
 
@@ -137,30 +138,6 @@ class DeepEnergyMethodBeam(DeepEnergyMethod):
         if return_pred_tensor:
             return U, u_pred_torch, xyz_tensor
         return U
-    
-    def evaluate_model2(self, x, y, z, U):
-        Nx = len(x)
-        Ny = len(y)
-        Nz = len(z)
-
-        # x1D = np.expand_dims(x.flatten(), 1)
-        # y1D = np.expand_dims(y.flatten(), 1)
-        # z1D = np.expand_dims(z.flatten(), 1)
-        # xyz = np.concatenate((x1D, y1D, z1D), axis=-1)
-
-        # xyz_tensor = torch.from_numpy(xyz).float().to(dev)
-        # xyz_tensor.requires_grad_(True)
-
-        # u_pred_torch = self.getU(self.model, xyz_tensor)
-        # u_pred = u_pred_torch.detach().cpu().numpy()
-
-        # print(U.flags['C_CONTIGUOUS'])
-        surUx = U[:, 0].reshape(Ny, Nx, Nz)
-        surUy = U[:, 1].reshape(Ny, Nx, Nz)
-        surUz = U[:, 2].reshape(Ny, Nx, Nz)
-        # print(np.float64(np.copy(surUx)).flags['C_CONTIGUOUS']); exit()
-        U_out = (np.float64(np.copy(surUx)), np.float64(np.copy(surUy)), np.float64(np.copy(surUz)))
-        return U_out
 
 def energy(u, x, J=False):
     ### energy frunction from DEM paper ### 
@@ -432,19 +409,9 @@ if __name__ == '__main__':
     # u_fem20 = np.load('stored_arrays/u_fem_N20.npy')
     u_fem30 = np.load(arrays_path / 'u_fem_N30.npy')
 
-
-    domain, dirichlet, neumann = define_domain(L, H, D, N=N_test)
-    model = MultiLayerNet(3, *([10]*2), 3)
-    DemBeam = DeepEnergyMethodBeam(model, energy)
-
     x = np.linspace(0, L, 4*N_test + 2)[1:-1]
     y = np.linspace(0, D, N_test + 2)[1:-1]
     z = np.linspace(0, H, N_test + 2)[1:-1]
-
-    U = DemBeam.evaluate_model2(x, y, z, domain)
-    write_vtk_v2('filemane', x, y, z, U)
-    print('ferdig')
-    exit()
 
     x_eval = np.linspace(0, L, 4*N_test + 4)[2:-2]
     y_eval = np.linspace(0, D, N_test + 4)[2:-2]
