@@ -175,13 +175,15 @@ def define_domain(N=15, M=5):
     x_perp = np.expand_dims(x_perp.flatten(), 1)
     y_perp = np.expand_dims(y_perp.flatten(), 1)
     z_perp = np.expand_dims(z_perp.flatten(), 1)
-
-    n_cond = 1E4*np.concatenate((x_perp, y_perp, z_perp), -1)
+    n_cond = np.concatenate((x_perp, y_perp, z_perp), -1)
+    
+    # n_cond = 1E4**(1/3)*np.concatenate((x_perp, y_perp, z_perp), -1)
 
     x2 = np.expand_dims(x2.flatten(), 1)
     y2 = np.expand_dims(y2.flatten(), 1)
     z2 = np.expand_dims(z2.flatten(), 1)
     nb_pts = np.concatenate((x2, y2, z2), -1)
+    n_cond = 1E4**(1/3)*np.ones(np.shape(nb_pts))
     nb_vals = n_cond
 
     dirichlet = {
@@ -199,7 +201,7 @@ def define_domain(N=15, M=5):
 class DeepEnergyMethodLV(DeepEnergyMethodBeam):
     def getU(self, model, x):
         u = model(x).to(dev)
-        Ux, Uy, Uz = (x[:, 2] - 6) * u.T.unsqueeze(1)
+        Ux, Uy, Uz = (x[:, 2] - 5) * u.T.unsqueeze(1)
         u_pred = torch.cat((Ux.T, Uy.T, Uz.T), dim=-1)
         return u_pred
     
