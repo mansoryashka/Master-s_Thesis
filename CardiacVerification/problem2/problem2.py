@@ -5,10 +5,16 @@ import torch
 from torch import nn
 from torch.autograd import grad
 
+<<<<<<< HEAD
+=======
+import matplotlib
+matplotlib.rcParams['figure.dpi'] = 350
+>>>>>>> 5631b203f55e0aad458a11e55ce16ca1b711e427
 
 import sys
 sys.path.insert(0, "../../3DBeam")
 sys.path.insert(0, "../..")
+<<<<<<< HEAD
 sys.path.insert(0, "../problem1")
 from DemBeam3D import DeepEnergyMethodBeam, train_and_evaluate, MultiLayerNet, write_vtk_v2, dev
 from problem1 import energy
