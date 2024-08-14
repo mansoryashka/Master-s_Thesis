@@ -242,7 +242,7 @@ if __name__ == '__main__':
     rl_epi = 20
     N = 12; M = 3
     domain, dirichlet, neumann = define_domain(N, M)
-    shape = [N, N, M]
+    shape = [N, M, N]
     LHD = [rs_epi-rs_endo, rs_epi-rs_endo, rl_epi-rl_endo]
     model = MultiLayerNet(3, 40, 40, 40, 3)
     DemLV = DeepEnergyMethodLV(model, energy)
