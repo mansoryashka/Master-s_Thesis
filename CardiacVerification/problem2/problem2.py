@@ -317,8 +317,8 @@ if __name__ == '__main__':
 
     # U_pred = DemLV.evaluate_model(x, y, z)
     # print('domain: ', domain.shape); exit()
-    domain2 = np.copy(domain)
-    U_pred = DemLV.evaluate_model2(x, y, z, domain2)
+    
+    U_pred = DemLV.evaluate_model2(x, y, z, domain)
     
     write_vtk_v3('output/DemLV', x, y, z, U_pred)
 
