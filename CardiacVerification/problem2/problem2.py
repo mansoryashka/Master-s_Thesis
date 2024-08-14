@@ -250,7 +250,7 @@ if __name__ == '__main__':
     rl_endo = 17
     rs_epi = 10
     rl_epi = 20
-    N = 25; M = 5
+    N = 15; M = 5
     domain, dirichlet, neumann = define_domain(N, M)
     shape = [N, M, N]
     LHD = [rs_epi-rs_endo, rl_epi-rl_endo, rs_epi-rs_endo]
