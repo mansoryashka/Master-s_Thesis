@@ -229,6 +229,29 @@ class DeepEnergyMethodLV(DeepEnergyMethodBeam):
 
         U = (np.float64(surUx), np.float64(surUy), np.float64(surUz))
         return U
+    def evaluate_model2(self, x, y, z, U):
+        Nx = len(x)
+        Ny = len(y)
+        Nz = len(z)
+        Nx = N; Ny = M; Nz = N
+        # x1D = np.expand_dims(x.flatten(), 1)
+        # y1D = np.expand_dims(y.flatten(), 1)
+        # z1D = np.expand_dims(z.flatten(), 1)
+        # xyz = np.concatenate((x1D, y1D, z1D), axis=-1)
+
+        # xyz_tensor = torch.from_numpy(xyz).float().to(dev)
+        # xyz_tensor.requires_grad_(True)
+
+        # u_pred_torch = self.getU(self.model, xyz_tensor)
+        # u_pred = u_pred_torch.detach().cpu().numpy()
+
+        # print(U.flags['C_CONTIGUOUS'])
+        surUx = U[:, 0].reshape(Nx, Ny, Nz)
+        surUy = U[:, 1].reshape(Nx, Ny, Nz)
+        surUz = U[:, 2].reshape(Nx, Ny, Nz)
+        # print(np.float64(np.copy(surUx)).flags['C_CONTIGUOUS']); exit()
+        U_out = (np.float64(np.copy(surUx)), np.float64(np.copy(surUy)), np.float64(np.copy(surUz)))
+        return U_out
 
 def write_vtk_v3(filename, x_space, y_space, z_space, U):
     # xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
@@ -256,7 +279,7 @@ if __name__ == '__main__':
     LHD = [(rs_epi-rs_endo), rl_epi-rl_endo, rs_epi-rs_endo]
     model = MultiLayerNet(3, 30, 30, 30, 30, 30, 3)
     DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=500, fb=np.array([[0, 0, 0]]))
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=1, fb=np.array([[0, 0, 0]]))
 
     K = N
     rs_endo = 7
@@ -292,7 +315,10 @@ if __name__ == '__main__':
     z = np.copy(z.reshape((N, M, int(K/M), N))[..., middle, :])
 
 
-    U_pred = DemLV.evaluate_model(x, y, z)
+    # U_pred = DemLV.evaluate_model(x, y, z)
+    # print('domain: ', domain.shape); exit()
+    domain2 = np.copy(domain)
+    U_pred = DemLV.evaluate_model2(x, y, z, domain2)
     
     write_vtk_v3('output/DemLV', x, y, z, U_pred)
 
