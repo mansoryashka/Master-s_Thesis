@@ -184,7 +184,7 @@ def define_domain(N=15, M=5):
     y2 = np.expand_dims(y2.flatten(), 1)
     z2 = np.expand_dims(z2.flatten(), 1)
     nb_pts = np.concatenate((x2, y2, z2), -1)
-    n_cond = 1E6*np.ones(np.shape(nb_pts))
+    n_cond = 10*np.ones(np.shape(nb_pts))
     # print(n_cond); exit()
     nb_vals = n_cond
 
@@ -253,10 +253,10 @@ if __name__ == '__main__':
     N = 15; M = 5
     domain, dirichlet, neumann = define_domain(N, M)
     shape = [N, M, N]
-    LHD = [rs_epi-rs_endo, rl_epi-rl_endo, rs_epi-rs_endo]
+    LHD = [(rs_epi-rs_endo), rl_epi-rl_endo, rs_epi-rs_endo]
     model = MultiLayerNet(3, 30, 30, 30, 30, 30, 3)
     DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=10, fb=np.array([[1e5, 1e5, 1e5]]))
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=10, fb=np.array([[0, 0, 0]]))
 
     K = N
     rs_endo = 7
