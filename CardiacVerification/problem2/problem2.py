@@ -4,6 +4,7 @@ from pathlib import Path
 import torch
 from torch import nn
 from torch.autograd import grad
+from pyevtk.hl import gridToVTK
 
 
 import sys
@@ -228,6 +229,16 @@ class DeepEnergyMethodLV(DeepEnergyMethodBeam):
         U = (np.float64(surUx), np.float64(surUy), np.float64(surUz))
         return U
 
+def write_vtk_v3(filename, x_space, y_space, z_space, U):
+    # print(U.shape)
+    print(x_space.shape, y_space.shape, z_space.shape)
+    # xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
+    xx, yy, zz = x_space, y_space, z_space
+    if isinstance(U, dict):
+        gridToVTK(filename, xx, yy, zz, pointData=U)
+    else:
+        gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
+
 if __name__ == '__main__':
     # x = np.arange(1000).reshape((10, 10, 10))
     # print(x.flags['C_CONTIGUOUS'])
@@ -243,10 +254,10 @@ if __name__ == '__main__':
     N = 25; M = 5
     domain, dirichlet, neumann = define_domain(N, M)
     shape = [N, M, N]
-    LHD = [rs_epi-rs_endo, rs_epi-rs_endo, rl_epi-rl_endo]
+    LHD = [rs_epi-rs_endo, rl_epi-rl_endo, rs_epi-rs_endo]
     model = MultiLayerNet(3, 30, 30, 30, 30, 30, 3)
     DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=50, fb=np.array([[0, 0, 0]]))
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=10, fb=np.array([[0, 0, 0]]))
 
     K = N
     rs_endo = 7
@@ -267,7 +278,6 @@ if __name__ == '__main__':
     RS = np.ones(N*K)
     RL = np.ones(N*K)
     for i in range(M):
-        # print(f'fra: {int(N*K/M)*i} til: {int(N*K/M)*(i+1)-1}')
         RS[int(N*K/M)*i:int(N*K/M)*(i+1)] = rs[i]
         RL[int(N*K/M)*i:int(N*K/M)*(i+1)] = rl[i]
 
@@ -281,18 +291,9 @@ if __name__ == '__main__':
     x = np.copy(x.reshape((N, M, int(K/M), N))[..., middle, :])
     y = np.copy(y.reshape((N, M, int(K/M), N))[..., middle, :])
     z = np.copy(z.reshape((N, M, int(K/M), N))[..., middle, :])
-    # print(x.flags)
-    # print(y.flags)
-    # print(z.flags)
-    # x = x.ravel()
-    # y = y.ravel()
-    # z = z.ravel()
+
 
     U_pred = DemLV.evaluate_model(x, y, z)
+    
+    write_vtk_v3('output/DemLV', x, y, z, U_pred)
 
-    domain2 = (
-        np.float64(np.copy(domain[:, 0].reshape((N, M, N)))), 
-        np.float64(np.copy(domain[:, 1].reshape((N, M, N)))), 
-        np.float64(np.copy(domain[:, 2].reshape((N, M, N))))
-        )
-    write_vtk_v2('output/DemLV', x, y, z, U_pred)
