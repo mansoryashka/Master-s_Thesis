@@ -256,7 +256,7 @@ if __name__ == '__main__':
     LHD = [rs_epi-rs_endo, rl_epi-rl_endo, rs_epi-rs_endo]
     model = MultiLayerNet(3, 30, 30, 30, 30, 30, 3)
     DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=10, fb=np.array([[0, 0, 0]]))
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, lr=.5, epochs=10, fb=np.array([[1e4, 1e4, 1e4]]))
 
     K = N
     rs_endo = 7
