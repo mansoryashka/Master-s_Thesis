@@ -36,7 +36,6 @@ class MultiLayerNet(nn.Module):
         for layer in self.linears:
             x = torch.tanh(layer(x))
 
-            # x = torch.tanh(torch.nn.functional.linear(x, layer.weight.clone(), layer.bias))
         return x
 
 class DeepEnergyMethod:
@@ -45,8 +44,8 @@ class DeepEnergyMethod:
         self.energy = energy
         
     def train_model(self, data, dirichlet, neumann, shape, LHD, xyz=None, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]]), eval_data=None):
-        dxdydz = np.array(LHD) / (np.array(shape) - 1)
-        # print(dxdydz); exit()
+        # dxdydz = np.array(LHD) / (np.array(shape) - 1)
+        dxdydz=xyz
 
         x = torch.from_numpy(data).float().to(dev)
         fb = torch.from_numpy(fb).float().to(dev)
@@ -87,25 +86,22 @@ class DeepEnergyMethod:
 
                 # print('internal')
                 # internal_loss = simps3D(IntEnergy, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape)
-                internal_loss = simps3D(IntEnergy, xyz=xyz, shape=shape)
+                internal_loss = simps3D(IntEnergy, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape)
 
                 # boundary loss
                 dir_pred = self.getU(self.model, dirBC_coords)
 
-                bc_dir = LHD[1]*LHD[2]*loss_squared_sum(dir_pred, dirBC_values)
+                # bc_dir = LHD[1]*LHD[2]*loss_squared_sum(dir_pred, dirBC_values)
+                bc_dir = np.pi*(10**2-7**2)*loss_squared_sum(dir_pred, dirBC_values)
                 boundary_loss = torch.sum(bc_dir)
-
                 # external loss
                 neu_pred = self.getU(self.model, neuBC_coords)
                 bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
-                # neu_pred = self.getU(self.model, neuBC_coords_i)
-                # bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
-                # self.neu_pred = neu_pred
+
                 body_f = torch.matmul(u_pred.unsqueeze(1), fb.unsqueeze(2))
                 # print(body_f.shape)
                 # external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape) + simps2D(bc_neu, dx=dxdydz[1], dy=dxdydz[2], shape=[shape[1], shape[2]])
-                external_loss = simps3D(body_f, xyz=xyz, shape=shape) + simps2D(bc_neu, xy=xyz[1:], shape=[shape[0], shape[2]])
-
+                external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape) + simps2D(bc_neu, dx=dxdydz[0], dy=dxdydz[2], shape=[shape[0], shape[2]])
                 loss = internal_loss - external_loss + boundary_loss
                 optimizer.zero_grad()
                 loss.backward()
@@ -119,7 +115,6 @@ class DeepEnergyMethod:
                 return loss
 
             optimizer.step(closure)
-            # neuBC_coords_i = self.neu_pred + neuBC_coords
 
             loss_change = torch.abs(self.current_loss - prev_loss)
             prev_loss = self.current_loss
@@ -209,7 +204,6 @@ def simps3D(U, xyz=None, dx=None, dy=None, dz=None, shape=None):
     Nz = shape[2]
     U3D = U.flatten().reshape(Nx, Ny, Nz)
     if xyz is not None:
-        print('fikk xyz')
         return simpson(simpson(simpson(U3D, x=xyz[2]), x=xyz[1]), x=xyz[0])
     return simpson(simpson(simpson(U3D, dx=dz), dx=dy), dx=dx)
 

@@ -22,50 +22,53 @@ matplotlib.rcParams['figure.dpi'] = 200
 
 def define_domain(N=15, M=5):
     K = N
-    num_duplicates = int(K/M)
-    middle = int(np.floor(num_duplicates/2))
+    
+    middle = int(K/2)
     assert N % M == 0, 'N must be divisible by M!'
 
     rs_endo = 7
     rl_endo = 17
+    # rs_endo = 7E-3
+    # rl_endo = 17E-3
     u_endo = np.linspace(-np.pi, -np.arccos(5/17), N)
     v_endo = np.linspace(-np.pi, np.pi, N)
 
     rs_epi = 10
     rl_epi = 20
+    # rs_epi = 10E-3
+    # rl_epi = 20E-3
     u_epi = np.linspace(-np.pi, -np.arccos(5/20), N)
     v_epi = np.linspace(-np.pi, np.pi, N)
 
-
     u = np.linspace(u_endo, u_epi, K)
+    u = u.T[:, middle]
 
-    plt.plot(u[int(len(u[0])/2)].T)
-    plt.savefig('u.png')
-    exit()
     v = np.linspace(-np.pi, np.pi, N)
     rs = np.linspace(rs_endo, rs_epi, M)
     rl = np.linspace(rl_endo, rl_epi, M)
 
-    RS = np.ones(N*K)
-    RL = np.ones(N*K)
+    RS = np.ones((N, M, N))
+    RL = np.ones((N, M, N))
     for i in range(M):
         # print(f'fra: {int(N*K/M)*i} til: {int(N*K/M)*(i+1)-1}')
-        RS[int(N*K/M)*i:int(N*K/M)*(i+1)] = rs[i]
-        RL[int(N*K/M)*i:int(N*K/M)*(i+1)] = rl[i]
+        RS[:, i] = rs[i]
+        RL[:, i] = rl[i]
 
-
-    x = RS*np.outer(np.cos(v), np.sin(u))
-    y = RS*np.outer(np.sin(v), np.sin(u))
-    z = RL*np.outer(np.ones(np.size(v)), np.cos(u))
-
+    x = RS*np.expand_dims(np.outer(np.cos(v), np.sin(u)), 1)
+    y = RS*np.expand_dims(np.outer(np.sin(v), np.sin(u)), 1)
+    z = RL*np.expand_dims(np.outer(np.ones(np.size(v)), np.cos(u)), 1)
+    # print(x.shape)
     """ Finn ut hvorfor max(z) = 5.10!!! """
     # set z_max to 5
-    # z = np.where(np.abs(z - 5) < 0.1, 5, z)
+    z = np.where(np.abs(z - 5) < 1, 5, z)
+    # z = np.where(np.abs(z - 5E-3) < 1E-3, 5E-3, z)
 
     # define Dirichlet and Neumann BCs
-    dir_BC = lambda z: np.abs(z - 5) < .2
+    dir_BC = lambda z: np.abs(z - 5) < .5
+    # dir_BC = lambda z: np.abs(z - 5E-3) < 5E-4
     neu_BC = RS == rs_endo
 
+    # print(RS[RS == rs_endo]); exit()
     # define inner points
     # x0 = x[:, ~neu_BC]
     # y0 = y[:, ~neu_BC]
@@ -83,9 +86,9 @@ def define_domain(N=15, M=5):
     z1 = z[dir_BC(z)]
 
     # define points on Neumann boundary
-    x2 = x[:, neu_BC]
-    y2 = y[:, neu_BC]
-    z2 = z[:, neu_BC]
+    x2 = x[neu_BC]
+    y2 = y[neu_BC]
+    z2 = z[neu_BC]
     # x2 = x2[~dir_BC(z2)]
     # y2 = y2[~dir_BC(z2)]
     # z2 = z2[~dir_BC(z2)]
@@ -100,9 +103,9 @@ def define_domain(N=15, M=5):
     y_epi = rs_epi*np.outer(np.sin(v_epi), np.sin(u_epi))
     z_epi = rl_epi*np.outer(np.ones(np.size(v_epi)), np.cos(u_epi))
 
-    x_perp = np.copy(x_endo)
-    y_perp = np.copy(y_endo)
-    z_perp = np.copy(z_endo)
+    x_perp = 2*np.copy(x_endo)/rs_endo**2
+    y_perp = 2*np.copy(y_endo)/rs_endo**2
+    z_perp = 2*np.copy(z_endo)/rl_endo**2
     # x_perp[1:, 0] = 0
     # y_perp[1:, 0] = 0
     # z_perp[1:, 0] = 0
@@ -129,31 +132,32 @@ def define_domain(N=15, M=5):
     # reshape to have access to different dimentsions
     # dimension 0 is angle
     # dimension 1 is depth layer
-    # dimension 2 is which of N/M duplicate. try to use only middle duplicate or all
-    # dimension 3 is vertical level
-    # x0 = x0.reshape((N, M-1, int(K/M), N-1))[..., middle, :]
-    # y0 = y0.reshape((N, M-1, int(K/M), N-1))[..., middle, :]
-    # z0 = z0.reshape((N, M-1, int(K/M), N-1))[..., middle, :]
-    x0 = x0.reshape((N, M, int(K/M), N))[..., middle, :]
-    y0 = y0.reshape((N, M, int(K/M), N))[..., middle, :]
-    z0 = z0.reshape((N, M, int(K/M), N))[..., middle, :]
+    # dimension 2 is vertical level
+    # x0 = x0.reshape((N, M-1, int(K/M), N-1))
+    # y0 = y0.reshape((N, M-1, int(K/M), N-1))
+    # z0 = z0.reshape((N, M-1, int(K/M), N-1))
+    x0 = x0.reshape((N, M, N))
+    y0 = y0.reshape((N, M, N))
+    z0 = z0.reshape((N, M, N))
 
-    x1 = x1.reshape((N, M, int(K/M), 1))[..., middle, :]
-    y1 = y1.reshape((N, M, int(K/M), 1))[..., middle, :]
-    z1 = z1.reshape((N, M, int(K/M), 1))[..., middle, :]
+    x1 = x1.reshape((N, M, 1))
+    y1 = y1.reshape((N, M, 1))
+    z1 = z1.reshape((N, M, 1))
 
-    # x2 = x2.reshape((N, 1, int(K/M), N-1))[..., middle, :]
-    # y2 = y2.reshape((N, 1, int(K/M), N-1))[..., middle, :]
-    # z2 = z2.reshape((N, 1, int(K/M), N-1))[..., middle, :]
-    x2 = x2.reshape((N, 1, int(K/M), N))[..., middle, :]
-    y2 = y2.reshape((N, 1, int(K/M), N))[..., middle, :]
-    z2 = z2.reshape((N, 1, int(K/M), N))[..., middle, :]
+    # x2 = x2.reshape((N, 1, N-1))
+    # y2 = y2.reshape((N, 1, N-1))
+    # z2 = z2.reshape((N, 1, N-1))
+    x2 = x2.reshape((N, 1, N))
+    y2 = y2.reshape((N, 1, N))
+    z2 = z2.reshape((N, 1, N))
 
     # plot domain
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     ax.set_aspect('equal')
-    ax.scatter(x0, y0, z0, s=1, c='tab:blue', alpha=.1)
+    ax.scatter(x0, y0, z0, s=1, c='tab:blue')
+    # ax.scatter(x0[0, :, :9], y0[0, :, :9], z0[0, :, :9], s=1, c='tab:blue')
+    # ax.scatter(x[7], y[7], z[7], s=1, c='tab:blue')
     ax.scatter(x1, y1, z1, s=2, c='tab:green')
     ax.scatter(x2, y2, z2, s=2, c='tab:red')
     # plot epicardial and endocardial surfaces
@@ -163,7 +167,7 @@ def define_domain(N=15, M=5):
     # ax.scatter(x_perp, y_perp, z_perp)
     # ax.quiver(x_endo[:, :-1], y_endo[:, :-1], z_endo[:, :-1], x_perp, y_perp, z_perp, alpha=.1)
 
-    # plt.show()
+    # plt.show(); exit()
     plt.savefig('ventricle.pdf')
 
 
@@ -175,22 +179,21 @@ def define_domain(N=15, M=5):
     x1 = np.expand_dims(x1.flatten(), 1)
     y1 = np.expand_dims(y1.flatten(), 1)
     z1 = np.expand_dims(z1.flatten(), 1)
-    d_cond = 5
-    db_pts = np.concatenate((x0, y0, z0), -1)
+    d_cond = 0
+    # d_cond = np.asarray([0, 0, 0])
+    db_pts = np.concatenate((x1, y1, z1), -1)
     db_vals = np.ones(np.shape(db_pts)) * d_cond
-
+    # print(db_vals); exit()
     x_perp = np.expand_dims(x_perp.flatten(), 1)
     y_perp = np.expand_dims(y_perp.flatten(), 1)
     z_perp = np.expand_dims(z_perp.flatten(), 1)
-    n_cond = np.concatenate((x_perp, y_perp, z_perp), -1)
+    # n_cond = np.concatenate((x_perp, y_perp, z_perp), -1)
+    n_cond = 1E4*np.concatenate((x_perp, y_perp, z_perp), -1)
     
-    # n_cond = 1E4**(1/3)*np.concatenate((x_perp, y_perp, z_perp), -1)
-
     x2 = np.expand_dims(x2.flatten(), 1)
     y2 = np.expand_dims(y2.flatten(), 1)
     z2 = np.expand_dims(z2.flatten(), 1)
     nb_pts = np.concatenate((x2, y2, z2), -1)
-    n_cond = 10*np.ones(np.shape(nb_pts))
     # print(n_cond); exit()
     nb_vals = n_cond
 
@@ -228,7 +231,7 @@ class DeepEnergyMethodLV(DeepEnergyMethodBeam):
 
         u_pred_torch = self.getU(self.model, xyz_tensor)
         u_pred = u_pred_torch.detach().cpu().numpy()
-        
+
         surUx = u_pred[:, 0].reshape(Nx, Ny, Nz)
         surUy = u_pred[:, 1].reshape(Nx, Ny, Nz)
         surUz = u_pred[:, 2].reshape(Nx, Ny, Nz)
@@ -253,73 +256,60 @@ if __name__ == '__main__':
     # x = np.copy(x)
     # print(x.flags['C_CONTIGUOUS'])
     # exit()
-    rs_endo = 7
+    rs_endo =  7
     rl_endo = 17
-    rs_epi = 10
-    rl_epi = 20
-    N = 15; M = 5
+    rs_epi =  10
+    rl_epi =  20
+    N = 25; M = 5
     domain, dirichlet, neumann = define_domain(N, M)
     shape = [N, M, N]
 
     K=N
     u_endo = np.linspace(-np.pi, -np.arccos(5/17), N)
     u_epi = np.linspace(-np.pi, -np.arccos(5/20), N)
-    middle = int(np.floor(K/M/2))
+    middle = int(N/2)
     u = np.linspace(u_endo, u_epi, K)
+    u = u.T[:, middle]
     v = np.linspace(-np.pi, np.pi, N)
     rs = np.linspace(rs_endo, rs_epi, M)
     rl = np.linspace(rl_endo, rl_epi, M)
     
-    dx = v[1] - v[0]
-    # dy = 
+    dx = rs_endo * (v[1] - v[0])
+    dy = rs[1] - rs[0]
+    dz = (rl_endo + rs_endo) / 2 * (u[1] - u[0])
 
-    xyz = np.asarray((v, rs, u[:, middle]))
-    print(v.shape, rs.shape, u[middle].shape); exit()
-    # print(domain.shape, xyz.shape); exit()
+    dxdydz = np.asarray([dx, dy, dz])
 
     LHD = [rs_epi-rs_endo, rl_epi-rl_endo, rs_epi-rs_endo]
-    model = MultiLayerNet(3, 30, 30, 30, 30, 30, 3)
-    DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, xyz=xyz, lr=.5, epochs=1, fb=np.array([[0, 0, 0]]))
 
     K = N
-    rs_endo = 7
-    rl_endo = 17
     u_endo = np.linspace(-np.pi, -np.arccos(5/17), N)
     v_endo = np.linspace(-np.pi, np.pi, N)
 
-    rs_epi = 10
-    rl_epi = 20
     u_epi = np.linspace(-np.pi, -np.arccos(5/20), N)
     v_epi = np.linspace(-np.pi, np.pi, N)
 
-    u = np.linspace(u_endo, u_epi, K)
-    v = np.linspace(-np.pi, np.pi, N)
-    rs = np.linspace(rs_endo, rs_epi, M)
-    rl = np.linspace(rl_endo, rl_epi, M)
 
-    RS = np.ones(N*K)
-    RL = np.ones(N*K)
+    RS = np.ones((N, M, N))
+    RL = np.ones((N, M, N))
     for i in range(M):
-        RS[int(N*K/M)*i:int(N*K/M)*(i+1)] = rs[i]
-        RL[int(N*K/M)*i:int(N*K/M)*(i+1)] = rl[i]
+        # print(f'fra: {int(N*K/M)*i} til: {int(N*K/M)*(i+1)-1}')
+        RS[:, i] = rs[i]
+        RL[:, i] = rl[i]
 
-
-    middle = int(np.floor(K/M/2))
-    x = RS*np.outer(np.cos(v), np.sin(u))
-    y = RS*np.outer(np.sin(v), np.sin(u))
-    z = RL*np.outer(np.ones(np.size(v)), np.cos(u))
-    # print(x.flags)
-
-    x = np.copy(x.reshape((N, M, int(K/M), N))[..., middle, :])
-    y = np.copy(y.reshape((N, M, int(K/M), N))[..., middle, :])
-    z = np.copy(z.reshape((N, M, int(K/M), N))[..., middle, :])
-    print(x.shape);exit()
-
-    # U_pred = DemLV.evaluate_model(x, y, z)
-    # print('domain: ', domain.shape); exit()
+    x = RS*np.expand_dims(np.outer(np.cos(v), np.sin(u)), 1)
+    y = RS*np.expand_dims(np.outer(np.sin(v), np.sin(u)), 1)
+    z = RL*np.expand_dims(np.outer(np.ones(np.size(v)), np.cos(u)), 1)
+    # z = np.where(np.abs(z - 5E-3) < 1E-3, 5E-3, z)
+    z = np.where(np.abs(z - 5) < 1, 5, z)
     
-    U_pred = DemLV.evaluate_model2(x, y, z, domain)
+    model = MultiLayerNet(3, 60, 60, 60, 3)
+    DemLV = DeepEnergyMethodLV(model, energy)
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, xyz=dxdydz, lr=.5, epochs=30, fb=np.array([[0, 0, 0]]))
+
+
+    U_pred = DemLV.evaluate_model(x, y, z)
+
     
     write_vtk_v3('output/DemLV', x, y, z, U_pred)
 

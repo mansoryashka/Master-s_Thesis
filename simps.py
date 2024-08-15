@@ -1,7 +1,6 @@
 import torch
 
 def simpson(y, x=None, dx=1, axis=-1, even='avg'):
-    print('regner')
     # import scipy.integrate as sp
     # sp.simps()
     # y = torch.tensor(y)

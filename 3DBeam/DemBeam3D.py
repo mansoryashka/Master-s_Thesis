@@ -93,7 +93,7 @@ def define_domain(L, H, D, N=25, dir_bcs=None, neu_bcs=None):
         ax.set_ylabel('y')
         ax.set_zlabel('z')
         ax.view_init(elev=25, azim=-55)
-        plt.show(); exit()
+
         fig.savefig('domain.png')
         plt.close()
 
@@ -128,7 +128,9 @@ class DeepEnergyMethodBeam(DeepEnergyMethod):
         xyz_tensor.requires_grad_(True)
 
         u_pred_torch = self.getU(self.model, xyz_tensor)
+
         u_pred = u_pred_torch.detach().cpu().numpy()
+
         surUx = u_pred[:, 0].reshape(Ny, Nx, Nz)
         surUy = u_pred[:, 1].reshape(Ny, Nx, Nz)
         surUz = u_pred[:, 2].reshape(Ny, Nx, Nz)
@@ -412,6 +414,10 @@ if __name__ == '__main__':
     x = np.linspace(0, L, 4*N_test + 2)[1:-1]
     y = np.linspace(0, D, N_test + 2)[1:-1]
     z = np.linspace(0, H, N_test + 2)[1:-1]
+
+    model = MultiLayerNet(3, 100, 3)
+    dem = DeepEnergyMethodBeam(model, energy)
+    dem.evaluate_model(x, y, z)
 
     x_eval = np.linspace(0, L, 4*N_test + 4)[2:-2]
     y_eval = np.linspace(0, D, N_test + 4)[2:-2]

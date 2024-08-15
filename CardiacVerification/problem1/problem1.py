@@ -27,10 +27,10 @@ dx = L / (10*N_test)
 dy = H/N_test
 dx = D/N_test
 
-C = 2E3
-bf = 8
-bt = 2
-bfs = 4
+C = 10E3
+bf = 1
+bt = 1
+bfs = 1
 
 f0 = np.array([1, 0, 0])
 
