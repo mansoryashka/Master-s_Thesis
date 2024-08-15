@@ -180,21 +180,20 @@ def define_domain(N=15, M=5):
     y1 = np.expand_dims(y1.flatten(), 1)
     z1 = np.expand_dims(z1.flatten(), 1)
     d_cond = 0
-    # d_cond = np.asarray([0, 0, 0])
     db_pts = np.concatenate((x1, y1, z1), -1)
     db_vals = np.ones(np.shape(db_pts)) * d_cond
-    # print(db_vals); exit()
+
+
     x_perp = np.expand_dims(x_perp.flatten(), 1)
     y_perp = np.expand_dims(y_perp.flatten(), 1)
     z_perp = np.expand_dims(z_perp.flatten(), 1)
-    # n_cond = np.concatenate((x_perp, y_perp, z_perp), -1)
+
     n_cond = 1E4*np.concatenate((x_perp, y_perp, z_perp), -1)
     
     x2 = np.expand_dims(x2.flatten(), 1)
     y2 = np.expand_dims(y2.flatten(), 1)
     z2 = np.expand_dims(z2.flatten(), 1)
     nb_pts = np.concatenate((x2, y2, z2), -1)
-    # print(n_cond); exit()
     nb_vals = n_cond
 
     dirichlet = {
@@ -249,18 +248,12 @@ def write_vtk_v3(filename, x_space, y_space, z_space, U):
         gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
 
 if __name__ == '__main__':
-    # x = np.arange(1000).reshape((10, 10, 10))
-    # print(x.flags['C_CONTIGUOUS'])
-    # x = x[:, 1, :]
-    # print(x.flags['C_CONTIGUOUS'])
-    # x = np.copy(x)
-    # print(x.flags['C_CONTIGUOUS'])
-    # exit()
+
     rs_endo =  7
     rl_endo = 17
     rs_epi =  10
     rl_epi =  20
-    N = 25; M = 5
+    N = 21; M = 3
     domain, dirichlet, neumann = define_domain(N, M)
     shape = [N, M, N]
 
@@ -276,7 +269,7 @@ if __name__ == '__main__':
     
     dx = rs_endo * (v[1] - v[0])
     dy = rs[1] - rs[0]
-    dz = (rl_endo + rs_endo) / 2 * (u[1] - u[0])
+    dz = ((rl_epi + rs_epi) / 2 + (rl_endo + rs_endo) / 2) / 2 * (u[1] - u[0])
 
     dxdydz = np.asarray([dx, dy, dz])
 
@@ -303,7 +296,7 @@ if __name__ == '__main__':
     # z = np.where(np.abs(z - 5E-3) < 1E-3, 5E-3, z)
     z = np.where(np.abs(z - 5) < 1, 5, z)
     
-    model = MultiLayerNet(3, 60, 60, 60, 3)
+    model = MultiLayerNet(3, 60, 60, 60, 60, 3)
     DemLV = DeepEnergyMethodLV(model, energy)
     DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, xyz=dxdydz, lr=.5, epochs=30, fb=np.array([[0, 0, 0]]))
 
