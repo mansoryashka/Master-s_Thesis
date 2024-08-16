@@ -10,15 +10,14 @@ from pyevtk.hl import gridToVTK
 import sys
 sys.path.insert(0, "../../3DBeam")
 sys.path.insert(0, "../..")
-sys.path.insert(0, "../problem1")
 from DemBeam3D import DeepEnergyMethodBeam, train_and_evaluate, MultiLayerNet, write_vtk_v2, dev
-from problem1 import energy
+from EnergyModels import GuccioneEnergyModel
 plt.style.use('default')
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 200
-# C = 10E3
-# bf = bt = bfs = 1
 
+C = 10E3
+bf = bt = bfs = 1
 
 def define_domain(N=15, M=5):
     K = N
@@ -41,7 +40,7 @@ def define_domain(N=15, M=5):
     v_epi = np.linspace(-np.pi, np.pi, N)
 
     u = np.linspace(u_endo, u_epi, K)
-    u = u.T[:, middle]
+    u = u.T[:, -1]
 
     v = np.linspace(-np.pi, np.pi, N)
     rs = np.linspace(rs_endo, rs_epi, M)
@@ -64,7 +63,7 @@ def define_domain(N=15, M=5):
     # z = np.where(np.abs(z - 5E-3) < 1E-3, 5E-3, z)
 
     # define Dirichlet and Neumann BCs
-    dir_BC = lambda z: np.abs(z - 5) < .5
+    dir_BC = lambda z: np.abs(z - 5) < 1
     # dir_BC = lambda z: np.abs(z - 5E-3) < 5E-4
     neu_BC = RS == rs_endo
 
@@ -103,39 +102,19 @@ def define_domain(N=15, M=5):
     y_epi = rs_epi*np.outer(np.sin(v_epi), np.sin(u_epi))
     z_epi = rl_epi*np.outer(np.ones(np.size(v_epi)), np.cos(u_epi))
 
-    x_perp = 2*np.copy(x_endo)/rs_endo**2
-    y_perp = 2*np.copy(y_endo)/rs_endo**2
-    z_perp = 2*np.copy(z_endo)/rl_endo**2
+    # define vector penpendicular to the endocardium
+    # from https://math.stackexchange.com/questions/2931909/normal-of-a-point-on-the-surface-of-an-ellipsoid
+    x_perp = 2*np.copy(x_endo) / rs_endo**2
+    y_perp = 2*np.copy(y_endo) / rs_endo**2
+    z_perp = 2*np.copy(z_endo) / rl_endo**2
     # x_perp[1:, 0] = 0
     # y_perp[1:, 0] = 0
     # z_perp[1:, 0] = 0
-
-    # define perpendicular surface
-    # dx = -rs_endo*np.outer(
-    #     np.sin(v_endo),
-    #     np.sin(u_endo), 
-    # )
-    # dy = rs_endo*np.outer(
-    #     np.sin(v_endo),
-    #     np.cos(u_endo),
-    # )
-    # dz = -rl_endo*np.outer(
-    #     np.ones(np.size(v_endo)),
-    #     np.sin(u_endo),
-    # )
- 
-    # x_perp = - dz * dy
-    # y_perp = - dx * dz
-    # z_perp = dx * dy
-
 
     # reshape to have access to different dimentsions
     # dimension 0 is angle
     # dimension 1 is depth layer
     # dimension 2 is vertical level
-    # x0 = x0.reshape((N, M-1, int(K/M), N-1))
-    # y0 = y0.reshape((N, M-1, int(K/M), N-1))
-    # z0 = z0.reshape((N, M-1, int(K/M), N-1))
     x0 = x0.reshape((N, M, N))
     y0 = y0.reshape((N, M, N))
     z0 = z0.reshape((N, M, N))
@@ -144,9 +123,6 @@ def define_domain(N=15, M=5):
     y1 = y1.reshape((N, M, 1))
     z1 = z1.reshape((N, M, 1))
 
-    # x2 = x2.reshape((N, 1, N-1))
-    # y2 = y2.reshape((N, 1, N-1))
-    # z2 = z2.reshape((N, 1, N-1))
     x2 = x2.reshape((N, 1, N))
     y2 = y2.reshape((N, 1, N))
     z2 = z2.reshape((N, 1, N))
@@ -155,21 +131,21 @@ def define_domain(N=15, M=5):
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     ax.set_aspect('equal')
-    ax.scatter(x0, y0, z0, s=1, c='tab:blue')
-    # ax.scatter(x0[0, :, :9], y0[0, :, :9], z0[0, :, :9], s=1, c='tab:blue')
+    # ax.scatter(x0, y0, z0, s=1, c='tab:blue')
+    # ax.scatter(x0[:3, :, :15], y0[:3, :, :15], z0[:3, :, :15], s=1, c='tab:blue')
     # ax.scatter(x[7], y[7], z[7], s=1, c='tab:blue')
-    ax.scatter(x1, y1, z1, s=2, c='tab:green')
-    ax.scatter(x2, y2, z2, s=2, c='tab:red')
+    ax.scatter(x1, y1, z1, s=5, c='tab:green')
+    # # ax.scatter(x2, y2, z2, s=5, c='tab:red')
     # plot epicardial and endocardial surfaces
-    ax.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
-    ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
+    # ax.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
+    # ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
     # ax.scatter(dx, dy, dz)
     # ax.scatter(x_perp, y_perp, z_perp)
     # ax.quiver(x_endo[:, :-1], y_endo[:, :-1], z_endo[:, :-1], x_perp, y_perp, z_perp, alpha=.1)
 
     # plt.show(); exit()
     plt.savefig('ventricle.pdf')
-
+    plt.close()
 
     x0 = np.expand_dims(x0.flatten(), 1)
     y0 = np.expand_dims(y0.flatten(), 1)
@@ -253,7 +229,7 @@ if __name__ == '__main__':
     rl_endo = 17
     rs_epi =  10
     rl_epi =  20
-    N = 21; M = 3
+    N = 15; M = 5
     domain, dirichlet, neumann = define_domain(N, M)
     shape = [N, M, N]
 
@@ -272,8 +248,6 @@ if __name__ == '__main__':
     dz = ((rl_epi + rs_epi) / 2 + (rl_endo + rs_endo) / 2) / 2 * (u[1] - u[0])
 
     dxdydz = np.asarray([dx, dy, dz])
-
-    LHD = [rs_epi-rs_endo, rl_epi-rl_endo, rs_epi-rs_endo]
 
     K = N
     u_endo = np.linspace(-np.pi, -np.arccos(5/17), N)
@@ -297,12 +271,38 @@ if __name__ == '__main__':
     z = np.where(np.abs(z - 5) < 1, 5, z)
     
     model = MultiLayerNet(3, 60, 60, 60, 60, 3)
+    energy = GuccioneEnergyModel(C, bf, bt, bfs)
     DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=LHD, xyz=dxdydz, lr=.5, epochs=30, fb=np.array([[0, 0, 0]]))
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, dxdydz=dxdydz, neu_axis=[0, 2], lr=.5, epochs=30, fb=np.array([[0, 0, 0]]))
 
-
+    print()
     U_pred = DemLV.evaluate_model(x, y, z)
-
-    
     write_vtk_v3('output/DemLV', x, y, z, U_pred)
+
+    U = np.asarray(U_pred) + domain.T.reshape((3, N, M, N))
+    k = 12
+    x = domain[:, 0].reshape((N, M, N))
+    z = domain[:, -1].reshape((N, M, N))
+    ref_x = x[k, 2]
+    ref_z = z[k, 2]
+
+    line = np.asarray(U_pred)
+    cur_x = U[0, k, 2]
+    # y = U[1, k, 2]
+    cur_z = U[2, k, 2]
+
+    plt.figure(figsize=(3, 6))
+    
+    plt.plot(ref_x, ref_z, c='gray', linestyle=':')
+    plt.plot(cur_x, cur_z)
+    plt.figure()
+    plt.plot(cur_x, cur_z)
+    plt.xlim(left=-14,right=-11)
+    plt.ylim((-9, -2))
+    plt.figure()
+    plt.plot(cur_x, cur_z)
+    plt.xlim((-5, 0))
+    plt.ylim((-28, -25))
+    plt.show()
+    # exit()
 

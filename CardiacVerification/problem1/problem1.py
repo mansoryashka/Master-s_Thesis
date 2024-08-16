@@ -12,6 +12,7 @@ import sys
 sys.path.insert(0, "../../3DBeam")
 sys.path.insert(0, "../../")
 from DemBeam3D import DeepEnergyMethodBeam, train_and_evaluate, MultiLayerNet, write_vtk_v2, dev
+from EnergyModels import GuccioneEnergyModel
 
 current_path = Path.cwd()
 
@@ -27,10 +28,10 @@ dx = L / (10*N_test)
 dy = H/N_test
 dx = D/N_test
 
-C = 10E3
-bf = 1
-bt = 1
-bfs = 1
+C = 2E2
+bf = 8
+bt = 2
+bfs = 4
 
 f0 = np.array([1, 0, 0])
 
@@ -96,59 +97,7 @@ def define_domain(L, H, D, N=10):
 
     return domain, dirichlet, neumann
 
-def energy(u, x, J=False):
-    kappa = 1E3
-    # Guccione energy mode. Get source from verification paper!!!
-    duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
-    duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
-    duzdxyz = grad(u[:, 2].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
 
-
-    Fxx = duxdxyz[:, 0].unsqueeze(1) + 1
-    Fxy = duxdxyz[:, 1].unsqueeze(1) + 0
-    Fxz = duxdxyz[:, 2].unsqueeze(1) + 0
-    Fyx = duydxyz[:, 0].unsqueeze(1) + 0
-    Fyy = duydxyz[:, 1].unsqueeze(1) + 1
-    Fyz = duydxyz[:, 2].unsqueeze(1) + 0
-    Fzx = duzdxyz[:, 0].unsqueeze(1) + 0
-    Fzy = duzdxyz[:, 1].unsqueeze(1) + 0
-    Fzz = duzdxyz[:, 2].unsqueeze(1) + 1
-
-
-    detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
-    
-    # invF11 = (Fyy * Fzz - Fyz * Fzy) / detF
-    # invF12 = -(Fxy * Fzz - Fxz * Fzy) / detF
-    # invF13 = (Fxy * Fyz - Fxz * Fyy) / detF
-    # invF21 = -(Fyx * Fzz - Fyz * Fzx) / detF
-    # invF22 = (Fxx * Fzz - Fxz * Fzy) / detF
-    # invF23 = -(Fxx * Fyz - Fxz * Fyx) / detF
-    # invF31 = (Fyx * Fzy - Fyy * Fzy) / detF
-    # invF32 = -(Fxx * Fzy - Fxy * Fzx) / detF
-    # invF33 = (Fxx * Fyy - Fxy * Fyx) / detF
-
-    E11 = 0.5*(Fxx*Fxx + Fyx*Fyx + Fzx*Fzx - 1)
-    E12 = 0.5*(Fxx*Fxy + Fyx*Fyy + Fzx*Fzy - 0)
-    E13 = 0.5*(Fxx*Fxz + Fyx*Fyz + Fzx*Fzz - 0)
-    E21 = 0.5*(Fxy*Fxx + Fyy*Fyx + Fzy*Fzx - 0)
-    E22 = 0.5*(Fxy*Fxy + Fyy*Fyy + Fzy*Fzy - 1)
-    E23 = 0.5*(Fxy*Fxz + Fyy*Fyz + Fzy*Fzz - 0)
-    E31 = 0.5*(Fxz*Fxx + Fyz*Fyx + Fzz*Fzx - 0)
-    E32 = 0.5*(Fxz*Fxy + Fyz*Fyy + Fzz*Fzy - 0)
-    E33 = 0.5*(Fxz*Fxz + Fyz*Fyz + Fzz*Fzz - 1)
-
-    Q = bf*E11**2 + bt*(E22**2 + E33**2 + E23**2 + E32**2) + bfs*(E12**2 + E21**2 + E13**2 + E31**2)
-    W = C / 2 * (torch.exp(Q) - 1)
-
-    compressibility = kappa/2 * (detF - 1)**2
-
-    total_energy = W + compressibility
-
-    # print(W[W == np.inf]); exit()
-
-    if J:
-        return total_energy, J
-    return total_energy
 
 if __name__ == '__main__':
     N = 10
@@ -160,8 +109,9 @@ if __name__ == '__main__':
     z_test = np.linspace(0, D, N+3)[1:-2]
 
     model = MultiLayerNet(3, *[30]*3, 3)
+    energy = GuccioneEnergyModel(C, bf, bt, bfs)
     DemBeam = DeepEnergyMethodBeam(model, energy)
     domain, dirichlet, neumann = define_domain(L, H, D, N=N)
-    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, lr=0.1, epochs=1, fb=np.array([[0, 0, 0]]))
+    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.1, epochs=1, fb=np.array([[0, 0, 0]]))
     U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
     write_vtk_v2('output/problem1', x_test, y_test, z_test, U_pred)
