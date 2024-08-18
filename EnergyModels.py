@@ -2,15 +2,21 @@ import torch
 from torch.autograd import grad
 from DEM import dev
 
-class NeoHookeanEnergyModel():
+class NeoHookeanEnergyModel:
     def __init__(self, lmbda, mu):
         self.lmbda = lmbda
         self.mu = mu
 
     def noe(self, u, x):
-        duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
-        duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
-        duzdxyz = grad(u[:, 2].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
+        duxdxyz = grad(u[:, 0].unsqueeze(1), x, 
+                        torch.ones(x.shape[0], 1, device=dev), 
+                        create_graph=True, retain_graph=True)[0]
+        duydxyz = grad(u[:, 1].unsqueeze(1), x, 
+                        torch.ones(x.shape[0], 1, device=dev), 
+                        create_graph=True, retain_graph=True)[0]
+        duzdxyz = grad(u[:, 2].unsqueeze(1), x, 
+                        torch.ones(x.shape[0], 1, device=dev), 
+                        create_graph=True, retain_graph=True)[0]
 
         Fxx = duxdxyz[:, 0].unsqueeze(1) + 1
         Fxy = duxdxyz[:, 1].unsqueeze(1) + 0
@@ -132,20 +138,31 @@ class NeoHookeanActiveEnergyModel(NeoHookeanEnergyModel):
             return StrainEnergy, detF
         return StrainEnergy
     
-class GuccioneEnergyModel():
-    def __init__(self, C, bf, bt, bfs):
+class GuccioneEnergyModel:
+    def __init__(self, C, bf, bt, bfs, kappa=1E3):
         self.C = C
         self.bf = bf
         self.bt = bt
         self.bfs = bfs
-    
-    def __call__(self, u, x, J=False):
-        kappa = 1E3
-        # Guccione energy mode. Get source from verification paper!!!
-        duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
-        duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
-        duzdxyz = grad(u[:, 2].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
+        self.kappa = kappa
 
+    def get_W(self, Q):
+        return self.C / 2 * (torch.exp(Q) - 1)
+
+    def get_compressibility(self, detF):
+        return  0.5 * self.kappa * (detF - 1)**2
+
+    def noe(self, u, x):
+        # Guccione energy mode. Get source from verification paper!!!
+        duxdxyz = grad(u[:, 0].unsqueeze(1), x, 
+                        torch.ones(x.shape[0], 1, device=dev), 
+                        create_graph=True, retain_graph=True)[0]
+        duydxyz = grad(u[:, 1].unsqueeze(1), x, 
+                        torch.ones(x.shape[0], 1, device=dev), 
+                        create_graph=True, retain_graph=True)[0]
+        duzdxyz = grad(u[:, 2].unsqueeze(1), x, 
+                        torch.ones(x.shape[0], 1, device=dev), 
+                        create_graph=True, retain_graph=True)[0]
 
         Fxx = duxdxyz[:, 0].unsqueeze(1) + 1
         Fxy = duxdxyz[:, 1].unsqueeze(1) + 0
@@ -157,19 +174,6 @@ class GuccioneEnergyModel():
         Fzy = duzdxyz[:, 1].unsqueeze(1) + 0
         Fzz = duzdxyz[:, 2].unsqueeze(1) + 1
 
-
-        detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
-
-        # invF11 = (Fyy * Fzz - Fyz * Fzy) / detF
-        # invF12 = -(Fxy * Fzz - Fxz * Fzy) / detF
-        # invF13 = (Fxy * Fyz - Fxz * Fyy) / detF
-        # invF21 = -(Fyx * Fzz - Fyz * Fzx) / detF
-        # invF22 = (Fxx * Fzz - Fxz * Fzy) / detF
-        # invF23 = -(Fxx * Fyz - Fxz * Fyx) / detF
-        # invF31 = (Fyx * Fzy - Fyy * Fzy) / detF
-        # invF32 = -(Fxx * Fzy - Fxy * Fzx) / detF
-        # invF33 = (Fxx * Fyy - Fxy * Fyx) / detF
-
         E11 = 0.5*(Fxx*Fxx + Fyx*Fyx + Fzx*Fzx - 1)
         E12 = 0.5*(Fxx*Fxy + Fyx*Fyy + Fzx*Fzy - 0)
         E13 = 0.5*(Fxx*Fxz + Fyx*Fyz + Fzx*Fzz - 0)
@@ -180,14 +184,21 @@ class GuccioneEnergyModel():
         E32 = 0.5*(Fxz*Fxy + Fyz*Fyy + Fzz*Fzy - 0)
         E33 = 0.5*(Fxz*Fxz + Fyz*Fyz + Fzz*Fzz - 1)
 
-        Q = self.bf*E11**2 + self.bt*(E22**2 + E33**2 + E23**2 + E32**2) + self.bfs*(E12**2 + E21**2 + E13**2 + E31**2)
-        W = self.C / 2 * (torch.exp(Q) - 1)
+        detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
+        Q = (self.bf*E11**2
+             + self.bt*(E22**2 + E33**2 + E23**2 + E32**2)
+             + self.bfs*(E12**2 + E21**2 + E13**2 + E31**2))
 
-        compressibility = kappa/2 * (detF - 1)**2
+        return Q, detF
+        # W = self.C / 2 * (torch.exp(Q) - 1)
+        # compressibility = kappa/2 * (detF - 1)**2
 
+    def __call__(self, u, x, J=False):
+        Q, detF = self.noe(u, x)
+
+        W = self.get_W(Q)
+        compressibility = self.get_compressibility(detF)
         total_energy = W + compressibility
-
-        # print(W[W == np.inf]); exit()
 
         if J:
             return total_energy, detF

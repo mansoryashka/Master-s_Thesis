@@ -20,7 +20,7 @@ dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 current_path = Path.cwd().resolve()
 figures_path = current_path / 'figures'
 arrays_path = current_path / 'stored_arrays'
-models_path = current_path / 'trained_models' / 'run3'
+models_path = current_path / 'trained_models' / 'run1'
 msg = "You have to run the files from their respective folders!"
 
 assert figures_path.exists(), msg
@@ -77,22 +77,21 @@ class DeepEnergyMethod:
         for i in range(epochs+1):
             def closure():
                 # internal loss
-                u_pred = self.getU(self.model, x)
+                u_pred = self(self.model, x)
                 u_pred.double()
 
                 IntEnergy, J = self.energy(u_pred, x, J=True)
                 internal_loss = simps3D(IntEnergy, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape)
 
                 # boundary loss
-                dir_pred = self.getU(self.model, dirBC_coords)
+                dir_pred = self(self.model, dirBC_coords)
                 bc_dir = loss_squared_sum(dir_pred, dirBC_values)
                 dir_loss = torch.sum(bc_dir)
 
                 # external loss
-                neu_pred = self.getU(self.model, neuBC_coords)
+                neu_pred = self(self.model, neuBC_coords)
                 bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
                 neu_loss = simps2D(bc_neu, dx=dxdydz[neu_axis[0]], dy=dxdydz[neu_axis[1]], shape=[shape[neu_axis[0]], shape[neu_axis[1]]])
-
 
                 body_f = torch.matmul(u_pred.unsqueeze(1), fb.unsqueeze(2))
                 external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape) + neu_loss
@@ -115,17 +114,19 @@ class DeepEnergyMethod:
             loss_change = torch.abs(self.current_loss - prev_loss)
             prev_loss = self.current_loss
 
-            # if i == 100:
-            #     best_change = loss_change
-            #     best_epoch = i
-            #     torch.save(self.model.state_dict(), 
-            #                 models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
-            # elif i > 100:
-            #     if loss_change <= best_change:
-            #         best_change = loss_change
-            #         best_epoch = i
-            #         torch.save(self.model.state_dict(), 
-            #                    models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
+            if i == 100:
+                best_change = loss_change
+                best_epoch = i
+                torch.save(self.model.state_dict(), 
+                            models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
+            elif i > 100:
+                # store model if loss change decreasese by a factor of 10
+                if loss_change <= 0.1*best_change:
+                    best_change = loss_change
+                    best_epoch = i
+                    torch.save(self.model.state_dict(), 
+                               models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
+            
             if eval_data:
                 eval_shape = [len(eval_data[0]), len(eval_data[1]), len(eval_data[2])]
                 _, u_eval, xyz_eval = self.evaluate_model(eval_data[0], eval_data[1], eval_data[2], True)
@@ -141,10 +142,10 @@ class DeepEnergyMethod:
             else:
                 print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}')
                 self.losses.append(self.current_loss.detach().cpu())
-        # print(best_change, best_epoch)
-        # return self.model
+                
+        print(best_change, best_epoch)
 
-    def getU(self, model, x):
+    def __call__(self, model, x):
         u = model(x).to(dev)
         Ux, Uy, Uz = x[:, 0] * u.T.unsqueeze(1)
         u_pred = torch.cat((Ux.T, Uy.T, Uz.T), dim=-1)

@@ -11,7 +11,7 @@ matplotlib.rcParams['figure.dpi'] = 350
 import sys
 sys.path.insert(0, "../../3DBeam")
 sys.path.insert(0, "../../")
-from DemBeam3D import DeepEnergyMethodBeam, train_and_evaluate, MultiLayerNet, write_vtk_v2, dev
+from DemBeam3D import DeepEnergyMethodBeam, train_and_evaluate, MultiLayerNet, write_vtk_v2
 from EnergyModels import GuccioneEnergyModel
 
 current_path = Path.cwd()

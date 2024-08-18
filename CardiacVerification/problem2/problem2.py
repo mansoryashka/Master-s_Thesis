@@ -1,17 +1,13 @@
+import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from pathlib import Path
-import torch
-from torch import nn
-from torch.autograd import grad
 from pyevtk.hl import gridToVTK
 
-
 import sys
-sys.path.insert(0, "../../3DBeam")
 sys.path.insert(0, "../..")
-from DemBeam3D import DeepEnergyMethodBeam, train_and_evaluate, MultiLayerNet, write_vtk_v2, dev
+from DEM import DeepEnergyMethod, MultiLayerNet, dev
 from EnergyModels import GuccioneEnergyModel
+
 plt.style.use('default')
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 200
@@ -20,10 +16,9 @@ C = 10E3
 bf = bt = bfs = 1
 
 def define_domain(N=15, M=5):
-    K = N
-    
-    middle = int(K/2)
-    assert N % M == 0, 'N must be divisible by M!'
+    # N=N+1
+    middle = int(N/2)
+    # assert N % M == 0, 'N must be divisible by M!'
 
     rs_endo = 7
     rl_endo = 17
@@ -39,8 +34,8 @@ def define_domain(N=15, M=5):
     u_epi = np.linspace(-np.pi, -np.arccos(5/20), N)
     v_epi = np.linspace(-np.pi, np.pi, N)
 
-    u = np.linspace(u_endo, u_epi, K)
-    u = u.T[:, -1]
+    u = np.linspace(u_endo, u_epi, N)
+    u = u.T[:, middle]
 
     v = np.linspace(-np.pi, np.pi, N)
     rs = np.linspace(rs_endo, rs_epi, M)
@@ -59,11 +54,11 @@ def define_domain(N=15, M=5):
     # print(x.shape)
     """ Finn ut hvorfor max(z) = 5.10!!! """
     # set z_max to 5
-    z = np.where(np.abs(z - 5) < 1, 5, z)
+    z = np.where(np.abs(z - 5) < .5, 5, z)
     # z = np.where(np.abs(z - 5E-3) < 1E-3, 5E-3, z)
 
     # define Dirichlet and Neumann BCs
-    dir_BC = lambda z: np.abs(z - 5) < 1
+    dir_BC = lambda z: np.abs(z - 5) < .5
     # dir_BC = lambda z: np.abs(z - 5E-3) < 5E-4
     neu_BC = RS == rs_endo
 
@@ -83,7 +78,7 @@ def define_domain(N=15, M=5):
     x1 = x[dir_BC(z)]
     y1 = y[dir_BC(z)]
     z1 = z[dir_BC(z)]
-
+    # print(x1); exit()
     # define points on Neumann boundary
     x2 = x[neu_BC]
     y2 = y[neu_BC]
@@ -131,8 +126,11 @@ def define_domain(N=15, M=5):
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
     ax.set_aspect('equal')
+    ax.set_xlabel('$x$')
+    ax.set_ylabel('$y$')
+    ax.set_zlabel('$z$')
     # ax.scatter(x0, y0, z0, s=1, c='tab:blue')
-    # ax.scatter(x0[:3, :, :15], y0[:3, :, :15], z0[:3, :, :15], s=1, c='tab:blue')
+    ax.scatter(x0[:, :, -3:], y0[:, :, -3:], z0[:, :, -3:], s=1, c='tab:blue')
     # ax.scatter(x[7], y[7], z[7], s=1, c='tab:blue')
     ax.scatter(x1, y1, z1, s=5, c='tab:green')
     # # ax.scatter(x2, y2, z2, s=5, c='tab:red')
@@ -184,8 +182,8 @@ def define_domain(N=15, M=5):
 
     return domain, dirichlet, neumann
 
-class DeepEnergyMethodLV(DeepEnergyMethodBeam):
-    def getU(self, model, x):
+class DeepEnergyMethodLV(DeepEnergyMethod):
+    def __call__(self, model, x):
         u = model(x).to(dev)
         Ux, Uy, Uz = (x[:, 2] - 5) * u.T.unsqueeze(1)
         u_pred = torch.cat((Ux.T, Uy.T, Uz.T), dim=-1)
@@ -204,7 +202,7 @@ class DeepEnergyMethodLV(DeepEnergyMethodBeam):
         xyz_tensor = torch.from_numpy(xyz).float().to(dev)
         xyz_tensor.requires_grad_(True)
 
-        u_pred_torch = self.getU(self.model, xyz_tensor)
+        u_pred_torch = self(self.model, xyz_tensor)
         u_pred = u_pred_torch.detach().cpu().numpy()
 
         surUx = u_pred[:, 0].reshape(Nx, Ny, Nz)
@@ -229,7 +227,7 @@ if __name__ == '__main__':
     rl_endo = 17
     rs_epi =  10
     rl_epi =  20
-    N = 15; M = 5
+    N = 31; M = 3
     domain, dirichlet, neumann = define_domain(N, M)
     shape = [N, M, N]
 
@@ -267,20 +265,21 @@ if __name__ == '__main__':
     x = RS*np.expand_dims(np.outer(np.cos(v), np.sin(u)), 1)
     y = RS*np.expand_dims(np.outer(np.sin(v), np.sin(u)), 1)
     z = RL*np.expand_dims(np.outer(np.ones(np.size(v)), np.cos(u)), 1)
+    z = np.where(np.abs(z - 5) < .5, 5, z)
     # z = np.where(np.abs(z - 5E-3) < 1E-3, 5E-3, z)
-    z = np.where(np.abs(z - 5) < 1, 5, z)
     
     model = MultiLayerNet(3, 60, 60, 60, 60, 3)
     energy = GuccioneEnergyModel(C, bf, bt, bfs)
     DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, dxdydz=dxdydz, neu_axis=[0, 2], lr=.5, epochs=30, fb=np.array([[0, 0, 0]]))
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, dxdydz=dxdydz, neu_axis=[0, 2], lr=.5, epochs=10, fb=np.array([[0, 0, 0]]))
 
     print()
     U_pred = DemLV.evaluate_model(x, y, z)
     write_vtk_v3('output/DemLV', x, y, z, U_pred)
 
+    plt.figure(figsize=(3, 6))
     U = np.asarray(U_pred) + domain.T.reshape((3, N, M, N))
-    k = 12
+    k = int((N-1)/2)
     x = domain[:, 0].reshape((N, M, N))
     z = domain[:, -1].reshape((N, M, N))
     ref_x = x[k, 2]
@@ -291,10 +290,10 @@ if __name__ == '__main__':
     # y = U[1, k, 2]
     cur_z = U[2, k, 2]
 
-    plt.figure(figsize=(3, 6))
-    
-    plt.plot(ref_x, ref_z, c='gray', linestyle=':')
-    plt.plot(cur_x, cur_z)
+
+    # plt.plot(ref_x, ref_z, c='gray', linestyle=':')
+    plt.plot(cur_x, cur_z, label=f'{k}')
+    plt.legend()
     plt.figure()
     plt.plot(cur_x, cur_z)
     plt.xlim(left=-14,right=-11)
@@ -305,4 +304,3 @@ if __name__ == '__main__':
     plt.ylim((-28, -25))
     plt.show()
     # exit()
-
