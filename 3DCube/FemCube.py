@@ -40,12 +40,9 @@ def neo_hookean(F: ufl.Coefficient, mu: float = 15.0) -> ufl.Coefficient:
     ufl.Coefficient
         Strain energy density
     """
-    J = dolfin.det(F)
-    F_bar = F
+
     C = F.T * F
-    C_bar = F_bar.T * F_bar
-    # C_bar = C
-    I1 = dolfin.tr(C_bar)
+    I1 = dolfin.tr(C)
     return 0.5 * mu * (I1 - 3)
 
 
@@ -105,14 +102,9 @@ def transverse_holzapfel_ogden(
         Strain energy density
     """
 
-    J = dolfin.det(F)
-    F_bar = F / J**(1/3)
-    # F_bar = F 
     C = F.T * F
-    C_bar = F_bar.T * F_bar
-    # C_bar = C
-    I1 = dolfin.tr(C_bar)
-    I4f = dolfin.inner(C_bar * f0, f0)
+    I1 = dolfin.tr(C)
+    I4f = dolfin.inner(C * f0, f0)
 
     return (a / (2.0 * b)) * (dolfin.exp(b * (I1 - 3)) - 1.0) + (
         a_f / (2.0 * b_f)
@@ -140,9 +132,7 @@ def active_stress_energy(
     """
 
     J = dolfin.det(F)
-    F_bar = F / J**(1/3)
-    # F_bar = F 
-    I4f = dolfin.inner(F_bar * f0, F_bar * f0)
+    I4f = dolfin.inner(F * f0, F * f0)
     return 0.5 * Ta / J * (I4f - 1)
 
 
@@ -183,7 +173,7 @@ def FEM_Cube(N):
     F = dolfin.grad(u) + dolfin.Identity(3)
 
     # Active tension
-    Ta = dolfin.Constant(0.0)
+    Ta = dolfin.Constant(1.0)
     # Set fiber direction to be constant in the x-direction
     f0 = dolfin.Constant([1.0, 0.0, 0.0])
 
@@ -271,14 +261,14 @@ def FEM_Cube(N):
                 u_fem[:, j, i, k] = u(x[i], y[j], z[k])
     np.save(f'stored_arrays/u_fem{N}', u_fem)
 
-    print(dolfin.assemble(elastic_energy*dolfin.dx))            # -38.89300569089483
-    print(dolfin.assemble(dolfin.inner(u, n)*ds(right_marker))) # 0.0427946693202464
+    print(dolfin.assemble(elastic_energy*dolfin.dx))            # -37.3210
+    print(dolfin.assemble(dolfin.inner(u, n)*ds(right_marker))) # 0.048729
 
 
 if __name__ == '__main__':
     import numpy as np
-    # Ns = [5, 10, 15, 20]
-    Ns = [10]
+    Ns = [5, 10, 15, 20]
+    # Ns = [10]
     for N in Ns:
         print('N = ', N)
         FEM_Cube(N)
