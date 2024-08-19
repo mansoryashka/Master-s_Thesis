@@ -1,9 +1,1 @@
 nohup: ignoring input
-Traceback (most recent call last):
-  File "/itf-fi-ml/home/mansurd/Master/3DBeam/DemBeam3D.py", line 428, in <module>
-    #     U_norms_i, losses_i= train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape, eval_data=[x_eval, y_eval, z_eval])
-  File "/itf-fi-ml/home/mansurd/Master/3DBeam/DemBeam3D.py", line 276, in train_and_evaluate
-    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs,  eval_data=eval_data)
-  File "/itf-fi-ml/home/mansurd/Master/3DBeam/../DEM.py", line 120, in train_model
-    torch.savqe(self.model.state_dict(), 
-AttributeError: module 'torch' has no attribute 'savqe'

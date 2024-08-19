@@ -228,7 +228,7 @@ def FEM_Cube(N):
     # traction = dolfin.Constant(1.0)
     traction = dolfin.Constant(-0.5)
     Norm = dolfin.FacetNormal(mesh)
-    n = traction * ufl.cofac(F) * Norm
+    n = traction * Norm
     ds = dolfin.ds(domain=mesh, subdomain_data=ffun)
     external_virtual_work = dolfin.inner(u_test, n) * ds(right_marker)
 
