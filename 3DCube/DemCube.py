@@ -197,8 +197,8 @@ mu = E / (2*(1 + nu))
 
 
 ### Skrive blokkene til en egen funksjon? Kalles på helt likt inne i loopene ###
-def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, max_it=20, shape=[20, 20, 20], eval_data=None, k=5):
-    num_losses = int(num_epochs / k) + 1
+def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, max_it=20, shape=[20, 20, 20], eval_data=None):
+    num_losses = int(num_epochs) + 1
     if eval_data:
         nr_losses = 2
     else:
