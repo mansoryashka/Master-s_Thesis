@@ -114,7 +114,7 @@ class DeepEnergyMethodCube(DeepEnergyMethod):
         return U
 
 E = 1000
-nu = 0.3
+nu = 0.9
 mu = E / (2*(1 + nu))
 
 
