@@ -12,7 +12,7 @@ import sys
 sys.path.insert(0, "../../3DBeam")
 sys.path.insert(0, "../../")
 from DemBeam3D import DeepEnergyMethodBeam, train_and_evaluate, MultiLayerNet, write_vtk_v2
-from EnergyModels import GuccioneEnergyModel
+from EnergyModels import GuccioneTransverseEnergyModel, GuccioneEnergyModel
 
 current_path = Path.cwd()
 
@@ -109,9 +109,13 @@ if __name__ == '__main__':
     z_test = np.linspace(0, D, N+3)[1:-2]
 
     model = MultiLayerNet(3, *[30]*3, 3)
+    # energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
     energy = GuccioneEnergyModel(C, bf, bt, bfs)
     DemBeam = DeepEnergyMethodBeam(model, energy)
     domain, dirichlet, neumann = define_domain(L, H, D, N=N)
-    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.1, epochs=1, fb=np.array([[0, 0, 0]]))
+    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.1, epochs=20, fb=np.array([[0, 0, 0]]))
+    print('ferdig med trennig')
     U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
-    write_vtk_v2('output/problem1', x_test, y_test, z_test, U_pred)
+    print('ferdig med evaluering')
+    write_vtk_v2('output/problem1_iso', x_test, y_test, z_test, U_pred)
+    print('ferdig med lagring')

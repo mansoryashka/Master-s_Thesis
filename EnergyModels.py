@@ -203,3 +203,88 @@ class GuccioneEnergyModel:
         if J:
             return total_energy, detF
         return total_energy
+    
+class GuccioneTransverseEnergyModel(GuccioneEnergyModel):
+    def __init__(self, C, bf, bt, bfs, kappa=1E3, 
+                 f0=torch.tensor([1, 0, 0]),
+                 s0=torch.tensor([0, 1, 0]),
+                 n0=torch.tensor([0, 0, 1])):
+        self.C = C
+        self.bf = bf
+        self.bt = bt
+        self.bfs = bfs
+        self.kappa = kappa
+        self.f0 = f0
+        self.s0 = s0
+        self.n0 = n0
+
+    def noe(self, u, x):
+        f0 = self.f0; s0 = self.s0; n0 = self.n0
+        # Guccione energy mode. Get source from verification paper!!!
+        duxdxyz = grad(u[:, 0].unsqueeze(1), x, 
+                        torch.ones(x.shape[0], 1, device=dev), 
+                        create_graph=True, retain_graph=True)[0]
+        duydxyz = grad(u[:, 1].unsqueeze(1), x, 
+                        torch.ones(x.shape[0], 1, device=dev), 
+                        create_graph=True, retain_graph=True)[0]
+        duzdxyz = grad(u[:, 2].unsqueeze(1), x, 
+                        torch.ones(x.shape[0], 1, device=dev), 
+                        create_graph=True, retain_graph=True)[0]
+
+        Fxx = duxdxyz[:, 0].unsqueeze(1) + 1
+        Fxy = duxdxyz[:, 1].unsqueeze(1) + 0
+        Fxz = duxdxyz[:, 2].unsqueeze(1) + 0
+        Fyx = duydxyz[:, 0].unsqueeze(1) + 0
+        Fyy = duydxyz[:, 1].unsqueeze(1) + 1
+        Fyz = duydxyz[:, 2].unsqueeze(1) + 0
+        Fzx = duzdxyz[:, 0].unsqueeze(1) + 0
+        Fzy = duzdxyz[:, 1].unsqueeze(1) + 0
+        Fzz = duzdxyz[:, 2].unsqueeze(1) + 1
+
+        Exx = 0.5*(Fxx*Fxx + Fyx*Fyx + Fzx*Fzx - 1)
+        Exy = 0.5*(Fxx*Fxy + Fyx*Fyy + Fzx*Fzy - 0)
+        Exz = 0.5*(Fxx*Fxz + Fyx*Fyz + Fzx*Fzz - 0)
+        Eyx = 0.5*(Fxy*Fxx + Fyy*Fyx + Fzy*Fzx - 0)
+        Eyy = 0.5*(Fxy*Fxy + Fyy*Fyy + Fzy*Fzy - 1)
+        Eyz = 0.5*(Fxy*Fxz + Fyy*Fyz + Fzy*Fzz - 0)
+        Ezx = 0.5*(Fxz*Fxx + Fyz*Fyx + Fzz*Fzx - 0)
+        Ezy = 0.5*(Fxz*Fxy + Fyz*Fyy + Fzz*Fzy - 0)
+        Ezz = 0.5*(Fxz*Fxz + Fyz*Fyz + Fzz*Fzz - 1)
+
+        E11 = (f0[0] * (f0[0]*Exx + f0[1]*Eyx + f0[2]*Ezx)
+        + f0[1] * (f0[0]*Exy + f0[1]*Eyy + f0[2]*Ezy)
+        + f0[2] * (f0[0]*Exz + f0[1]*Eyz + f0[2]*Ezz))
+        E12 = (s0[0] * (f0[0]*Exx + f0[1]*Eyx + f0[2]*Ezx)
+        + s0[1] * (f0[0]*Exy + f0[1]*Eyy + f0[2]*Ezy)
+        + s0[2] * (f0[0]*Exz + f0[1]*Eyz + f0[2]*Ezz))
+        E13 = (n0[0] * (f0[0]*Exx + f0[1]*Eyx + f0[2]*Ezx)
+        + n0[1] * (f0[0]*Exy + f0[1]*Eyy + f0[2]*Ezy)
+        + n0[2] * (f0[0]*Exz + f0[1]*Eyz + f0[2]*Ezz))
+
+
+        E21 = (f0[0] * (s0[0]*Exx + s0[1]*Eyx + s0[2]*Ezx)
+        + f0[1] * (s0[0]*Exy + s0[1]*Eyy + s0[2]*Ezy)
+        + f0[2] * (s0[0]*Exz + s0[1]*Eyz + s0[2]*Ezz))
+        E22 = (s0[0] * (s0[0]*Exx + s0[1]*Eyx + s0[2]*Ezx)
+        + s0[1] * (s0[0]*Exy + s0[1]*Eyy + s0[2]*Ezy)
+        + s0[2] * (s0[0]*Exz + s0[1]*Eyz + s0[2]*Ezz))
+        E23 = (n0[0] * (s0[0]*Exx + s0[1]*Eyx + s0[2]*Ezx)
+        + n0[1] * (s0[0]*Exy + s0[1]*Eyy + s0[2]*Ezy)
+        + n0[2] * (s0[0]*Exz + s0[1]*Eyz + s0[2]*Ezz))
+
+        E31 = (f0[0] * (n0[0]*Exx + n0[1]*Eyx + n0[2]*Ezx)
+        + f0[1] * (n0[0]*Exy + n0[1]*Eyy + n0[2]*Ezy)
+        + f0[2] * (n0[0]*Exz + n0[1]*Eyz + n0[2]*Ezz))
+        E32 = (s0[0] * (n0[0]*Exx + n0[1]*Eyx + n0[2]*Ezx)
+        + s0[1] * (n0[0]*Exy + n0[1]*Eyy + n0[2]*Ezy)
+        + s0[2] * (n0[0]*Exz + n0[1]*Eyz + n0[2]*Ezz))
+        E33 = (n0[0] * (n0[0]*Exx + n0[1]*Eyx + n0[2]*Ezx)
+        + n0[1] * (n0[0]*Exy + n0[1]*Eyy + n0[2]*Ezy)
+        + n0[2] * (n0[0]*Exz + n0[1]*Eyz + n0[2]*Ezz))
+
+        detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
+        Q = (self.bf*E11**2
+             + self.bt*(E22**2 + E33**2 + E23**2 + E32**2)
+             + self.bfs*(E12**2 + E21**2 + E13**2 + E31**2))
+
+        return Q, detF

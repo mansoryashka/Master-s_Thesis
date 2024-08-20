@@ -143,7 +143,7 @@ class DeepEnergyMethod:
                 print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}')
                 self.losses.append(self.current_loss.detach().cpu())
                 
-        print(best_change, best_epoch)
+        # print(best_change, best_epoch)
 
     def __call__(self, model, x):
         u = model(x).to(dev)
