@@ -33,13 +33,11 @@ bf = 8
 bt = 2
 bfs = 4
 
-f0 = np.array([1, 0, 0])
-
 d_boundary = 0.0
 d_cond = [0, 0, 0]
 
 n_boundary = 0.0
-n_cond = [0, 4, 0]
+n_cond = [0, 0.004, 0]
 
 def define_domain(L, H, D, N=10):
     x = np.linspace(0, L, 10*N)
@@ -113,9 +111,6 @@ if __name__ == '__main__':
     energy = GuccioneEnergyModel(C, bf, bt, bfs)
     DemBeam = DeepEnergyMethodBeam(model, energy)
     domain, dirichlet, neumann = define_domain(L, H, D, N=N)
-    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.1, epochs=20, fb=np.array([[0, 0, 0]]))
-    print('ferdig med trennig')
+    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.1, epochs=10, fb=np.array([[0, 0, 0]]))
     U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
-    print('ferdig med evaluering')
     write_vtk_v2('output/problem1_iso', x_test, y_test, z_test, U_pred)
-    print('ferdig med lagring')
