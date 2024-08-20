@@ -15,7 +15,32 @@ matplotlib.rcParams['figure.dpi'] = 200
 C = 10E3
 bf = bt = bfs = 1
 
-def define_domain(N=15, M=5):
+def f(N, M):
+    # i = np.arange(N).reshape((N, 1))
+    # j = np.arange(M).reshape((1, M))
+    i = np.arange(N).reshape((N, 1, 1))
+    j = np.arange(M).reshape((1, M, 1))
+    k = np.arange(N).reshape((1, 1, N))
+    fx = (-np.sin(2*np.pi*i/(N-1))*j*(M - 1 - j) / (0.5*(M-1))**2 
+          * np.ones(N).reshape(1, 1, N)
+          #+ np.cos(2*np.pi*i/(N-1)) * (np.floor(M/2) - j) #* np.cos(np.pi*k/(N-1))
+
+
+    )
+    fy = ( np.cos(2*np.pi*i/(N-1))*j*(M - 1 - j) / (0.5*(M-1))**2 
+          * np.ones(N).reshape(1, 1, N) 
+          #+ np.sin(2*np.pi*i/(N-1)) * (np.floor(M/2) - j) #* np.sin(np.pi*k/(N-1))
+    )
+    # fz = (np.cos(np.pi*j/(M-1))*np.ones(N*N).reshape((N, 1, N))
+
+    fz = (np.cos(np.pi*j/(M-1))* np.ones(N*N*M).reshape((N, M, N))
+          #+ np.sin(np.pi*k/(N-1))
+    )
+
+    # print(fz.shape, z.shape); exit()
+    return np.array((fx, fy, fz))
+
+def define_domain(N=15, M=5, f=f):
     # N=N+1
     middle = int(N/2)
     # assert N % M == 0, 'N must be divisible by M!'
@@ -129,19 +154,22 @@ def define_domain(N=15, M=5):
     ax.set_xlabel('$x$')
     ax.set_ylabel('$y$')
     ax.set_zlabel('$z$')
-    # ax.scatter(x0, y0, z0, s=1, c='tab:blue')
-    ax.scatter(x0[:, :, -3:], y0[:, :, -3:], z0[:, :, -3:], s=1, c='tab:blue')
+    # ax.scatter(x0, y0, z0, s=.1, alpha=0.5, c='tab:blue')
+    # ax.scatter(x0[:, 0, :], y0[:, 0, :], z0[:, 0, :], s=1, c='tab:blue')
+    ax.quiver(x0[:, -1, :], y0[:, -1, :], z0[:, -1, :], 
+              f(N, M)[0][:, -1], 
+              f(N, M)[1][:, -1], 
+              f(N, M)[2][:, -1])
     # ax.scatter(x[7], y[7], z[7], s=1, c='tab:blue')
-    ax.scatter(x1, y1, z1, s=5, c='tab:green')
+    # ax.scatter(x1, y1, z1, s=5, c='tab:green')
     # # ax.scatter(x2, y2, z2, s=5, c='tab:red')
     # plot epicardial and endocardial surfaces
     # ax.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
-    # ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
+    ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
     # ax.scatter(dx, dy, dz)
     # ax.scatter(x_perp, y_perp, z_perp)
     # ax.quiver(x_endo[:, :-1], y_endo[:, :-1], z_endo[:, :-1], x_perp, y_perp, z_perp, alpha=.1)
-
-    # plt.show(); exit()
+    plt.show(); exit()
     plt.savefig('ventricle.pdf')
     plt.close()
 
@@ -184,9 +212,13 @@ def define_domain(N=15, M=5):
 
 class DeepEnergyMethodLV(DeepEnergyMethod):
     def __call__(self, model, x):
+        print('x: ', x.shape)
         u = model(x).to(dev)
+        print('u: ', u.shape)
         Ux, Uy, Uz = (x[:, 2] - 5) * u.T.unsqueeze(1)
+        print('Ux: ', Ux.shape)
         u_pred = torch.cat((Ux.T, Uy.T, Uz.T), dim=-1)
+        print('u_pred: ', u_pred.shape); exit()
         return u_pred
     
     def evaluate_model(self, x, y, z, return_pred_tensor=False):
@@ -222,12 +254,11 @@ def write_vtk_v3(filename, x_space, y_space, z_space, U):
         gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
 
 if __name__ == '__main__':
-
     rs_endo =  7
     rl_endo = 17
     rs_epi =  10
     rl_epi =  20
-    N = 31; M = 3
+    N = 13; M = 9
     domain, dirichlet, neumann = define_domain(N, M)
     shape = [N, M, N]
 
