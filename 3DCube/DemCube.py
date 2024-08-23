@@ -198,7 +198,7 @@ mu = E / (2*(1 + nu))
 
 ### Skrive blokkene til en egen funksjon? Kalles på helt likt inne i loopene ###
 def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, max_it=20, shape=[20, 20, 20], eval_data=None):
-    num_losses = int(num_epochs) + 1
+    num_losses = int(num_epochs)
     if eval_data:
         nr_losses = 2
     else:
@@ -345,8 +345,8 @@ if __name__ == '__main__':
     shape = [N_test, N_test, N_test]
     num_layers = [2, 3, 4, 5]
     num_neurons = [20, 30, 40, 50]
-    num_expreriments = 20
-    num_epochs = 500
+    num_expreriments = 1
+    num_epochs = 300
     U_norms = 0
     losses = 0
     start = time.time()
@@ -359,7 +359,7 @@ if __name__ == '__main__':
     losses /= num_expreriments
     print(U_norms)
     np.save(arrays_path / 'losses_nl_nn', losses)
-    plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'cube_heatmap_num_neurons_layers')
+    plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'cube_heatmap_num_neurons_layers300')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
