@@ -124,7 +124,7 @@ class DeepEnergyMethodBeam(DeepEnergyMethod):
         z1D = np.expand_dims(zGrid.flatten(), 1)
         xyz = np.concatenate((x1D, y1D, z1D), axis=-1)
 
-        xyz_tensor = torch.from_numpy(xyz).float().to(dev)
+        xyz_tensor = torch.from_numpy(xyz).double().to(dev)
         xyz_tensor.requires_grad_(True)
 
         u_pred_torch = self(self.model, xyz_tensor)
@@ -135,7 +135,7 @@ class DeepEnergyMethodBeam(DeepEnergyMethod):
         surUy = u_pred[:, 1].reshape(Ny, Nx, Nz)
         surUz = u_pred[:, 2].reshape(Ny, Nx, Nz)
 
-        U = (np.float64(surUx), np.float64(surUy), np.float64(surUz))
+        U = (np.copy(surUx), np.copy(surUy), np.copy(surUz))
 
         if return_pred_tensor:
             return U, u_pred_torch, xyz_tensor

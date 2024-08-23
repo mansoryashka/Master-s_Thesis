@@ -16,8 +16,8 @@ from EnergyModels import GuccioneTransverseEnergyModel, GuccioneEnergyModel
 
 current_path = Path.cwd()
 
-L = 10
-H = D = 1
+L = 10E-3
+H = D = 1E-3
 
 x0 = 0; x1 = L
 y0 = 0; y1 = H
@@ -28,7 +28,7 @@ dx = L / (10*N_test)
 dy = H/N_test
 dx = D/N_test
 
-C = 2E2
+C = 2E3
 bf = 8
 bt = 2
 bfs = 4
@@ -37,12 +37,12 @@ d_boundary = 0.0
 d_cond = [0, 0, 0]
 
 n_boundary = 0.0
-n_cond = [0, 0.004, 0]
+n_cond = [0, 0, 4]
 
 def define_domain(L, H, D, N=10):
-    x = np.linspace(0, L, 10*N)
-    y = np.linspace(0, H, N)
-    z = np.linspace(0, D, N)
+    x = np.linspace(0, L, 10*N+1)
+    y = np.linspace(0, H, N+1)
+    z = np.linspace(0, D, N+1)
 
     Xm, Zm, Ym = np.meshgrid(x, z, y)
     Xm = np.expand_dims(Xm.flatten(), 1)
@@ -100,17 +100,17 @@ def define_domain(L, H, D, N=10):
 if __name__ == '__main__':
     N = 10
     LHD = [L, H, D]
-    shape = [10*N, N, N]
-
+    shape = [10*N+1, N+1, N+1]
+    
     x_test = np.linspace(0, L, 10*N)
     y_test = np.linspace(0, H, N+3)[1:-2]
     z_test = np.linspace(0, D, N+3)[1:-2]
 
-    model = MultiLayerNet(3, *[30]*3, 3)
+    model = MultiLayerNet(3, *[50]*8, 3)
     energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
     # energy = GuccioneEnergyModel(C, bf, bt, bfs)
     DemBeam = DeepEnergyMethodBeam(model, energy)
     domain, dirichlet, neumann = define_domain(L, H, D, N=N)
-    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.1, epochs=10, fb=np.array([[0, 0, 0]]))
+    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.5, epochs=30, fb=np.array([[0, 0, 0]]))
     U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
-    write_vtk_v2('output/problem1_iso', x_test, y_test, z_test, U_pred)
+    write_vtk_v2('output/problem1', x_test, y_test, z_test, U_pred)
