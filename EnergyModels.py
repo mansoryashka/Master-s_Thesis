@@ -199,7 +199,6 @@ class GuccioneEnergyModel:
         W = self.get_W(Q)
         compressibility = self.get_compressibility(detF)
         total_energy = W + compressibility
-
         if J:
             return total_energy, detF
         return total_energy
@@ -251,6 +250,53 @@ class GuccioneTransverseEnergyModel(GuccioneEnergyModel):
         Ezy = 0.5*(Fxz*Fxy + Fyz*Fyy + Fzz*Fzy - 0)
         Ezz = 0.5*(Fxz*Fxz + Fyz*Fyz + Fzz*Fzz - 1)
 
+        # # if f0 is costant thoughout the domain
+        # if n == 1:
+        #     E11 = (f0[0] * (f0[0]*Exx + f0[1]*Eyx + f0[2]*Ezx)
+        #     + f0[1] * (f0[0]*Exy + f0[1]*Eyy + f0[2]*Ezy)
+        #     + f0[2] * (f0[0]*Exz + f0[1]*Eyz + f0[2]*Ezz))
+        #     E12 = (s0[0] * (f0[0]*Exx + f0[1]*Eyx + f0[2]*Ezx)
+        #     + s0[1] * (f0[0]*Exy + f0[1]*Eyy + f0[2]*Ezy)
+        #     + s0[2] * (f0[0]*Exz + f0[1]*Eyz + f0[2]*Ezz))
+        #     E13 = (n0[0] * (f0[0]*Exx + f0[1]*Eyx + f0[2]*Ezx)
+        #     + n0[1] * (f0[0]*Exy + f0[1]*Eyy + f0[2]*Ezy)
+        #     + n0[2] * (f0[0]*Exz + f0[1]*Eyz + f0[2]*Ezz))
+
+
+        #     E21 = (f0[0] * (s0[0]*Exx + s0[1]*Eyx + s0[2]*Ezx)
+        #     + f0[1] * (s0[0]*Exy + s0[1]*Eyy + s0[2]*Ezy)
+        #     + f0[2] * (s0[0]*Exz + s0[1]*Eyz + s0[2]*Ezz))
+        #     E22 = (s0[0] * (s0[0]*Exx + s0[1]*Eyx + s0[2]*Ezx)
+        #     + s0[1] * (s0[0]*Exy + s0[1]*Eyy + s0[2]*Ezy)
+        #     + s0[2] * (s0[0]*Exz + s0[1]*Eyz + s0[2]*Ezz))
+        #     E23 = (n0[0] * (s0[0]*Exx + s0[1]*Eyx + s0[2]*Ezx)
+        #     + n0[1] * (s0[0]*Exy + s0[1]*Eyy + s0[2]*Ezy)
+        #     + n0[2] * (s0[0]*Exz + s0[1]*Eyz + s0[2]*Ezz))
+
+        #     E31 = (f0[0] * (n0[0]*Exx + n0[1]*Eyx + n0[2]*Ezx)
+        #     + f0[1] * (n0[0]*Exy + n0[1]*Eyy + n0[2]*Ezy)
+        #     + f0[2] * (n0[0]*Exz + n0[1]*Eyz + n0[2]*Ezz))
+        #     E32 = (s0[0] * (n0[0]*Exx + n0[1]*Eyx + n0[2]*Ezx)
+        #     + s0[1] * (n0[0]*Exy + n0[1]*Eyy + n0[2]*Ezy)
+        #     + s0[2] * (n0[0]*Exz + n0[1]*Eyz + n0[2]*Ezz))
+        #     E33 = (n0[0] * (n0[0]*Exx + n0[1]*Eyx + n0[2]*Ezx)
+        #     + n0[1] * (n0[0]*Exy + n0[1]*Eyy + n0[2]*Ezy)
+        #     + n0[2] * (n0[0]*Exz + n0[1]*Eyz + n0[2]*Ezz))
+
+        # if n > 1:
+        #     # print('Dealer med masse fiberretninger!')
+        #     print(f0.shape)
+        #     i, j, k = f0.shape[1], f0.shape[2], f0.shape[3]
+        #     Exx = Exx.reshape((i, j, k))
+        #     Exy = Exy.reshape((i, j, k))
+        #     Exz = Exz.reshape((i, j, k))
+        #     Eyx = Exx.reshape((i, j, k))
+        #     Eyy = Exy.reshape((i, j, k))
+        #     Eyz = Exz.reshape((i, j, k))
+        #     Ezx = Exx.reshape((i, j, k))
+        #     Ezy = Exy.reshape((i, j, k))
+        #     Ezz = Exz.reshape((i, j, k))
+        
         E11 = (f0[0] * (f0[0]*Exx + f0[1]*Eyx + f0[2]*Ezx)
         + f0[1] * (f0[0]*Exy + f0[1]*Eyy + f0[2]*Ezy)
         + f0[2] * (f0[0]*Exz + f0[1]*Eyz + f0[2]*Ezz))
@@ -286,5 +332,4 @@ class GuccioneTransverseEnergyModel(GuccioneEnergyModel):
         Q = (self.bf*E11**2
              + self.bt*(E22**2 + E33**2 + E23**2 + E32**2)
              + self.bfs*(E12**2 + E21**2 + E13**2 + E31**2))
-
         return Q, detF

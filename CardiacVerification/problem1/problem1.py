@@ -107,8 +107,8 @@ if __name__ == '__main__':
     z_test = np.linspace(0, D, N+3)[1:-2]
 
     model = MultiLayerNet(3, *[30]*3, 3)
-    # energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
-    energy = GuccioneEnergyModel(C, bf, bt, bfs)
+    energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
+    # energy = GuccioneEnergyModel(C, bf, bt, bfs)
     DemBeam = DeepEnergyMethodBeam(model, energy)
     domain, dirichlet, neumann = define_domain(L, H, D, N=N)
     DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.1, epochs=10, fb=np.array([[0, 0, 0]]))
