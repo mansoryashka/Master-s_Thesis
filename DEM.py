@@ -47,12 +47,11 @@ class DeepEnergyMethod:
     def train_model(self, data, dirichlet, neumann, shape, LHD, dxdydz=None, neu_axis=None, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]]), eval_data=None):
         dxdydz = dxdydz if dxdydz is not None else np.array(LHD) / (np.array(shape) - 1)
 
-        x = torch.from_numpy(data).float().to(dev)
+        self.x = torch.from_numpy(data).float().to(dev)
+        self.x.requires_grad_(True)
         fb = torch.from_numpy(fb).float().to(dev)
-        x.requires_grad_(True)
         optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr, max_iter=max_it)
         
-        self.x = x
 
         # boundary
         dirBC_coords = torch.from_numpy(dirichlet['coords']).float().to(dev)
@@ -74,13 +73,13 @@ class DeepEnergyMethod:
         while Path(models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}').exists():
             j += 1
         
-        for i in range(epochs+1):
+        for i in range(epochs):
             def closure():
                 # internal loss
-                u_pred = self(self.model, x)
+                u_pred = self(self.model, self.x)
                 u_pred.double()
 
-                IntEnergy, J = self.energy(u_pred, x, J=True)
+                IntEnergy = self.energy(u_pred, self.x)
                 internal_loss = simps3D(IntEnergy, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape)
 
                 # boundary loss
@@ -114,36 +113,38 @@ class DeepEnergyMethod:
             loss_change = torch.abs(self.current_loss - prev_loss)
             prev_loss = self.current_loss
 
-            if i == 100:
-                best_change = loss_change
+            if i == 50:
+                # 
+                original_change = loss_change
+                lowest_change = original_change
                 best_epoch = i
-                torch.save(self.model.state_dict(), 
-                            models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
-            elif i > 100:
-                # store model if loss change decreasese by a factor of 10
-                if loss_change <= 0.1*best_change:
-                    best_change = loss_change
+                # torch.save(self.model.state_dict(), 
+                #             models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
+            elif i > 50:
+                # store model if loss change decreases by a factor of 10
+                if loss_change <= 0.1*lowest_change:
+                    lowest_change = loss_change
                     best_epoch = i
-                    torch.save(self.model.state_dict(), 
-                               models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
-            
-            if eval_data:
-                eval_shape = [len(eval_data[0]), len(eval_data[1]), len(eval_data[2])]
-                _, u_eval, xyz_eval = self.evaluate_model(eval_data[0], eval_data[1], eval_data[2], True)
-                eval_internal = self.energy(u_eval, xyz_eval)
-                eval_loss1 = simps3D(eval_internal, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=eval_shape)
+                    # torch.save(self.model.state_dict(), 
+                    #            models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
 
-                eval_BF = torch.matmul(u_eval.unsqueeze(1), fb.unsqueeze(2))
-                eval_loss2 = simps3D(eval_BF, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=eval_shape)
-                self.eval_loss = eval_loss1 - eval_loss2
+            # if eval_data:
+            #     eval_shape = [len(eval_data[0]), len(eval_data[1]), len(eval_data[2])]
+            #     _, u_eval, xyz_eval = self.evaluate_model(eval_data[0], eval_data[1], eval_data[2], True)
+            #     eval_internal = self.energy(u_eval, xyz_eval)
+            #     eval_loss1 = simps3D(eval_internal, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=eval_shape)
 
-                print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Eval loss: {self.eval_loss:10.5f}, Loss_change: {loss_change.item():8.5f}')
-                self.losses.append([self.current_loss.detach().cpu(), self.eval_loss.detach().cpu()])
-            else:
-                print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}')
-                self.losses.append(self.current_loss.detach().cpu())
+            #     eval_BF = torch.matmul(u_eval.unsqueeze(1), fb.unsqueeze(2))
+            #     eval_loss2 = simps3D(eval_BF, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=eval_shape)
+            #     self.eval_loss = eval_loss1 - eval_loss2
+
+            #     print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Eval loss: {self.eval_loss:10.5f}, Loss_change: {loss_change.item():8.5f}')
+            #     self.losses.append([self.current_loss.detach().cpu(), self.eval_loss.detach().cpu()])
+            # else:
+            print(f'Iter: {i+1:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Loss_change: {loss_change.item():13.8f}')
+            self.losses.append(self.current_loss.detach().cpu())
                 
-        # print(best_change, best_epoch)
+        print(f'Model at epoch {best_epoch:3d} stored with energy change: {lowest_change:8.5f}, ')
 
     def __call__(self, model, x):
         u = model(x).to(dev)
