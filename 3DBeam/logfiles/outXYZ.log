@@ -1,0 +1,36 @@
+Running on GPU
+Experiment nr. 0
+num_n, num_l
+Model at epoch 196 stored with energy change:  0.00001, 
+Model at epoch 110 stored with energy change:  0.00007, 
+Model at epoch 164 stored with energy change:  0.00001, 
+Model at epoch 186 stored with energy change:  0.00001, 
+Model at epoch 180 stored with energy change:  0.00000, 
+Model at epoch 185 stored with energy change:  0.00000, 
+Model at epoch  72 stored with energy change:  0.00012, 
+Model at epoch 192 stored with energy change:  0.00001, 
+Model at epoch 186 stored with energy change:  0.00001, 
+Model at epoch 192 stored with energy change:  0.00000, 
+Model at epoch 160 stored with energy change:  0.00000, 
+Model at epoch 133 stored with energy change:  0.00000, 
+Model at epoch 162 stored with energy change:  0.00002, 
+Model at epoch 191 stored with energy change:  0.00001, 
+Model at epoch 155 stored with energy change:  0.00001, 
+Model at epoch 131 stored with energy change:  0.00001, 
+U_norms_i
+[[0.05620671 0.05679558 0.05555249 0.05531076]
+ [0.05556088 0.05635984 0.0552762  0.05469171]
+ [0.05532823 0.0555359  0.05515771 0.05399547]
+ [0.05568038 0.05583159 0.05438486 0.05649551]]
+U_norms
+[[0.05620671 0.05679558 0.05555249 0.05531076]
+ [0.05556088 0.05635984 0.0552762  0.05469171]
+ [0.05532823 0.0555359  0.05515771 0.05399547]
+ [0.05568038 0.05583159 0.05438486 0.05649551]]
+[[0.05620671 0.05679558 0.05555249 0.05531076]
+ [0.05556088 0.05635984 0.0552762  0.05469171]
+ [0.05532823 0.0555359  0.05515771 0.05399547]
+ [0.05568038 0.05583159 0.05438486 0.05649551]]
+tid: 8017.60s
+tid: 133.63m
+tid: 2.23t
