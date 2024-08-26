@@ -20,7 +20,7 @@ dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 current_path = Path.cwd().resolve()
 figures_path = current_path / 'figures'
 arrays_path = current_path / 'stored_arrays'
-models_path = current_path / 'trained_models' / 'run1'
+models_path = current_path / 'trained_models' / 'run4'
 msg = "You have to run the files from their respective folders!"
 
 assert figures_path.exists(), msg
@@ -113,8 +113,7 @@ class DeepEnergyMethod:
             loss_change = torch.abs(self.current_loss - prev_loss)
             prev_loss = self.current_loss
 
-            if i == 50:
-                # 
+            if i == 2:
                 original_change = loss_change
                 lowest_change = original_change
                 best_epoch = i
@@ -141,7 +140,7 @@ class DeepEnergyMethod:
             #     print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Eval loss: {self.eval_loss:10.5f}, Loss_change: {loss_change.item():8.5f}')
             #     self.losses.append([self.current_loss.detach().cpu(), self.eval_loss.detach().cpu()])
             # else:
-            print(f'Iter: {i+1:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Loss_change: {loss_change.item():13.8f}')
+            # print(f'Iter: {i+1:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Loss_change: {loss_change.item():13.8f}')
             self.losses.append(self.current_loss.detach().cpu())
                 
         print(f'Model at epoch {best_epoch:3d} stored with energy change: {lowest_change:8.5f}, ')
@@ -154,7 +153,6 @@ class DeepEnergyMethod:
 
     def evaluate_model(self, x, y, z, return_pred_tensor=False):
         raise NotImplementedError("You need to implement an 'evaluate_model' method in the subclass!")
-
 
 def loss_squared_sum(input, target):
     return torch.sum((input - target)**2, dim=1) / input.shape[1]*input.data.nelement()
@@ -177,6 +175,7 @@ def L2norm3D(U, Nx, Ny, Nz, dx, dy, dz):
     return L2norm
 
 def simps2D(U, xy=None, dx=None, dy=None, shape=None):
+    # Nx, Ny = shape
     Nx = shape[0]
     Ny = shape[1]
     U = U.flatten().reshape(Nx, Ny)
@@ -186,6 +185,7 @@ def simps2D(U, xy=None, dx=None, dy=None, shape=None):
         return simpson(simpson(U, dx=dy), dx=dx)
     
 def simps3D(U, xyz=None, dx=None, dy=None, dz=None, shape=None):
+    # Nx, Ny, Nz = shape
     Nx = shape[0]
     Ny = shape[1]
     Nz = shape[2]
