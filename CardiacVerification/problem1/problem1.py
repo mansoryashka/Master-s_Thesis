@@ -98,7 +98,7 @@ def define_domain(L, H, D, N=10):
 
 
 if __name__ == '__main__':
-    N = 25
+    N = 20
     LHD = [L, H, D]
     shape = [10*N+1, N+1, N+1]
     
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
     # energy = GuccioneEnergyModel(C, bf, bt, bfs)
     DemBeam = DeepEnergyMethodBeam(model, energy)
-    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.5, epochs=50, fb=np.array([[0, 0, 0]]))
+    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.1, epochs=3, fb=np.array([[0, 0, 0]]))
     U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
     np.save('stored_arrays/U_pred', np.asarray(U_pred))
     write_vtk_v2('output/problem1', x_test, y_test, z_test, U_pred)
@@ -222,19 +222,23 @@ if __name__ == '__main__':
                 / np.linalg.norm(pts_x - pts_z, axis=1)
                 - 1) * 100
 
-    fig, ax = plt.subplots(1, 3, figsize=(4, 2))
+    fig, ax = plt.subplots(1, 3, figsize=(10, 3))
+    fig.tight_layout()
     ax[0].plot(strain_x, '-x')
     ax[1].plot(strain_y, '-x')
     ax[2].plot(strain_z, '-x')
-    fig, ax = plt.subplots(1, 1, figsize=(4, 2))
+    fig.savefig('figures/strain_plot.pdf')
+    fig, ax = plt.subplots(1, 1) #, figsize=(4, 2))
     ax.plot(line_x_cur, line_z_cur)
-    fig, ax = plt.subplots(1, 1, figsize=(4, 2))
+    fig.savefig('figures/line_plot.pdf')
+    fig, ax = plt.subplots(1, 1) #, figsize=(4, 2))
     ax.plot(line_x_cur, line_z_cur)
     ax.set_xlim([9.25, 9.40])
     ax.set_xticks([9.25, 9.40])
     ax.set_ylim([3.60, 3.75])
     ax.set_yticks([3.60, 3.75])
-    plt.show()
+    fig.savefig('figures/zoom_plot.pdf')
+    # plt.show()
 
 
 
