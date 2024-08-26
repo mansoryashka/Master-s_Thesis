@@ -11,7 +11,7 @@ matplotlib.rcParams['figure.dpi'] = 100
 import sys
 sys.path.insert(0, "../../3DBeam")
 sys.path.insert(0, "../../")
-from DemBeam3D import DeepEnergyMethodBeam, train_and_evaluate, MultiLayerNet, write_vtk_v2
+from DemBeam import DeepEnergyMethodBeam, train_and_evaluate, MultiLayerNet, write_vtk_v2
 from EnergyModels import GuccioneTransverseEnergyModel, GuccioneEnergyModel
 
 current_path = Path.cwd()
@@ -24,9 +24,9 @@ y0 = 0; y1 = H
 z0 = 0; z1 = D
 
 N_test = 20
-dx = L / (10*N_test + 1)
-dy = H / N_test + 1
-dx = D / N_test + 1
+dx = L / (10*N_test)
+dy = H / (N_test)
+dx = D / (N_test)
 
 C = 2E3
 bf = 8
@@ -98,7 +98,7 @@ def define_domain(L, H, D, N=10):
 
 
 if __name__ == '__main__':
-    N = 30
+    N = 25
     LHD = [L, H, D]
     shape = [10*N+1, N+1, N+1]
     
@@ -110,14 +110,14 @@ if __name__ == '__main__':
     z_test = np.linspace(0, D, N+1)
 
     domain, dirichlet, neumann = define_domain(L, H, D, N=N)
-    # model = MultiLayerNet(3, *[40]*4, 3)
-    # energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
-    # # energy = GuccioneEnergyModel(C, bf, bt, bfs)
-    # DemBeam = DeepEnergyMethodBeam(model, energy)
-    # DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.1, epochs=50, fb=np.array([[0, 0, 0]]))
-    # U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
-    # np.save('stored_arrays/U_pred', np.asarray(U_pred))
-    # write_vtk_v2('output/problem1', x_test, y_test, z_test, U_pred)
+    model = MultiLayerNet(3, *[40]*4, 3)
+    energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
+    # energy = GuccioneEnergyModel(C, bf, bt, bfs)
+    DemBeam = DeepEnergyMethodBeam(model, energy)
+    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.5, epochs=50, fb=np.array([[0, 0, 0]]))
+    U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
+    np.save('stored_arrays/U_pred', np.asarray(U_pred))
+    write_vtk_v2('output/problem1', x_test, y_test, z_test, U_pred)
 
     u_pred = np.load('stored_arrays/U_pred.npy')
     domain = domain.reshape((shape[1], shape[0], shape[2], 3))
@@ -258,4 +258,4 @@ if __name__ == '__main__':
     # ax.set_xlabel('$x$')
     # ax.set_ylabel('$y$')
     # ax.set_zlabel('$z$')
-    plt.show()
+    # plt.show()

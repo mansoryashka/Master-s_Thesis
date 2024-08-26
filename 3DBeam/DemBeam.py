@@ -136,7 +136,7 @@ class DeepEnergyMethodBeam(DeepEnergyMethod):
         surUz = u_pred[:, 2].reshape(Ny, Nx, Nz)
 
         U = (np.float64(surUx), np.float64(surUy), np.float64(surUz))
-        print(np.asarray(U).shape); exit()
+        # print(np.asarray(U).shape); exit()
         if return_pred_tensor:
             return U, u_pred_torch, xyz_tensor
         return U

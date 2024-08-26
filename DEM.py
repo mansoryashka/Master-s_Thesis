@@ -46,7 +46,7 @@ class DeepEnergyMethod:
         
     def train_model(self, data, dirichlet, neumann, shape, LHD, dxdydz=None, neu_axis=None, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]]), eval_data=None):
         dxdydz = dxdydz if dxdydz is not None else np.array(LHD) / (np.array(shape) - 1)
-
+        print(dxdydz)
         self.x = torch.from_numpy(data).float().to(dev)
         self.x.requires_grad_(True)
         fb = torch.from_numpy(fb).float().to(dev)
@@ -140,7 +140,7 @@ class DeepEnergyMethod:
             #     print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Eval loss: {self.eval_loss:10.5f}, Loss_change: {loss_change.item():8.5f}')
             #     self.losses.append([self.current_loss.detach().cpu(), self.eval_loss.detach().cpu()])
             # else:
-            # print(f'Iter: {i+1:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Loss_change: {loss_change.item():13.8f}')
+            print(f'Iter: {i+1:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Loss_change: {loss_change.item():13.8f}')
             self.losses.append(self.current_loss.detach().cpu())
                 
         print(f'Model at epoch {best_epoch:3d} stored with energy change: {lowest_change:8.5f}, ')
