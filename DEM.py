@@ -20,7 +20,7 @@ dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 current_path = Path.cwd().resolve()
 figures_path = current_path / 'figures'
 arrays_path = current_path / 'stored_arrays'
-models_path = current_path / 'trained_models' / 'run4'
+models_path = current_path / 'trained_models' / 'run1'
 msg = "You have to run the files from their respective folders!"
 
 assert figures_path.exists(), msg
@@ -46,7 +46,6 @@ class DeepEnergyMethod:
         
     def train_model(self, data, dirichlet, neumann, shape, LHD, dxdydz=None, neu_axis=None, lr=0.5, max_it=20, epochs=20, fb=np.array([[0, -5, 0]]), eval_data=None):
         dxdydz = dxdydz if dxdydz is not None else np.array(LHD) / (np.array(shape) - 1)
-        print(dxdydz)
         self.x = torch.from_numpy(data).float().to(dev)
         self.x.requires_grad_(True)
         fb = torch.from_numpy(fb).float().to(dev)
@@ -62,7 +61,7 @@ class DeepEnergyMethod:
         neuBC_coords.requires_grad_(True)
         neuBC_values = torch.from_numpy(neumann['values']).float().to(dev)
 
-        self.losses = []
+        self.losses = torch.zeros(epochs).to(dev)
         self.eval_losses = []
         prev_loss = torch.tensor([0.0]).to(dev)
         start_time = time.time()
@@ -113,7 +112,7 @@ class DeepEnergyMethod:
             loss_change = torch.abs(self.current_loss - prev_loss)
             prev_loss = self.current_loss
 
-            if i == 2:
+            if i == 50:
                 original_change = loss_change
                 lowest_change = original_change
                 best_epoch = i
@@ -141,7 +140,7 @@ class DeepEnergyMethod:
             #     self.losses.append([self.current_loss.detach().cpu(), self.eval_loss.detach().cpu()])
             # else:
             print(f'Iter: {i+1:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Loss_change: {loss_change.item():13.8f}')
-            self.losses.append(self.current_loss.detach().cpu())
+            self.losses[i] = self.current_loss
                 
         print(f'Model at epoch {best_epoch:3d} stored with energy change: {lowest_change:8.5f}, ')
 

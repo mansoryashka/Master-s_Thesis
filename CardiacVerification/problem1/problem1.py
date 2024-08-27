@@ -44,12 +44,12 @@ def define_domain(L, H, D, N=10):
     y = np.linspace(0, H, N+1)
     z = np.linspace(0, D, N+1)
 
-    Xm, Ym, Zm = np.meshgrid(x, y, z)
+    # Xm, Ym, Zm = np.meshgrid(x, y, z)
+    Xm, Zm, Ym = np.meshgrid(x, z, y)
     Xm = np.expand_dims(Xm.flatten(), 1)
     Ym = np.expand_dims(Ym.flatten(), 1)
     Zm = np.expand_dims(Zm.flatten(), 1)
     domain = np.concatenate((Xm, Ym, Zm), axis=-1)
-    
     db_idx = np.where(Xm == d_boundary)[0]
     db_pts = domain[db_idx, :]
     db_vals = np.ones(np.shape(db_pts)) * d_cond
@@ -96,7 +96,6 @@ def define_domain(L, H, D, N=10):
     return domain, dirichlet, neumann
 
 
-
 if __name__ == '__main__':
     N = 20
     LHD = [L, H, D]
@@ -109,19 +108,19 @@ if __name__ == '__main__':
     y_test = np.linspace(0, H, N+1)
     z_test = np.linspace(0, D, N+1)
 
-    domain, dirichlet, neumann = define_domain(L, H, D, N=N)
-    model = MultiLayerNet(3, *[40]*4, 3)
-    energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
-    # energy = GuccioneEnergyModel(C, bf, bt, bfs)
-    DemBeam = DeepEnergyMethodBeam(model, energy)
-    DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.1, epochs=3, fb=np.array([[0, 0, 0]]))
-    U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
-    np.save('stored_arrays/U_pred', np.asarray(U_pred))
-    write_vtk_v2('output/problem1', x_test, y_test, z_test, U_pred)
+    # domain, dirichlet, neumann = define_domain(L, H, D, N=N)
+    # model = MultiLayerNet(3, *[40]*4, 3)
+    # energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
+    # # energy = GuccioneEnergyModel(C, bf, bt, bfs)
+    # DemBeam = DeepEnergyMethodBeam(model, energy)
+    # DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.1, epochs=192, fb=np.array([[0, 0, 0]]))
+    # U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
+    # np.save('stored_arrays/U_predXZY', np.asarray(U_pred))
+    # write_vtk_v2('output/problem1XZY', x_test, y_test, z_test, U_pred)
 
-    u_pred = np.load('stored_arrays/U_pred.npy')
-    domain = domain.reshape((shape[1], shape[0], shape[2], 3))
-    X, Y, Z = domain[..., 0], domain[..., 1], domain[..., 2]
+    u_pred = np.load('stored_arrays/U_predXZY.npy')
+    
+    X, Y, Z = np.meshgrid(x_test, y_test, z_test)
     # print(np.array(u_pred).shape)
     # u_pred = np.transpose(np.array(u_pred), [1, 2, 3, 0])
     # print(u_pred.shape)
