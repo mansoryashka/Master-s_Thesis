@@ -340,7 +340,7 @@ def run1():
     num_layers = [2, 3, 4, 5]
     num_neurons = [20, 30, 40, 50]
     num_expreriments = 1
-    num_epochs = 400
+    num_epochs = 50
     U_norms = 0
     losses = 0
     start = time.time()
@@ -354,7 +354,10 @@ def run1():
     losses /= num_expreriments
     print(U_norms)
     np.save(arrays_path / 'losses_nl_nn', losses)
-    plot_heatmap(U_norms, num_neurons, num_layers, rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 'Number of hidden neurons', 'Number of hidden layers', 'cube_heatmap_num_neurons_layers400')
+    plot_heatmap(U_norms, num_neurons, num_layers, 
+                 rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 
+                 'Number of hidden neurons', 'Number of hidden layers', 
+                 'cube_heatmap_num_neurons_layers50')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
@@ -367,7 +370,7 @@ def run2():
     num_neurons = [20, 30, 40, 50]
     num_layers = 3
     num_expreriments = 1
-    num_epochs = 300
+    num_epochs = 150
     U_norms = 0
     losses = 0
     start = time.time()
@@ -385,7 +388,10 @@ def run2():
     U_norms /= num_expreriments
     losses /= num_expreriments
     print(U_norms)
-    plot_heatmap(U_norms, num_neurons, lrs, rf'$L^2$ norm of error with N={N} and {num_layers} hidden layers', 'Number of neurons in hidden layers', r'$\eta$', 'cube_heatmap_lrs_num_neurons')
+    plot_heatmap(U_norms, num_neurons, lrs, 
+                 rf'$L^2$ norm of error with N={N} and {num_layers} hidden layers', 
+                 'Number of neurons in hidden layers', r'$\eta$', 
+                 'cube_heatmap_lrs_num_neurons150')
     np.save(arrays_path / 'losses_lrs_nn', losses)
 
 def run3():
@@ -425,7 +431,7 @@ if __name__ == '__main__':
     y_eval = np.linspace(0, D, N_test + 4)[1:-1]
     z_eval = np.linspace(0, H, N_test + 4)[1:-1]
 
-    run1()
-    # run2()
+    # run1()
+    run2()
     # run3()
 
