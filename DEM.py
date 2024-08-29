@@ -116,15 +116,15 @@ class DeepEnergyMethod:
                 original_change = loss_change
                 lowest_change = original_change
                 best_epoch = i
-                # torch.save(self.model.state_dict(), 
-                #             models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
+                torch.save(self.model.state_dict(), 
+                            models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
             elif i > 50:
                 # store model if loss change decreases by a factor of 10
                 if loss_change <= 0.1*lowest_change:
                     lowest_change = loss_change
                     best_epoch = i
-                    # torch.save(self.model.state_dict(), 
-                    #            models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
+                    torch.save(self.model.state_dict(), 
+                               models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}')
 
             # if eval_data:
             #     eval_shape = [len(eval_data[0]), len(eval_data[1]), len(eval_data[2])]
@@ -142,7 +142,7 @@ class DeepEnergyMethod:
             print(f'Iter: {i+1:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Loss_change: {loss_change.item():13.8f}')
             self.losses[i] = self.current_loss
                 
-        # print(f'Model at epoch {best_epoch:3d} stored with energy change: {lowest_change:8.5f}, ')
+        print(f'Model at epoch {best_epoch:3d} stored with energy change: {lowest_change:8.5f}, ')
 
     def __call__(self, model, x):
         u = model(x).to(dev)
