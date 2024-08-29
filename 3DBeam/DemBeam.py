@@ -247,8 +247,8 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
             # train model
             DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lrs, max_it=max_it, epochs=num_epochs)
             # evaluate model
-            U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
-            VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
+            U_pred = DemBeam.evaluate_model(x, y, z)
+            # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
             # store solution
             # write_vtk_v2(f'output/DemBeam_N{N}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
             # calculate L2norm
@@ -268,8 +268,8 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
 
                 DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs)
-                U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
-                VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
+                U_pred = DemBeam.evaluate_model(x, y, z)
+                # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
 
                 # store solution
                 # write_vtk_v2(f'output/DemBeam_lr{lr}_nn{n}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
@@ -289,8 +289,8 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
                 DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs)
                 # evaluate model
-                U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
-                VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
+                U_pred = DemBeam.evaluate_model(x, y, z)
+                # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
                 # store solution
                 # write_vtk_v2(f'output/DemBeam_lr{lr}_nl{l}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
 
@@ -311,8 +311,8 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
                 DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lrs, max_it=max_it, epochs=num_epochs)
                 # evaluate model
-                U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
-                VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
+                U_pred = DemBeam.evaluate_model(x, y, z)
+                # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
                 # store solution
                 # write_vtk_v2(f'output/DemBeam_nn{n}_nl{l}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
                 u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
@@ -336,8 +336,8 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 # train model
                 DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs)
                 # evaluate model
-                U_pred, u_pred_torch, xyz_tensor = DemBeam.evaluate_model(x, y, z, return_pred_tensor=True)
-                VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
+                U_pred = DemBeam.evaluate_model(x, y, z)
+                # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
                 # store solution
                 # write_vtk_v2(f'output/DemBeam_lr{lr}_N{N}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
                 # calculate L2norm
@@ -393,8 +393,8 @@ def run1():
     shape = [4*N, N, N]
     num_layers = [2, 3, 4, 5]
     num_neurons = [30, 40, 50, 60]
-    num_expreriments = 5
-    num_epochs = 250
+    num_expreriments = 10
+    num_epochs = 300
     U_norms = 0
     losses = 0
     start = time.time()
@@ -414,7 +414,7 @@ def run1():
     plot_heatmap(U_norms, num_neurons, num_layers, 
                  rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 
                  'Number of hidden neurons', 'Number of hidden layers', 
-                 'beam_heatmap_num_neurons_layers250')
+                 'beam_heatmap_num_neurons_layers')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
@@ -423,13 +423,11 @@ def run1():
 def run2():
     N = 30
     shape = [4*N, N, N]
-    lrs = [0.001, 0.01, 0.1, 0.5]
+    lrs = [0.01, 0.05, 0.1, 0.5]
     num_layers = [2, 3, 4, 5]
     num_neurons = 40
-    num_expreriments = 5
-    num_epochs = 250
-    U_norms = 0
-    losses = 0
+    num_expreriments = 10
+    num_epochs = 300
     start = time.time()
     for i in range(num_expreriments):
         U_norms_i, losses_i= train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape)
@@ -447,7 +445,7 @@ def run2():
     np.save(arrays_path / 'losses_lrs_nl', losses)
     plot_heatmap(U_norms, num_layers, lrs, 
                  rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 
-                 'Number of layers', r'$\eta$', f'beam_heatmap_lrs_num_layers250')
+                 'Number of layers', r'$\eta$', f'beam_heatmap_lrs_num_layers')
     # print(U_norms)
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
@@ -460,7 +458,7 @@ def run3():
     lrs = [0.01, 0.05, 0.1, 0.5]
     num_neurons = [30, 40, 50, 60]
     num_layers = 3
-    num_expreriments = 5
+    num_expreriments = 10
     num_epochs = 300
     U_norms = 0
     losses = 0
@@ -486,11 +484,11 @@ def run3():
     np.save(arrays_path / 'losses_lrs_nn', losses)
 
 def run4():
-    Ns = [20, 30, 40, 50, 60]
+    Ns = [30, 40, 50, 60]
     lrs = [0.01, 0.05, 0.1, 0.5]
     num_layers = 3
-    num_neurons = 60
-    num_expreriments = 5
+    num_neurons = 40
+    num_expreriments = 10
     num_epochs = 300
     U_norms = 0
     losses = 0
@@ -530,7 +528,7 @@ if __name__ == '__main__':
 
     "______________________________________________"
 
-    run1()
+    # run1()
     # run2()
     # run3()
-    # run4()
+    run4()

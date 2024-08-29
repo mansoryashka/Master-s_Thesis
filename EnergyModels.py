@@ -169,6 +169,7 @@ class GuccioneEnergyModel:
         Czy = Fxz*Fxy + Fyz*Fyy + Fzz*Fzy
         Czz = Fxz*Fxz + Fyz*Fyz + Fzz*Fzz
 
+        # store C for use in active Guccione model
         self.Cxx = Cxx; self.Cxy = Cxy; self.Cxz = Cxz
         self.Cyx = Cyx; self.Cyy = Cyy; self.Cyz = Cyz
         self.Czx = Czx; self.Czy = Czy; self.Czz = Czz
@@ -183,6 +184,7 @@ class GuccioneEnergyModel:
         Ezy = 0.5*(Czy - 0)
         Ezz = 0.5*(Czz - 1)
 
+        # store E for use in tranversely isotropic Guccione model
         self.Exx = Exx; self.Exy = Exy; self.Exz = Exz
         self.Eyx = Eyx; self.Eyy = Eyy; self.Eyz = Eyz
         self.Ezx = Ezx; self.Ezy = Ezy; self.Ezz = Ezz
@@ -194,10 +196,10 @@ class GuccioneEnergyModel:
              + self.bt*(Eyy**2 + Ezz**2 + Eyz**2 + Ezy**2)
              + self.bfs*(Exy**2 + Eyx**2 + Exz**2 + Ezx**2))
         
-        return Q, detF
+        return detF, Q
 
     def __call__(self, u, x):
-        Q, detF = self.noe(u, x)
+        detF, Q = self.noe(u, x)
 
         W = self.get_paasive_strain_energy(Q)
         compressibility = self.get_compressibility(detF)
@@ -252,7 +254,7 @@ class GuccioneTransverseEnergyModel(GuccioneEnergyModel):
         # Ezz = 0.5*(Fxz*Fxz + Fyz*Fyz + Fzz*Fzz - 1)
         f0 = self.f0; s0 = self.s0; n0 = self.n0
         
-        _, detF = super().noe(u, x)
+        detF, _ = super().noe(u, x)
         
         Exx = self.Exx; Exy = self.Exy; Exz = self.Exz
         Eyx = self.Eyx; Eyy = self.Eyy; Eyz = self.Eyz
@@ -292,7 +294,7 @@ class GuccioneTransverseEnergyModel(GuccioneEnergyModel):
              + self.bt*(E22**2 + E33**2 + E23**2 + E32**2)
              + self.bfs*(E12**2 + E21**2 + E13**2 + E31**2))
         
-        return Q, detF
+        return detF, Q
     
 class GuccioneTransverseActiveEnergyModel(GuccioneTransverseEnergyModel):
     def __init__(self, C, bf, bt, bfs, kappa=1E3, Ta=1.0,
@@ -308,7 +310,7 @@ class GuccioneTransverseActiveEnergyModel(GuccioneTransverseEnergyModel):
     def noe(self, u, x):
         f0 = self.f0
 
-        Q, detF = super().noe(u, x)
+        detF, Q = super().noe(u, x)
 
         # C11 = Fxx*Fxx + Fyx*Fyx + Fzx*Fzx
         # C12 = Fxx*Fxy + Fyx*Fyy + Fzx*Fzy
@@ -328,10 +330,10 @@ class GuccioneTransverseActiveEnergyModel(GuccioneTransverseEnergyModel):
               + f0[1] * (f0[0]*Cxy + f0[1]*Cyy + f0[2]*Czy)
               + f0[2] * (f0[0]*Cxz + f0[1]*Cyz + f0[2]*Czz))
 
-        return Q, detF, I4f0
+        return detF, Q, I4f0
     
     def __call__(self, u, x):
-        Q, detF, I4f0 = self.noe(u, x)
+        detF, Q, I4f0 = self.noe(u, x)
 
         StrainEnergy = (self.get_compressibility(detF)
                         + self.get_passive_strain_energy(Q)
