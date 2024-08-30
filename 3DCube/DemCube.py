@@ -422,8 +422,9 @@ def run3():
     print(f'tid: {tid/3600:.2f}t')
 
 if __name__ == '__main__':
-    u_fem20 = np.load(arrays_path / 'u_fem20.npy')
-    # print(f'FEM: {L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)}')
+    u_fem20 = np.load(arrays_path / 'u_fem5.npy')
+    exit(f'FEM: {L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)}')
+
 
     x = np.linspace(0, L, N_test + 2)[1:-1]
     y = np.linspace(0, D, N_test + 2)[1:-1]

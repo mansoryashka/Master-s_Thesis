@@ -20,7 +20,7 @@ dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 current_path = Path.cwd().resolve()
 figures_path = current_path / 'figures'
 arrays_path = current_path / 'stored_arrays'
-models_path = current_path / 'trained_models' / 'run3'
+models_path = current_path / 'trained_models' / 'run2'
 msg = "You have to run the files from their respective folders!"
 
 assert figures_path.exists(), msg
@@ -141,7 +141,7 @@ class DeepEnergyMethod:
             # else:
             print(f'Iter: {i+1:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Loss_change: {loss_change.item():13.8f}')
             self.losses[i] = self.current_loss
-                
+
         print(f'Model at epoch {best_epoch:3d} stored with energy change: {lowest_change:8.5f}, ')
 
     def __call__(self, model, x):

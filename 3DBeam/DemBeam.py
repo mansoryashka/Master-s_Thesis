@@ -428,6 +428,8 @@ def run2():
     num_neurons = 40
     num_expreriments = 10
     num_epochs = 300
+    U_norms = 0
+    losses = 0
     start = time.time()
     for i in range(num_expreriments):
         U_norms_i, losses_i= train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape)
@@ -516,6 +518,7 @@ def run4():
 if __name__ == '__main__':
     # u_fem20 = np.load('stored_arrays/u_fem_N20.npy')
     u_fem30 = np.load(arrays_path / 'u_fem_N30.npy')
+    exit(L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz))
 
     x = np.linspace(0, L, 4*N_test + 2)[1:-1]
     y = np.linspace(0, D, N_test + 2)[1:-1]
@@ -529,6 +532,6 @@ if __name__ == '__main__':
     "______________________________________________"
 
     # run1()
-    # run2()
+    run2()
     # run3()
-    run4()
+    # run4()
