@@ -30,7 +30,7 @@ assert models_path.exists(), msg
 class MultiLayerNet(nn.Module):
     def __init__(self, *neurons):
         super(MultiLayerNet, self).__init__()
-        #### throw error if depth < 3 ####
+        # throw error if fewer than 3 layers
         if len(neurons) < 3:
             raise Exception('You have to provide at least three layes!')
         self.linears = nn.ModuleList([nn.Linear(neurons[i-1], neurons[i]) for i in range(1, len(neurons))])
@@ -51,7 +51,6 @@ class DeepEnergyMethod:
         fb = torch.from_numpy(fb).float().to(dev)
         optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr, max_iter=max_it)
         
-
         # boundary
         dirBC_coords = torch.from_numpy(dirichlet['coords']).float().to(dev)
         dirBC_coords.requires_grad_(True)
