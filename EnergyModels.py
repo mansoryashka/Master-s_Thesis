@@ -7,7 +7,7 @@ class NeoHookeanEnergyModel:
         self.lmbda = lmbda
         self.mu = mu
 
-    def get_invariants(self, u, x):
+    def _get_invariants(self, u, x):
         duxdxyz = grad(u[:, 0].unsqueeze(1), x, 
                         torch.ones(x.shape[0], 1, device=dev), 
                         create_graph=True, retain_graph=True)[0]
@@ -42,21 +42,21 @@ class NeoHookeanEnergyModel:
 
         return detF, trC
     
-    # def get_active_strain_energy(self, u, x):
+    # def _get_active_strain_energy(self, u, x):
     #     raise NotImplementedError('Active strain energy function is not implemented for this case!')
     
-    def get_passive_strain_energy(self, trC):
+    def _get_passive_strain_energy(self, trC):
         return 0.5 * self.mu * (trC - 3)
     
-    def get_compressibility(self, detF):
+    def _get_compressibility(self, detF):
         return 0.5 * self.lmbda * (torch.log(detF) * torch.log(detF)) - self.mu * torch.log(detF)
         
     def __call__(self, u, x):
         ### energy frunction from DEM paper ### 
-        detF, trC = self.get_invariants(u, x)
+        detF, trC = self._get_invariants(u, x)
         
-        StrainEnergy = (self.get_compressibility(detF) 
-                      + self.get_passive_strain_energy(trC))
+        StrainEnergy = (self._get_compressibility(detF) 
+                      + self._get_passive_strain_energy(trC))
 
         return StrainEnergy
     
@@ -67,15 +67,15 @@ class NeoHookeanActiveEnergyModel(NeoHookeanEnergyModel):
         self.f0 = f0
         self.kappa = kappa
 
-    def get_active_strain_energy(self, detF, I4f0):
+    def _get_active_strain_energy(self, detF, I4f0):
         return 0.5 * self.Ta / detF * (I4f0 - 1)
 
-    def get_compressibility(self, detF):
+    def _get_compressibility(self, detF):
         return 0.5 * self.kappa * (detF - 1)**2
 
-    def get_invariants(self, u, x):
+    def _get_invariants(self, u, x):
         f0 = self.f0
-        detF, trC = super().get_invariants(u, x)
+        detF, trC = super()._get_invariants(u, x)
 
         Fxx = self.Fxx; Fxy = self.Fxy; Fxz = self.Fxz
         Fyx = self.Fyx; Fyy = self.Fyy; Fyz = self.Fyz
@@ -98,11 +98,11 @@ class NeoHookeanActiveEnergyModel(NeoHookeanEnergyModel):
         return detF, trC, I4f0
 
     def __call__(self, u, x):
-        detF, trC, I4f0 = self.get_invariants(u, x)
+        detF, trC, I4f0 = self._get_invariants(u, x)
 
-        StrainEnergy = (self.get_compressibility(detF)
-                      + self.get_passive_strain_energy(trC)
-                      + self.get_active_strain_energy(detF, I4f0))
+        StrainEnergy = (self._get_compressibility(detF)
+                      + self._get_passive_strain_energy(trC)
+                      + self._get_active_strain_energy(detF, I4f0))
 
         return StrainEnergy
     
@@ -114,13 +114,13 @@ class GuccioneEnergyModel:
         self.bfs = bfs
         self.kappa = kappa
 
-    def get_passive_strain_energy(self, Q):
-        return self.C / 2 * (torch.exp(Q) - 1)
+    def _get_passive_strain_energy(self, Q):
+        return 0.5 * self.C * (torch.exp(Q) - 1)
 
-    def get_compressibility(self, detF):
+    def _get_compressibility(self, detF):
         return  0.5 * self.kappa * (detF - 1)**2
 
-    def get_invariants(self, u, x):
+    def _get_invariants(self, u, x):
         # Guccione energy mode. Get source from verification paper!!!
         duxdxyz = grad(u[:, 0].unsqueeze(1), x, 
                         torch.ones(x.shape[0], 1, device=dev), 
@@ -175,6 +175,7 @@ class GuccioneEnergyModel:
         detF = (Fxx * (Fyy * Fzz - Fyz * Fzy) 
               - Fxy * (Fyx * Fzz - Fyz * Fzx) 
               + Fxz * (Fyx * Fzy - Fyy * Fzx))
+        
         Q = (self.bf*Exx**2
              + self.bt*(Eyy**2 + Ezz**2 + Eyz**2 + Ezy**2)
              + self.bfs*(Exy**2 + Eyx**2 + Exz**2 + Ezx**2))
@@ -182,10 +183,10 @@ class GuccioneEnergyModel:
         return detF, Q
 
     def __call__(self, u, x):
-        detF, Q = self.get_invariants(u, x)
+        detF, Q = self._get_invariants(u, x)
 
-        StrainEnergy = (self.get_passive_strain_energy(Q)
-                      + self.get_compressibility(detF))
+        StrainEnergy = (self._get_passive_strain_energy(Q)
+                      + self._get_compressibility(detF))
 
         return StrainEnergy
     
@@ -200,9 +201,9 @@ class GuccioneTransverseEnergyModel(GuccioneEnergyModel):
         self.s0 = s0
         self.n0 = n0
 
-    def get_invariants(self, u, x):
+    def _get_invariants(self, u, x):
         f0 = self.f0; s0 = self.s0; n0 = self.n0
-        detF, _ = super().get_invariants(u, x)
+        detF, _ = super()._get_invariants(u, x)
         
         Exx = self.Exx; Exy = self.Exy; Exz = self.Exz
         Eyx = self.Eyx; Eyy = self.Eyy; Eyz = self.Eyz
@@ -252,12 +253,12 @@ class GuccioneTransverseActiveEnergyModel(GuccioneTransverseEnergyModel):
         super().__init__(C, bf, bt, bfs, kappa, f0, s0, n0)
         self.Ta = Ta
 
-    def get_active_strain_energy(self, detF, I4f0):
+    def _get_active_strain_energy(self, detF, I4f0):
         return 0.5 * self.Ta / detF * (I4f0 - 1)
     
-    def get_invariants(self, u, x):
+    def _get_invariants(self, u, x):
         f0 = self.f0
-        detF, Q = super().get_invariants(u, x)
+        detF, Q = super()._get_invariants(u, x)
 
         Cxx = self.Cxx; Cxy = self.Cxy; Cxz = self.Cxz
         Cyx = self.Cyx; Cyy = self.Cyy; Cyz = self.Cyz
@@ -270,10 +271,10 @@ class GuccioneTransverseActiveEnergyModel(GuccioneTransverseEnergyModel):
         return detF, Q, I4f0
     
     def __call__(self, u, x):
-        detF, Q, I4f0 = self.get_invariants(u, x)
+        detF, Q, I4f0 = self._get_invariants(u, x)
 
-        StrainEnergy = (self.get_compressibility(detF)
-                      + self.get_passive_strain_energy(Q)
-                      + self.get_active_strain_energy(detF, I4f0))
+        StrainEnergy = (self._get_compressibility(detF)
+                      + self._get_passive_strain_energy(Q)
+                      + self._get_active_strain_energy(detF, I4f0))
 
         return StrainEnergy

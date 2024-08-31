@@ -13,7 +13,7 @@ sys.path.insert(0, "../problem2")
 sys.path.insert(0, "../../")
 from problem2 import DeepEnergyMethodLV, write_vtk_v3
 from DEM import MultiLayerNet, dev
-from EnergyModels import GuccioneTransverseEnergyModel
+from EnergyModels import GuccioneTransverseActiveEnergyModel
 
 print(dev)
 plt.style.use('default')
@@ -117,7 +117,6 @@ def generate_fibers(N=15, M=3):
 def define_domain(N=15, M=5):
     # N=N+1
     middle = int(N/2 + 1)
-    print(middle)
     # assert N % M == 0, 'N must be divisible by M!'
 
     rs_endo = 7
@@ -134,23 +133,22 @@ def define_domain(N=15, M=5):
     u_epi = np.linspace(-np.pi, -np.arccos(5/20), N)
     v_epi = np.linspace(-np.pi, np.pi, N)
 
-    u = np.linspace(u_endo, u_epi, N)
-    u = u.T[:, middle]
+    u = np.linspace(u_endo, u_epi, M).reshape(1, M, N)
 
-    v = np.linspace(-np.pi, np.pi, N)
-    rs = np.linspace(rs_endo, rs_epi, M)
-    rl = np.linspace(rl_endo, rl_epi, M)
+    v = np.linspace(-np.pi, np.pi, N).reshape(N, 1, 1)
+    rs = np.linspace(rs_endo, rs_epi, M).reshape((1, M, 1))
+    rl = np.linspace(rl_endo, rl_epi, M).reshape((1, M, 1))
 
-    RS = np.ones((N, M, N))
-    RL = np.ones((N, M, N))
-    for i in range(M):
-        # print(f'fra: {int(N*K/M)*i} til: {int(N*K/M)*(i+1)-1, 1}')
-        RS[:, i] = rs[i]
-        RL[:, i] = rl[i]
+    # RS = np.ones((1, M, 1))
+    # RL = np.ones((1, M, 1))
+    # for i in range(M):
+    #     # print(f'fra: {int(N*K/M)*i} til: {int(N*K/M)*(i+1)-1}')
+    #     RS[:, i] = rs[i]
+    #     RL[:, i] = rl[i]
 
-    x = RS*np.expand_dims(np.outer(np.cos(v), np.sin(u)), 1)
-    y = RS*np.expand_dims(np.outer(np.sin(v), np.sin(u)), 1)
-    z = RL*np.expand_dims(np.outer(np.ones(np.size(v)), np.cos(u)), 1)
+    x = rs*np.sin(u)*np.cos(v)
+    y = rs*np.sin(u)*np.sin(v)
+    z = rl*np.cos(u)*np.ones(np.shape(v))
 
     f, _, _ = generate_fibers(N, M)
     # print(x.shape)
@@ -162,7 +160,7 @@ def define_domain(N=15, M=5):
     # define Dirichlet and Neumann BCs
     dir_BC = 5.0
     # dir_BC = lambda z: np.abs(z - 5E-3) < 5E-4
-    neu_BC = RS == rs_endo
+    neu_BC = rs[0, :, 0] == rs_endo
 
     # define inner points
     x0 = np.copy(x)
@@ -177,9 +175,9 @@ def define_domain(N=15, M=5):
     z1 = z0[..., -1]
 
     # define points on Neumann boundary
-    x2 = x0[neu_BC]
-    y2 = y0[neu_BC]
-    z2 = z0[neu_BC]
+    x2 = x0[:, neu_BC]
+    y2 = y0[:, neu_BC]
+    z2 = z0[:, neu_BC]
 
 
     # define endocardium surface for illustration
@@ -197,6 +195,23 @@ def define_domain(N=15, M=5):
     x_perp = np.copy(x_endo) / rs_endo
     y_perp = np.copy(y_endo) / rs_endo
     z_perp = np.copy(z_endo) / rl_endo
+
+    end = int((N-1)/4)
+    # x_perp[::2, 1:end] = 0
+    # y_perp[::2, 1:end] = 0
+    # z_perp[::2, 1:end] = 0
+    # x_perp[1:-1:4, 1:end] = 0
+    # y_perp[1:-1:4, 1:end] = 0
+    # z_perp[1:-1:4, 1:end] = 0
+    # x_perp[3:-1:8, 1:end] = 0
+    # y_perp[3:-1:8, 1:end] = 0
+    # z_perp[3:-1:8, 1:end] = 0
+    # x_perp[1:, 0] = 0
+    # y_perp[1:, 0] = 0
+    # z_perp[1:, 0] = 0
+    # x_perp[-1] = 0
+    # y_perp[-1] = 0
+    # z_perp[-1] = 0
 
     # reshape to have access to different dimentsions
     # dimension 0 is angle
@@ -225,17 +240,17 @@ def define_domain(N=15, M=5):
     # ax.scatter(x1, y1, z1, s=5, c='tab:green')
     # ax.scatter(x2, y2, z2, s=5, c='tab:red')
 
-    ax.quiver(x0, y0, z0, 
-              f[0], 
-              f[1], 
-              f[2])
+    # ax.quiver(x0, y0, z0, 
+    #           f[0], 
+    #           f[1], 
+    #           f[2])
 
 
     # ax.scatter(x0[:5, :, :], y0[:5, :, :], z0[:5, :, :], s=1, c='tab:blue')
-    # ax.quiver(x0[0, :, :], y0[0, :, :], z0[0, :, :], 
-    #           f[0][0, :, :], 
-    #           f[1][0, :, :], 
-    #           f[2][0, :, :])
+    ax.quiver(x0[::6, :, :], y0[::6, :, :], z0[::6, :, :], 
+              f[0][::6, :, :], 
+              f[1][::6, :, :], 
+              f[2][::6, :, :])
     # ax.quiver(x0[-1, :, :], y0[-1, :, :], z0[-1, :, :], 
     #           f[0][-1, :, :], 
     #           f[1][-1, :, :], 
@@ -244,8 +259,8 @@ def define_domain(N=15, M=5):
     
 
     # plot epicardial and endocardial surfaces
-    # ax.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
-    # ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
+    ax.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
+    ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
     # ax.scatter(dx, dy, dz)
     # ax.scatter(x_perp, y_perp, z_perp)
     # ax.quiver(x_endo[:, :-1], y_endo[:, :-1], z_endo[:, :-1], x_perp, y_perp, z_perp, alpha=.1)
@@ -270,7 +285,7 @@ def define_domain(N=15, M=5):
     y_perp = np.expand_dims(y_perp.flatten(), 1)
     z_perp = np.expand_dims(z_perp.flatten(), 1)
 
-    n_cond = 1E4*np.concatenate((x_perp, y_perp, z_perp), -1)
+    n_cond = 15E3*np.concatenate((x_perp, y_perp, z_perp), -1)
 
 
     x2 = np.expand_dims(x2.flatten(), 1)
@@ -292,53 +307,93 @@ def define_domain(N=15, M=5):
     return domain, dirichlet, neumann
 
 if __name__ == '__main__':
-    N = 51; M = 5
+    N = 41; M = 5
     shape = [N, M, N]
 
-    rs_endo =  7
+    rs_endo = 7
     rl_endo = 17
-    rs_epi =  10
-    rl_epi =  20
-
+    # rs_endo = 7E-3
+    # rl_endo = 17E-3
     u_endo = np.linspace(-np.pi, -np.arccos(5/17), N)
+    v_endo = np.linspace(-np.pi, np.pi, N)
+
+    rs_epi = 10
+    rl_epi = 20
+    # rs_epi = 10E-3
+    # rl_epi = 20E-3
     u_epi = np.linspace(-np.pi, -np.arccos(5/20), N)
-    middle = int(N/2 + 1)
-    u = np.linspace(u_endo, u_epi, N)
-    u = u.T[:, middle]
-    v = np.linspace(-np.pi, np.pi, N)
-    rs = np.linspace(rs_endo, rs_epi, M).reshape(M)
-    rl = np.linspace(rl_endo, rl_epi, M).reshape(M)
+    v_epi = np.linspace(-np.pi, np.pi, N)
 
-    RS = np.ones((N, M, N))
-    RL = np.ones((N, M, N))
-    for i in range(M):
-        # print(f'fra: {int(N*K/M)*i} til: {int(N*K/M)*(i+1)-1}')
-        RS[:, i] = rs[i]
-        RL[:, i] = rl[i]
+    u = np.linspace(u_endo, u_epi, M).reshape(1, M, N)
 
-    x = RS*np.expand_dims(np.outer(np.cos(v), np.sin(u)), 1)
-    y = RS*np.expand_dims(np.outer(np.sin(v), np.sin(u)), 1)
-    z = RL*np.expand_dims(np.outer(np.ones(np.size(v)), np.cos(u)), 1)
+    v = np.linspace(-np.pi, np.pi, N).reshape(N, 1, 1)
+    rs = np.linspace(rs_endo, rs_epi, M).reshape((1, M, 1))
+    rl = np.linspace(rl_endo, rl_epi, M).reshape((1, M, 1))
+
+    # RS = np.ones((1, M, 1))
+    # RL = np.ones((1, M, 1))
+    # for i in range(M):
+    #     # print(f'fra: {int(N*K/M)*i} til: {int(N*K/M)*(i+1)-1}')
+    #     RS[:, i] = rs[i]
+    #     RL[:, i] = rl[i]
+
+    x = rs*np.sin(u)*np.cos(v)
+    y = rs*np.sin(u)*np.sin(v)
+    z = rl*np.cos(u)*np.ones(np.shape(v))
 
     z[..., -1] = 5.0
 
-    dx = rs_endo * (v[1] - v[0])
-    dy = rs[1] - rs[0]
-    dz = ((rl_epi + rs_epi) / 2 + (rl_endo + rs_endo) / 2) / 2 * (u[1] - u[0])
-    dxdydz = np.asarray([dx, dy, dz])
-
+    # dx = rs_endo * (v[1] - v[0])
+    # dy = rs[1] - rs[0]
+    # dz = ((rl_epi + rs_epi) / 2 + (rl_endo + rs_endo) / 2) / 2 * (u[1] - u[0])
+    # dxdydz = np.asarray([dx, dy, dz])
     domain, dirichlet, neumann = define_domain(N, M)
-    # f0, s0, n0 = generate_fibers(N, M)
-    # f0 = torch.tensor(f0.reshape((3, -1, 1))).to(dev)
-    # s0 = torch.tensor(s0.reshape((3, -1, 1))).to(dev)
-    # n0 = torch.tensor(n0.reshape((3, -1, 1))).to(dev)
-    f0 = torch.tensor([1, 0, 0]).to(dev)
-    s0 = torch.tensor([0, 1, 0]).to(dev)
-    n0 = torch.tensor([0, 0, 1]).to(dev)
+    middle_layer = int(np.floor(M/2))
+    dX = np.zeros(shape[0])
+    dY = np.zeros(shape[1])
+    dZ = np.zeros(shape[2])
+    tmp_domain = domain.reshape((N, M, N, 3))
+    
+    dZ[1:] = np.cumsum(np.sqrt(
+                        (tmp_domain[0, middle_layer, 1:, 0] - tmp_domain[0, middle_layer, :-1, 0])**2
+                      + (tmp_domain[0, middle_layer, 1:, 2] - tmp_domain[0, middle_layer, :-1, 2])**2))
 
-    model = MultiLayerNet(3, 60, 60, 60, 60, 3)
-    energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs , f0=f0, s0=s0, n0=n0)
+    dY[1:] = np.cumsum(tmp_domain[0, 1:, -1, 0] - tmp_domain[0, :-1, -1, 0])
+
+    dX[1:] = np.cumsum(np.sqrt(
+                        (tmp_domain[1:, 0, -1, 0] - tmp_domain[:-1, 0, -1, 0])**2
+                      + (tmp_domain[1:, 0, -1, 1] - tmp_domain[:-1, 0, -1, 1])**2))
+
+    neumann_domain = neumann['coords'].reshape((N, N, 3))
+    # exit(neumann_domain.shape)
+    dX_neumann = np.zeros(N)
+    dZ_neumann = np.zeros(N)
+
+    dZ_neumann[1:] = np.cumsum(np.sqrt(
+                        (neumann_domain[0, 1:, 0] - neumann_domain[0, :-1, 0])**2
+                      + (neumann_domain[0, 1:, 2] - neumann_domain[0, :-1, 2])**2))
+
+    dX_neumann[1:] = np.cumsum(np.sqrt(
+                        (neumann_domain[1:, -1, 0] - neumann_domain[:-1, -1, 0])**2
+                      + (neumann_domain[1:, -1, 1] - neumann_domain[:-1, -1, 1])**2))
+
+
+    f0, s0, n0 = generate_fibers(N, M)
+    f0 = torch.tensor(f0.reshape((3, -1, 1))).to(dev)
+    s0 = torch.tensor(s0.reshape((3, -1, 1))).to(dev)
+    n0 = torch.tensor(n0.reshape((3, -1, 1))).to(dev)
+    # f0 = torch.tensor([1, 0, 0]).to(dev)
+    # s0 = torch.tensor([0, 1, 0]).to(dev)
+    # n0 = torch.tensor([0, 0, 1]).to(dev)
+
+    model = MultiLayerNet(3, *[100]*10, 3)
+    energy = GuccioneTransverseActiveEnergyModel(C, bf, bt, bfs, kappa=1E7, Ta=6E4, f0=f0, s0=s0, n0=n0)
     DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, dxdydz=dxdydz, neu_axis=[0, 2], lr=.5, epochs=20, fb=np.array([[0, 0, 0]]))
+    # DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, dxdydz=dxdydz, neu_axis=[0, 2], lr=.5, epochs=20, fb=np.array([[0, 0, 0]]))
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, 
+                      dxdydz=[[dX, dY, dZ], [dX_neumann, dZ_neumann]], 
+                      neu_axis=[0, 2], lr=.1, epochs=40, fb=np.array([[0, 0, 0]]))
     U_pred = DemLV.evaluate_model(x, y, z)
     write_vtk_v3('output/DemLV', x, y, z, U_pred)
+
+    np.save('stored_arrays/U_pred', np.asarray(U_pred))

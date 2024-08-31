@@ -51,6 +51,12 @@ class DeepEnergyMethod:
         fb = torch.from_numpy(fb).float().to(dev)
         optimizer = torch.optim.LBFGS(self.model.parameters(), lr=lr, max_iter=max_it)
         
+        dX = torch.tensor(dxdydz[0][0]).to(dev)
+        dY = torch.tensor(dxdydz[0][1]).to(dev)
+        dZ = torch.tensor(dxdydz[0][2]).to(dev)
+        dX_neumann = torch.tensor(dxdydz[1][0]).to(dev)
+        dZ_neumann = torch.tensor(dxdydz[1][1]).to(dev)
+
         # boundary
         dirBC_coords = torch.from_numpy(dirichlet['coords']).float().to(dev)
         dirBC_coords.requires_grad_(True)
@@ -78,8 +84,14 @@ class DeepEnergyMethod:
                 u_pred.double()
 
                 IntEnergy = self.energy(u_pred, self.x)
-                internal_loss = simps3D(IntEnergy, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape)
+                # internal_loss = simps3D(IntEnergy, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape)
+                "___________________________________________________________"
 
+                IntEnergy = IntEnergy.reshape((shape))
+                s1 = simpson(IntEnergy, x=dX, axis=0)
+                s2 = simpson(s1, x=dY, axis=0)
+                internal_loss = simpson(s2, x=dZ, axis=-1)
+                "___________________________________________________________"
                 # boundary loss
                 dir_pred = self(self.model, dirBC_coords)
                 bc_dir = loss_squared_sum(dir_pred, dirBC_values)
@@ -88,11 +100,16 @@ class DeepEnergyMethod:
                 # external loss
                 neu_pred = self(self.model, neuBC_coords)
                 bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
-                neu_loss = simps2D(bc_neu, dx=dxdydz[neu_axis[0]], dy=dxdydz[neu_axis[1]], shape=[shape[neu_axis[0]], shape[neu_axis[1]]])
-
+                # neu_loss = simps2D(bc_neu, dx=dxdydz[neu_axis[0]], dy=dxdydz[neu_axis[1]], shape=[shape[neu_axis[0]], shape[neu_axis[1]]])
+                "___________________________________________________________"
+                bc_neu = bc_neu.reshape((shape[neu_axis[0]], shape[neu_axis[1]]))
+                s1 = simpson(bc_neu, x=dX_neumann, axis=0)
+                neu_loss = simpson(s1, x=dZ_neumann)
+                body_loss = 0
+                "___________________________________________________________"
                 body_f = torch.matmul(u_pred.unsqueeze(1), fb.unsqueeze(2))
-                external_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape) + neu_loss
-
+                # body_loss = simps3D(body_f, dx=dxdydz[0], dy=dxdydz[1], dz=dxdydz[2], shape=shape)
+                external_loss = body_loss + neu_loss
                 # total loss
                 loss = internal_loss + dir_loss - external_loss
                 optimizer.zero_grad()
@@ -141,7 +158,7 @@ class DeepEnergyMethod:
             print(f'Iter: {i+1:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Loss_change: {loss_change.item():13.8f}')
             self.losses[i] = self.current_loss
 
-        print(f'Model at epoch {best_epoch:3d} stored with energy change: {lowest_change:8.5f}, ')
+        # print(f'Model at epoch {best_epoch:3d} stored with energy change: {lowest_change:8.5f}, ')
 
     def __call__(self, model, x):
         u = model(x).to(dev)

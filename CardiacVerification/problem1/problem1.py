@@ -151,7 +151,7 @@ if __name__ == '__main__':
     # dX_neumann = np.cumsum(dX_neumann).flatten()
     # exit(dX.reshape(shape))
 
-    model = MultiLayerNet(3, *[60]*6, 3)
+    model = MultiLayerNet(3, *[80]*6, 3)
     # energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
     # energy = GuccioneTransverseActiveEnergyModel(C, bf, bt, bfs, kappa=1E5, Ta=15E3)
     energy = GuccioneEnergyModel(C, bf, bt, bfs)
@@ -170,56 +170,6 @@ if __name__ == '__main__':
     # u_pred = np.transpose(np.array(u_pred), [1, 2, 3, 0])
     # print(u_pred.shape)
     X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
-    # print(X_cur[:, -1])
-
-    pts_x1 = np.zeros(10)
-    pts_y1 = np.zeros(10)
-    pts_z1 = np.zeros(10)
-
-    pts_x2 = np.zeros(10)
-    pts_y2 = np.zeros(10)
-    pts_z2 = np.zeros(10)
-    
-    pts_x3 = np.zeros(10)
-    pts_y3 = np.zeros(10)
-    pts_z3 = np.zeros(10)
-
-    pts_x1_cur = np.zeros(10)
-    pts_y1_cur = np.zeros(10)
-    pts_z1_cur = np.zeros(10)
-
-    pts_x2_cur = np.zeros(10)
-    pts_y2_cur = np.zeros(10)
-    pts_z2_cur = np.zeros(10)
-    
-    pts_x3_cur = np.zeros(10)
-    pts_y3_cur = np.zeros(10)
-    pts_z3_cur = np.zeros(10)
-
-    # for i in range(10):
-    #     condition1 = np.logical_and(np.logical_and(Z==0.5, Y==0.5), X==i)
-    #     pts_x1[i] = X[condition1][0]
-    #     pts_y1[i] = Y[condition1][0]
-    #     pts_z1[i] = Z[condition1][0]
-    #     pts_x1_cur[i] = X_cur[condition1][0]
-    #     pts_y1_cur[i] = Y_cur[condition1][0]
-    #     pts_z1_cur[i] = Z_cur[condition1][0]
-
-    #     condition2 = np.logical_and(np.logical_and(Z==0.5, Y==0.9), X==i)
-    #     pts_x2[i] = X[condition2][0]
-    #     pts_y2[i] = Y[condition2][0]
-    #     pts_z2[i] = Z[condition2][0]
-    #     pts_x2_cur[i] = X_cur[condition2][0]
-    #     pts_y2_cur[i] = Y_cur[condition2][0]
-    #     pts_z2_cur[i] = Z_cur[condition2][0]
-
-    #     condition3 = np.logical_and(np.logical_and(Z==0.9, Y==0.5), X==i)
-    #     pts_x3[i] = X[condition3][0]
-    #     pts_y3[i] = Y[condition3][0]
-    #     pts_z3[i] = Z[condition3][0]
-    #     pts_x3_cur[i] = X_cur[condition3][0]
-    #     pts_y3_cur[i] = Y_cur[condition3][0]
-    #     pts_z3_cur[i] = Z_cur[condition3][0]
 
 
     pts_x = np.zeros((10, 3))
@@ -300,9 +250,6 @@ if __name__ == '__main__':
     # ax.scatter(end_x_cur, end_y_cur, end_z_cur, s=5, c='forestgreen')
     # ax.scatter(pts_y_cur[:, 0], pts_y_cur[:, 1], pts_y_cur[:, 2], s=2, c='midnightblue')
     # ax.scatter(line_x_cur, line_y_cur, line_z_cur, s=.5, c='firebrick')
-    # ax.scatter(pts_x1, pts_y1, pts_z1, s=2, c='midnightblue')
-    # ax.scatter(pts_x2, pts_y2, pts_z2, s=2, c='midnightblue')
-    # ax.scatter(pts_x3, pts_y3, pts_z3, s=2, c='midnightblue')
     # ax.set_xlabel('$x$')
     # ax.set_ylabel('$y$')
     # ax.set_zlabel('$z$')

@@ -60,7 +60,7 @@ def define_domain(N=15, M=5):
 
     # define Dirichlet and Neumann BCs
     dir_BC = 5.0
-    neu_BC = rs[0,:, 0] == rs_endo
+    neu_BC = rs[0, :, 0] == rs_endo
     # print(neu_BC)
     # print(RS[RS == rs_endo]); exit()
     # define inner points
@@ -107,24 +107,22 @@ def define_domain(N=15, M=5):
     z_perp = np.copy(z_endo) / rl_endo
 
     end = int((N-1)/4)
-    print(end)
     x_perp[::2, 1:end] = 0
     y_perp[::2, 1:end] = 0
     z_perp[::2, 1:end] = 0
     x_perp[1:-1:4, 1:end] = 0
     y_perp[1:-1:4, 1:end] = 0
     z_perp[1:-1:4, 1:end] = 0
-    # x_perp[3:-1:8, 1:end] = 0
-    # y_perp[3:-1:8, 1:end] = 0
-    # z_perp[3:-1:8, 1:end] = 0
+    x_perp[3:-1:8, 1:end] = 0
+    y_perp[3:-1:8, 1:end] = 0
+    z_perp[3:-1:8, 1:end] = 0
     x_perp[1:, 0] = 0
     y_perp[1:, 0] = 0
     z_perp[1:, 0] = 0
     x_perp[-1] = 0
     y_perp[-1] = 0
     z_perp[-1] = 0
-    print(100*z_perp[:, :10])
-    # exit()
+
 
     # exit(y_perp[0])
     # reshape to have access to different dimentsions
@@ -317,44 +315,55 @@ if __name__ == '__main__':
 
     # z = np.where(np.abs(z - 5E-3) < 1E-3, 5E-3, z)
     
-    model = MultiLayerNet(3, *[60]*6, 3)
+    model = MultiLayerNet(3, *[80]*6, 3)
     energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E5)
     # energy = NeoHookeanEnergyModel(200, 100)
     DemLV = DeepEnergyMethodLV(model, energy)
     # DemLV.train_model(domain, dirichlet, neumann, shape=shape, dxdydz=dxdydz, neu_axis=[0, 2], lr=.1, epochs=20, fb=np.array([[0, 0, 0]]))
     DemLV.train_model(domain, dirichlet, neumann, 
                       shape=shape, dxdydz=[[dX, dY, dZ], [dX_neumann, dZ_neumann]], 
-                      LHD=np.zeros(3), neu_axis=[0, 2], lr=.5, epochs=30, fb=np.array([[0, 0, 0]]))
+                      LHD=np.zeros(3), neu_axis=[0, 2], lr=.5, epochs=27, fb=np.array([[0, 0, 0]]))
 
-    print()
+    # # print()
     U_pred = DemLV.evaluate_model(x, y, z)
     write_vtk_v3('output/DemLV', x, y, z, U_pred)
+    # # exit()
+    # np.save('stored_arrays/DemLV', np.asarray(U_pred))
+    U_pred = np.load('stored_arrays/DemLV.npy')
     exit()
+    domain = domain.reshape((N, M, N, 3))
+    X, Y, Z = domain[..., 0], domain[..., 1], domain[..., 2]
+    X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
 
-    plt.figure(figsize=(3, 6))
+
     U = np.asarray(U_pred) + domain.T.reshape((3, N, M, N))
     k = int((N-1)/2)
-    x = domain[:, 0].reshape((N, M, N))
-    z = domain[:, -1].reshape((N, M, N))
-    ref_x = x[k, 2]
-    ref_z = z[k, 2]
+
+    ref_x = X[k, 2]
+    ref_z = Z[k, 2]
 
     line = np.asarray(U_pred)
-    cur_x = U[0, k, 2]
-    # y = U[1, k, 2]
-    cur_z = U[2, k, 2]
+    cur_x = X_cur[k, 2]
+    cur_z = Z_cur[k, 2]
 
+    fig1, ax1 = plt.subplots(figsize=(3, 6))
+    ax1.plot(ref_x, ref_z, c='gray', linestyle=':')
+    ax1.plot(cur_x, cur_z, label=f'{k}')
+    ax1.legend()
 
-    # plt.plot(ref_x, ref_z, c='gray', linestyle=':')
-    plt.plot(cur_x, cur_z, label=f'{k}')
-    plt.legend()
-    plt.figure()
-    plt.plot(cur_x, cur_z)
-    plt.xlim(left=-14,right=-11)
-    plt.ylim((-9, -2))
-    plt.figure()
-    plt.plot(cur_x, cur_z)
-    plt.xlim((-5, 0))
-    plt.ylim((-28, -25))
+    fig2, ax2 = plt.subplots()
+    ax2.plot(cur_x, cur_z)
+    ax2.set_xlim(left=-14,right=-11)
+    ax2.set_ylim((-9, -2))
+
+    fig3, ax3 = plt.subplots()
+    ax3.plot(cur_x, cur_z)
+    ax3.set_xlim((-5, 0))
+    ax3.set_ylim((-28, -25))
+
+    fig4, ax4 = plt.subplots()
+    ax4.plot(Z_cur[0, 0, 0], marker='x', c='C0')
+    ax4.plot(Z_cur[0, -1, 0], marker='x', c='C0')
     plt.show()
+
     # exit()
