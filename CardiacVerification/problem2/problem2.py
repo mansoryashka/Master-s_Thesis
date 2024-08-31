@@ -6,7 +6,7 @@ from pyevtk.hl import gridToVTK
 import sys
 sys.path.insert(0, "../..")
 from DEM import DeepEnergyMethod, MultiLayerNet, dev
-from EnergyModels import GuccioneEnergyModel
+from EnergyModels import *
 
 plt.style.use('default')
 import matplotlib
@@ -17,7 +17,7 @@ bf = bt = bfs = 1
 
 def define_domain(N=15, M=5):
     # N=N+1
-    middle = int(N/2)
+    # middle = int(N/2)
     # assert N % M == 0, 'N must be divisible by M!'
 
     rs_endo = 7
@@ -34,31 +34,34 @@ def define_domain(N=15, M=5):
     u_epi = np.linspace(-np.pi, -np.arccos(5/20), N)
     v_epi = np.linspace(-np.pi, np.pi, N)
 
-    u = np.linspace(u_endo, u_epi, N)
-    u = u.T[:, middle]
+    u = np.linspace(u_endo, u_epi, M).reshape(1, M, N)
 
-    v = np.linspace(-np.pi, np.pi, N)
-    rs = np.linspace(rs_endo, rs_epi, M)
-    rl = np.linspace(rl_endo, rl_epi, M)
+    v = np.linspace(-np.pi, np.pi, N).reshape(N, 1, 1)
+    rs = np.linspace(rs_endo, rs_epi, M).reshape((1, M, 1))
+    rl = np.linspace(rl_endo, rl_epi, M).reshape((1, M, 1))
 
-    RS = np.ones((N, M, N))
-    RL = np.ones((N, M, N))
-    for i in range(M):
-        # print(f'fra: {int(N*K/M)*i} til: {int(N*K/M)*(i+1)-1}')
-        RS[:, i] = rs[i]
-        RL[:, i] = rl[i]
+    # RS = np.ones((1, M, 1))
+    # RL = np.ones((1, M, 1))
+    # for i in range(M):
+    #     # print(f'fra: {int(N*K/M)*i} til: {int(N*K/M)*(i+1)-1}')
+    #     RS[:, i] = rs[i]
+    #     RL[:, i] = rl[i]
 
-    x = RS*np.expand_dims(np.outer(np.cos(v), np.sin(u)), 1)
-    y = RS*np.expand_dims(np.outer(np.sin(v), np.sin(u)), 1)
-    z = RL*np.expand_dims(np.outer(np.ones(np.size(v)), np.cos(u)), 1)
+    x = rs*np.sin(u)*np.cos(v)
+    y = rs*np.sin(u)*np.sin(v)
+    z = rl*np.cos(u)*np.ones(np.shape(v))
+
+    # x = RS*np.expand_dims(np.outer(np.cos(v), np.sin(u)), 1)
+    # y = RS*np.expand_dims(np.outer(np.sin(v), np.sin(u)), 1)
+    # z = RL*np.expand_dims(np.outer(np.ones(np.size(v)), np.cos(u)), 1)
     # print(x.shape)
     """ Finn ut hvorfor max(z) = 5.10!!! """
     # set z_max to 5
 
     # define Dirichlet and Neumann BCs
     dir_BC = 5.0
-    neu_BC = RS == rs_endo
-
+    neu_BC = rs[0,:, 0] == rs_endo
+    # print(neu_BC)
     # print(RS[RS == rs_endo]); exit()
     # define inner points
     # x0 = x[:, ~neu_BC]
@@ -67,21 +70,22 @@ def define_domain(N=15, M=5):
     # x0 = x0[~dir_BC(z0)]
     # y0 = y0[~dir_BC(z0)]
     # z0 = z0[~dir_BC(z0)]
+    z[..., -1] = dir_BC
     x0 = np.copy(x)
     y0 = np.copy(y)
     z0 = np.copy(z)
+    # print(x.shape, x0.shape); exit()
 
-    z0[..., -1] = dir_BC
     # print(x.shape)
     # define points on Dirichlet boundary
-    x1 = x0[..., -1]
-    y1 = y0[..., -1]
-    z1 = z0[..., -1]
-    # print(x1); exit()
+    x1 = x0[:, :, -1]
+    y1 = y0[:, :, -1]
+    z1 = z0[:, :, -1]
+
     # define points on Neumann boundary
-    x2 = x0[neu_BC]
-    y2 = y0[neu_BC]
-    z2 = z0[neu_BC]
+    x2 = x0[:, neu_BC]
+    y2 = y0[:, neu_BC]
+    z2 = z0[:, neu_BC]
     # x2 = x2[~dir_BC(z2)]
     # y2 = y2[~dir_BC(z2)]
     # z2 = z2[~dir_BC(z2)]
@@ -101,23 +105,43 @@ def define_domain(N=15, M=5):
     x_perp = np.copy(x_endo) / rs_endo
     y_perp = np.copy(y_endo) / rs_endo
     z_perp = np.copy(z_endo) / rl_endo
-    print(np.max(x_perp), np.min(x_perp))
-    print(np.max(y_perp), np.min(y_perp)); exit()
+
+    end = int((N-1)/4)
+    print(end)
+    x_perp[::2, 1:end] = 0
+    y_perp[::2, 1:end] = 0
+    z_perp[::2, 1:end] = 0
+    x_perp[1:-1:4, 1:end] = 0
+    y_perp[1:-1:4, 1:end] = 0
+    z_perp[1:-1:4, 1:end] = 0
+    # x_perp[3:-1:8, 1:end] = 0
+    # y_perp[3:-1:8, 1:end] = 0
+    # z_perp[3:-1:8, 1:end] = 0
+    x_perp[1:, 0] = 0
+    y_perp[1:, 0] = 0
+    z_perp[1:, 0] = 0
+    x_perp[-1] = 0
+    y_perp[-1] = 0
+    z_perp[-1] = 0
+    print(100*z_perp[:, :10])
+    # exit()
+
+    # exit(y_perp[0])
     # reshape to have access to different dimentsions
     # dimension 0 is angle
     # dimension 1 is depth layer
     # dimension 2 is vertical level
-    x0 = x0.reshape((N, M, N))
-    y0 = y0.reshape((N, M, N))
-    z0 = z0.reshape((N, M, N))
+    # x0 = x0.reshape((N, M, N))
+    # y0 = y0.reshape((N, M, N))
+    # z0 = z0.reshape((N, M, N))
 
-    x1 = x1.reshape((N, M, 1))
-    y1 = y1.reshape((N, M, 1))
-    z1 = z1.reshape((N, M, 1))
+    # x1 = x1.reshape((N, M, 1))
+    # y1 = y1.reshape((N, M, 1))
+    # z1 = z1.reshape((N, M, 1))
 
-    x2 = x2.reshape((N, 1, N))
-    y2 = y2.reshape((N, 1, N))
-    z2 = z2.reshape((N, 1, N))
+    # x2 = x2.reshape((N, 1, N))
+    # y2 = y2.reshape((N, 1, N))
+    # z2 = z2.reshape((N, 1, N))
 
     # plot domain
     fig = plt.figure()
@@ -126,17 +150,15 @@ def define_domain(N=15, M=5):
     ax.set_xlabel('$x$')
     ax.set_ylabel('$y$')
     ax.set_zlabel('$z$')
-    ax.scatter(x0, y0, z0, s=.1, alpha=0.5, c='tab:blue')
+    # ax.scatter(x0[0], y0[0], z0[0], s=.1, alpha=0.5, c='tab:blue')
     # ax.scatter(x0[:, 0, :], y0[:, 0, :], z0[:, 0, :], s=1, c='tab:blue')
     # ax.scatter(x[7], y[7], z[7], s=1, c='tab:blue')
-    ax.scatter(x1, y1, z1, s=5, c='tab:green')
-    ax.scatter(x2, y2, z2, s=5, c='tab:red')
+    # ax.scatter(x1, y1, z1, s=5, c='tab:green')
+    # ax.scatter(x2, y2, z2, s=5, c='tab:red')
     # plot epicardial and endocardial surfaces
-    # ax.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
-    ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
-    # ax.scatter(dx, dy, dz)
-    # ax.scatter(x_perp, y_perp, z_perp)
-    # ax.quiver(x_endo[:, :-1], y_endo[:, :-1], z_endo[:, :-1], x_perp, y_perp, z_perp, alpha=.1)
+    ax.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
+    # ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
+    ax.quiver(x_endo[:, :15], y_endo[:, :15], z_endo[:, :15], x_perp[:, :15], y_perp[:, :15], z_perp[:, :15], alpha=.5)
     # plt.show(); exit()
     plt.savefig('ventricle.pdf')
     plt.close()
@@ -159,7 +181,7 @@ def define_domain(N=15, M=5):
     z_perp = np.expand_dims(z_perp.flatten(), 1)
 
     n_cond = 1E4*np.concatenate((x_perp, y_perp, z_perp), -1)
-    
+
     x2 = np.expand_dims(x2.flatten(), 1)
     y2 = np.expand_dims(y2.flatten(), 1)
     z2 = np.expand_dims(z2.flatten(), 1)
@@ -222,7 +244,10 @@ if __name__ == '__main__':
     rl_endo = 17
     rs_epi =  10
     rl_epi =  20
-    N = 13; M = 3
+    N = 41; M = 5
+
+    middle_layer = int(np.floor(M/2))
+
     domain, dirichlet, neumann = define_domain(N, M)
     shape = [N, M, N]
 
@@ -235,10 +260,40 @@ if __name__ == '__main__':
     rs = np.linspace(rs_endo, rs_epi, M)
     rl = np.linspace(rl_endo, rl_epi, M)
     
-    dx = rs_endo * (v[1] - v[0])
+    dx = rs_endo / 2 * (v[1] - v[0])
     dy = rs[1] - rs[0]
     dz = ((rl_epi + rs_epi) / 2 + (rl_endo + rs_endo) / 2) / 2 * (u[1] - u[0])
     dxdydz = np.asarray([dx, dy, dz])
+
+    dX = np.zeros(shape[0])
+    dY = np.zeros(shape[1])
+    dZ = np.zeros(shape[2])
+
+    tmp_domain = domain.reshape((N, M, N, 3))
+    
+    dZ[1:] = np.cumsum(np.sqrt(
+                        (tmp_domain[0, middle_layer, 1:, 0] - tmp_domain[0, middle_layer, :-1, 0])**2
+                      + (tmp_domain[0, middle_layer, 1:, 2] - tmp_domain[0, middle_layer, :-1, 2])**2))
+
+    dY[1:] = np.cumsum(tmp_domain[0, 1:, -1, 0] - tmp_domain[0, :-1, -1, 0])
+
+    dX[1:] = np.cumsum(np.sqrt(
+                        (tmp_domain[1:, 0, -1, 0] - tmp_domain[:-1, 0, -1, 0])**2
+                      + (tmp_domain[1:, 0, -1, 1] - tmp_domain[:-1, 0, -1, 1])**2))
+
+    neumann_domain = neumann['coords'].reshape((N, N, 3))
+    # exit(neumann_domain.shape)
+    dX_neumann = np.zeros(N)
+    dZ_neumann = np.zeros(N)
+
+    dZ_neumann[1:] = np.cumsum(np.sqrt(
+                        (neumann_domain[0, 1:, 0] - neumann_domain[0, :-1, 0])**2
+                      + (neumann_domain[0, 1:, 2] - neumann_domain[0, :-1, 2])**2))
+
+    dX_neumann[1:] = np.cumsum(np.sqrt(
+                        (neumann_domain[1:, -1, 0] - neumann_domain[:-1, -1, 0])**2
+                      + (neumann_domain[1:, -1, 1] - neumann_domain[:-1, -1, 1])**2))
+
 
     u_endo = np.linspace(-np.pi, -np.arccos(5/17), N)
     v_endo = np.linspace(-np.pi, np.pi, N)
@@ -257,15 +312,19 @@ if __name__ == '__main__':
     x = RS*np.expand_dims(np.outer(np.cos(v), np.sin(u)), 1)
     y = RS*np.expand_dims(np.outer(np.sin(v), np.sin(u)), 1)
     z = RL*np.expand_dims(np.outer(np.ones(np.size(v)), np.cos(u)), 1)
-    print(z[:, : ,0])
+
     z[..., -1] = 5.0
 
     # z = np.where(np.abs(z - 5E-3) < 1E-3, 5E-3, z)
     
-    model = MultiLayerNet(3, 60, 60, 60, 60, 3)
-    energy = GuccioneEnergyModel(C, bf, bt, bfs)
+    model = MultiLayerNet(3, *[60]*6, 3)
+    energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E5)
+    # energy = NeoHookeanEnergyModel(200, 100)
     DemLV = DeepEnergyMethodLV(model, energy)
-    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, dxdydz=dxdydz, neu_axis=[0, 2], lr=.5, epochs=20, fb=np.array([[0, 0, 0]]))
+    # DemLV.train_model(domain, dirichlet, neumann, shape=shape, dxdydz=dxdydz, neu_axis=[0, 2], lr=.1, epochs=20, fb=np.array([[0, 0, 0]]))
+    DemLV.train_model(domain, dirichlet, neumann, 
+                      shape=shape, dxdydz=[[dX, dY, dZ], [dX_neumann, dZ_neumann]], 
+                      LHD=np.zeros(3), neu_axis=[0, 2], lr=.5, epochs=30, fb=np.array([[0, 0, 0]]))
 
     print()
     U_pred = DemLV.evaluate_model(x, y, z)

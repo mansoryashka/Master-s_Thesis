@@ -12,7 +12,7 @@ import sys
 sys.path.insert(0, "../../3DBeam")
 sys.path.insert(0, "../../")
 from DemBeam import DeepEnergyMethodBeam, train_and_evaluate, MultiLayerNet, write_vtk_v2
-from EnergyModels import GuccioneTransverseEnergyModel, GuccioneEnergyModel
+from EnergyModels import *
 
 current_path = Path.cwd()
 
@@ -26,7 +26,7 @@ z0 = 0; z1 = D
 N_test = 20
 dx = L / (10*N_test)
 dy = H / (N_test)
-dx = D / (N_test)
+dz = D / (N_test)
 
 C = 2E3
 bf = 8
@@ -108,23 +108,68 @@ if __name__ == '__main__':
     y_test = np.linspace(0, H, N+1)
     z_test = np.linspace(0, D, N+1)
 
-    # domain, dirichlet, neumann = define_domain(L, H, D, N=N)
-    # model = MultiLayerNet(3, *[40]*4, 3)
-    # energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
-    # # energy = GuccioneEnergyModel(C, bf, bt, bfs)
-    # DemBeam = DeepEnergyMethodBeam(model, energy)
-    # DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.1, epochs=192, fb=np.array([[0, 0, 0]]))
-    # U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
-    # np.save('stored_arrays/U_predXZY', np.asarray(U_pred))
-    # write_vtk_v2('output/problem1XZY', x_test, y_test, z_test, U_pred)
+    domain, dirichlet, neumann = define_domain(L, H, D, N=N)
 
-    u_pred = np.load('stored_arrays/U_predXZY.npy')
+    dX = np.zeros(domain.shape[0])
+    dX[1:] = np.cumsum(domain[1:, 0] - domain[:-1, 0])
+    dX = dX.reshape((shape[1], shape[0], shape[2]))[0, :, 0]
+
+    dY = np.zeros(domain.shape[0])
+    dY[1:] = np.cumsum(domain[1:, 1] - domain[:-1, 1])
+    dY = dY.reshape((shape[1], shape[0], shape[2]))[0, 0, :]
+
+    dZ = np.zeros(domain.shape[0])
+    dZ[1:] = np.cumsum(domain[1:, 2] - domain[:-1, 2])
+    dZ = dZ.reshape((shape[1], shape[0], shape[2]))[:, 0, 0]
+    # exit(dY)
+
+    # dX[:, 1:, 0] /= np.sqrt((x_test[1]-x_test[0])**2 + y_test[-1]**2)
+    # dX[:, 1:, 0] *= (x_test[1] - x_test[0])
+    # dX[:, 0, 0] /= np.sqrt(y_test[-1]**2 + (z_test[1]-z_test[0])**2)
+    # dX[:, 0, 0] *= (z_test[1] - z_test[0])
+    # dX = np.cumsum(dX).flatten()
+
+    neumann_domain = neumann['coords']
+
+    dX_neumann = np.zeros(neumann_domain.shape[0])
+    dX_neumann[1:] = np.cumsum(neumann_domain[1:, 0] - neumann_domain[:-1, 0])
+    dX_neumann = dX_neumann.reshape((shape[0], shape[2]))[:, 0]
+    
+    # dY_neumann = np.zeros(neumann['coords'].shape[0])
+    # dY_neumann[1:] = np.cumsum(np.sqrt((
+    #       neumann_domain[1:, 1] - neumann_domain[:-1, 1])**2))
+    
+    dZ_neumann = np.zeros(neumann['coords'].shape[0])
+    dZ_neumann[1:] = np.cumsum(neumann_domain[1:, 1] - neumann_domain[:-1, 1])
+    dZ_neumann = dZ_neumann.reshape((shape[0], shape[1]))[0, :]
+    
+    # exit(dZ_neumann)
+
+    # dX_neumann = dX_neumann.reshape(shape[:-1])
+    # dX_neumann[1:, 0] /= np.sqrt((x_test[1]-x_test[0])**2 + y_test[-1]**2)
+    # dX_neumann[1:, 0] *= (x_test[1] - x_test[0])
+    # dX_neumann = np.cumsum(dX_neumann).flatten()
+    # exit(dX.reshape(shape))
+
+    model = MultiLayerNet(3, *[60]*6, 3)
+    # energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
+    # energy = GuccioneTransverseActiveEnergyModel(C, bf, bt, bfs, kappa=1E5, Ta=15E3)
+    energy = GuccioneEnergyModel(C, bf, bt, bfs)
+    DemBeam = DeepEnergyMethodBeam(model, energy)
+    # DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.1, epochs=15, fb=np.array([[0, 0, 0]]))
+    DemBeam.train_model(domain, dirichlet, neumann, shape,dxdydz=[[dX, dY, dZ], [dX_neumann, dZ_neumann]], LHD=LHD, neu_axis=[0, 1], lr=0.5, epochs=15, fb=np.array([[0, 0, 0]]))
+    U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
+
+    # np.save('stored_arrays/U_predXZY', np.asarray(U_pred))
+    write_vtk_v2('output/problem1', x_test, y_test, z_test, U_pred)
+
+    # u_pred = np.load('stored_arrays/U_predXZY.npy')
     
     X, Y, Z = np.meshgrid(x_test, y_test, z_test)
     # print(np.array(u_pred).shape)
     # u_pred = np.transpose(np.array(u_pred), [1, 2, 3, 0])
     # print(u_pred.shape)
-    X_cur, Y_cur, Z_cur = X + u_pred[0], Y + u_pred[1], Z + u_pred[2]
+    X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
     # print(X_cur[:, -1])
 
     pts_x1 = np.zeros(10)
@@ -226,18 +271,18 @@ if __name__ == '__main__':
     ax[0].plot(strain_x, '-x')
     ax[1].plot(strain_y, '-x')
     ax[2].plot(strain_z, '-x')
-    fig.savefig('figures/strain_plot.pdf')
+    # fig.savefig('figures/strain_plot.pdf')
     fig, ax = plt.subplots(1, 1) #, figsize=(4, 2))
     ax.plot(line_x_cur, line_z_cur)
-    fig.savefig('figures/line_plot.pdf')
+    # fig.savefig('figures/line_plot.pdf')
     fig, ax = plt.subplots(1, 1) #, figsize=(4, 2))
     ax.plot(line_x_cur, line_z_cur)
     ax.set_xlim([9.25, 9.40])
     ax.set_xticks([9.25, 9.40])
     ax.set_ylim([3.60, 3.75])
     ax.set_yticks([3.60, 3.75])
-    fig.savefig('figures/zoom_plot.pdf')
-    # plt.show()
+    # fig.savefig('figures/zoom_plot.pdf')
+    plt.show()
 
 
 
