@@ -1,10 +1,8 @@
 import time
-import numpy as np
-import matplotlib.pyplot as plt
 import torch
-from torch import nn
-from torch.autograd import grad
+import numpy as np
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 350
@@ -14,12 +12,11 @@ sns.set()
 
 import sys
 sys.path.insert(0, "..")
-from DEM import DeepEnergyMethod, dev, MultiLayerNet, L2norm3D, write_vtk_v2, dev
 from EnergyModels import NeoHookeanActiveEnergyModel
+from DEM import DeepEnergyMethod, dev, MultiLayerNet, L2norm3D, write_vtk_v2, dev
 
 torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
-# dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 current_path = Path.cwd().resolve()
 figures_path = current_path / 'figures'
@@ -215,7 +212,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
             DemCube = DeepEnergyMethodCube(model, energy)
             domain, dirichlet, neumann = define_domain(L, H, D, N=N)
             # train model
-            DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lrs, max_it=max_it, epochs=num_epochs, eval_data=eval_data, fb=np.asarray([[0, 0, 0]]))
+            DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lrs, max_it=max_it, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
             # evaluate model
             U_pred, u_pred_torch, xyz_tensor = DemCube.evaluate_model(x, y, z, return_pred_tensor=True)
             # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
@@ -223,7 +220,8 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
             # write_vtk_v2(f'output/DemCube_N{N}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
             # write_vtk_v2(f'output/DemCube_N{N}', x, y, z, U_pred)
             # calculate L2norm
-            u_norms[i] = L2norm3D(U_pred - u_fem20, N_test, N_test, N_test, dx, dy, dz)
+            u_norms[i] = (L2norm3D(U_pred - u_fem20, N_test, N_test, N_test, dx, dy, dz)
+                            / L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz))
             losses[:, :, i] = DemCube.losses
             del model
     # train on many learning rates and number of neurons in hidden layers
@@ -237,14 +235,15 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 DemCube = DeepEnergyMethodCube(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
 
-                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs, eval_data=eval_data, fb=np.asarray([[0, 0, 0]]))
+                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
                 U_pred, u_pred_torch, xyz_tensor = DemCube.evaluate_model(x, y, z, return_pred_tensor=True)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
 
                 # store solution
                 # write_vtk_v2(f'output/DemCube_lr{lr}_nn{n}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
                 # write_vtk_v2(f'output/DemCube_lr{lr}_nn{n}', x, y, z, U_pred)
-                u_norms[i, j] = L2norm3D(U_pred - u_fem20, N_test, N_test, N_test, dx, dy, dz)
+                u_norms[i, j] = (L2norm3D(U_pred - u_fem20, N_test, N_test, N_test, dx, dy, dz)
+                                / L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz))
                 losses[:, :, i, j] = DemCube.losses
                 del model
     # train on many learning rates and number of hidden layers
@@ -257,7 +256,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 model = MultiLayerNet(3, *([num_neurons]*l), 3)
                 DemCube = DeepEnergyMethodCube(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
-                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs,  eval_data=eval_data, fb=np.asarray([[0, 0, 0]]))
+                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
                 # evaluate model
                 U_pred, u_pred_torch, xyz_tensor = DemCube.evaluate_model(x, y, z, return_pred_tensor=True)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
@@ -265,7 +264,8 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 # write_vtk_v2(f'output/DemCube_lr{lr}_nl{l}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
                 # write_vtk_v2(f'output/DemCube_lr{lr}_nl{l}', x, y, z, U_pred)
 
-                u_norms[i, j] = L2norm3D(U_pred - u_fem20, N_test, N_test, N_test, dx, dy, dz)
+                u_norms[i, j] = (L2norm3D(U_pred - u_fem20, N_test, N_test, N_test, dx, dy, dz)
+                                / L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz))
                 losses[:, :, i, j] = DemCube.losses
                 del model
     # train on number of neurons in hidden layers and number of hidden layers
@@ -278,14 +278,15 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 model = MultiLayerNet(3, *([n]*l), 3)
                 DemCube = DeepEnergyMethodCube(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
-                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lrs, max_it=max_it, epochs=num_epochs, eval_data=eval_data, fb=np.asarray([[0, 0, 0]]))
+                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lrs, max_it=max_it, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
                 # evaluate model
                 U_pred, u_pred_torch, xyz_tensor = DemCube.evaluate_model(x, y, z, return_pred_tensor=True)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
                 # store solution
                 # write_vtk_v2(f'output/DemCube_nn{n}_nl{l}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
                 # write_vtk_v2(f'output/DemCube_nn{n}_nl{l}', x, y, z, U_pred)
-                u_norms[i, j] = L2norm3D(U_pred - u_fem20, N_test, N_test, N_test, dx, dy, dz)
+                u_norms[i, j] = (L2norm3D(U_pred - u_fem20, N_test, N_test, N_test, dx, dy, dz)
+                                / L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz))
                 
                 losses[:, :, i, j] = DemCube.losses
                 del model
@@ -303,7 +304,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 DemCube = DeepEnergyMethodCube(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=N)
                 # train model
-                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs, eval_data=eval_data, fb=np.asarray([[0, 0, 0]]))
+                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
                 # evaluate model
                 U_pred, u_pred_torch, xyz_tensor = DemCube.evaluate_model(x, y, z, return_pred_tensor=True)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
@@ -311,7 +312,8 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 # write_vtk_v2(f'output/DemCube_lr{lr}_N{N}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
                 # write_vtk_v2(f'output/DemCube_lr{lr}_N{N}', x, y, z, U_pred)
                 # calculate L2norm
-                u_norms[i, j] = L2norm3D(U_pred - u_fem20, N_test, N_test, N_test, dx, dy, dz)
+                u_norms[i, j] = (L2norm3D(U_pred - u_fem20, N_test, N_test, N_test, dx, dy, dz)
+                                / L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz))
                 losses[:, :, i, j] = DemCube.losses
                 del model
     else:
@@ -328,7 +330,7 @@ def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, c
                 vmax=np.max(data[~np.isnan(data)])
                 )
     ### skriv tester for om title, labels og filnavn blir sendt inn!!! ###
-    ax.set_title(title)
+    # ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     fig.savefig(figures_path / Path(figname + '.pdf'))
@@ -339,8 +341,8 @@ def run1():
     shape = [N, N, N]
     num_layers = [2, 3, 4, 5]
     num_neurons = [20, 30, 40, 50]
-    num_expreriments = 5
-    num_epochs = 100
+    num_expreriments = 1
+    num_epochs = 700
     U_norms = 0
     losses = 0
     start = time.time()
@@ -357,7 +359,7 @@ def run1():
     plot_heatmap(U_norms, num_neurons, num_layers, 
                  rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 
                  'Number of hidden neurons', 'Number of hidden layers', 
-                 'cube_heatmap_num_neurons_layers')
+                 'cube_heatmap_num_neurons_layers700')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
@@ -422,8 +424,8 @@ def run3():
     print(f'tid: {tid/3600:.2f}t')
 
 if __name__ == '__main__':
-    u_fem20 = np.load(arrays_path / 'u_fem5.npy')
-    exit(f'FEM: {L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)}')
+    u_fem20 = np.load(arrays_path / 'u_fem20.npy')
+    # exit(f'FEM: {L2norm3D(u_fem20, N_test, N_test, N_test, dx, dy, dz)}')
 
 
     x = np.linspace(0, L, N_test + 2)[1:-1]
@@ -434,7 +436,7 @@ if __name__ == '__main__':
     y_eval = np.linspace(0, D, N_test + 4)[1:-1]
     z_eval = np.linspace(0, H, N_test + 4)[1:-1]
 
-    # run1()
+    run1()
     # run2()
-    run3()
+    # run3()
 

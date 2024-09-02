@@ -40,9 +40,9 @@ n_boundary = 0.0
 n_cond = [0, 0, 4]
 
 def define_domain(L, H, D, N=10):
-    x = np.linspace(0, L, 10*N+1)
-    y = np.linspace(0, H, N+1)
-    z = np.linspace(0, D, N+1)
+    x = np.linspace(0, L, 10*N)
+    y = np.linspace(0, H, N)
+    z = np.linspace(0, D, N)
 
     # Xm, Ym, Zm = np.meshgrid(x, y, z)
     Xm, Zm, Ym = np.meshgrid(x, z, y)
@@ -97,80 +97,58 @@ def define_domain(L, H, D, N=10):
 
 
 if __name__ == '__main__':
-    N = 20
+    N = 30
+    # print(int(N/10)); exit()
+    N_test = 10
     LHD = [L, H, D]
-    shape = [10*N+1, N+1, N+1]
+    shape = [10*N, N, N]
     
-    # x_test = np.linspace(0, L, 10*N)
-    # y_test = np.linspace(0, H, N+3)[1:-2]
-    # z_test = np.linspace(0, D, N+3)[1:-2]
-    x_test = np.linspace(0, L, 10*N+1)
-    y_test = np.linspace(0, H, N+1)
-    z_test = np.linspace(0, D, N+1)
+    x_test = np.linspace(0, L, 10*N_test+1)
+    y_test = np.linspace(0, H, N_test+1)
+    z_test = np.linspace(0, D, N_test+1)
 
     domain, dirichlet, neumann = define_domain(L, H, D, N=N)
 
-    dX = np.zeros(domain.shape[0])
-    dX[1:] = np.cumsum(domain[1:, 0] - domain[:-1, 0])
-    dX = dX.reshape((shape[1], shape[0], shape[2]))[0, :, 0]
+    # dX = np.zeros(domain.shape[0])
+    # dX[1:] = np.cumsum(domain[1:, 0] - domain[:-1, 0])
+    # dX = dX.reshape((shape[1], shape[0], shape[2]))[0, :, 0]
 
-    dY = np.zeros(domain.shape[0])
-    dY[1:] = np.cumsum(domain[1:, 1] - domain[:-1, 1])
-    dY = dY.reshape((shape[1], shape[0], shape[2]))[0, 0, :]
+    # dY = np.zeros(domain.shape[0])
+    # dY[1:] = np.cumsum(domain[1:, 1] - domain[:-1, 1])
+    # dY = dY.reshape((shape[1], shape[0], shape[2]))[0, 0, :]
 
-    dZ = np.zeros(domain.shape[0])
-    dZ[1:] = np.cumsum(domain[1:, 2] - domain[:-1, 2])
-    dZ = dZ.reshape((shape[1], shape[0], shape[2]))[:, 0, 0]
-    # exit(dY)
+    # dZ = np.zeros(domain.shape[0])
+    # dZ[1:] = np.cumsum(domain[1:, 2] - domain[:-1, 2])
+    # dZ = dZ.reshape((shape[1], shape[0], shape[2]))[:, 0, 0]
 
-    # dX[:, 1:, 0] /= np.sqrt((x_test[1]-x_test[0])**2 + y_test[-1]**2)
-    # dX[:, 1:, 0] *= (x_test[1] - x_test[0])
-    # dX[:, 0, 0] /= np.sqrt(y_test[-1]**2 + (z_test[1]-z_test[0])**2)
-    # dX[:, 0, 0] *= (z_test[1] - z_test[0])
-    # dX = np.cumsum(dX).flatten()
+    # neumann_domain = neumann['coords']
 
-    neumann_domain = neumann['coords']
-
-    dX_neumann = np.zeros(neumann_domain.shape[0])
-    dX_neumann[1:] = np.cumsum(neumann_domain[1:, 0] - neumann_domain[:-1, 0])
-    dX_neumann = dX_neumann.reshape((shape[0], shape[2]))[:, 0]
+    # dX_neumann = np.zeros(neumann_domain.shape[0])
+    # dX_neumann[1:] = np.cumsum(neumann_domain[1:, 0] - neumann_domain[:-1, 0])
+    # dX_neumann = dX_neumann.reshape((shape[0], shape[2]))[:, 0]
     
-    # dY_neumann = np.zeros(neumann['coords'].shape[0])
-    # dY_neumann[1:] = np.cumsum(np.sqrt((
-    #       neumann_domain[1:, 1] - neumann_domain[:-1, 1])**2))
     
-    dZ_neumann = np.zeros(neumann['coords'].shape[0])
-    dZ_neumann[1:] = np.cumsum(neumann_domain[1:, 1] - neumann_domain[:-1, 1])
-    dZ_neumann = dZ_neumann.reshape((shape[0], shape[1]))[0, :]
+    # dZ_neumann = np.zeros(neumann['coords'].shape[0])
+    # dZ_neumann[1:] = np.cumsum(neumann_domain[1:, 1] - neumann_domain[:-1, 1])
+    # dZ_neumann = dZ_neumann.reshape((shape[0], shape[1]))[0, :]
     
-    # exit(dZ_neumann)
 
-    # dX_neumann = dX_neumann.reshape(shape[:-1])
-    # dX_neumann[1:, 0] /= np.sqrt((x_test[1]-x_test[0])**2 + y_test[-1]**2)
-    # dX_neumann[1:, 0] *= (x_test[1] - x_test[0])
-    # dX_neumann = np.cumsum(dX_neumann).flatten()
-    # exit(dX.reshape(shape))
+    model = MultiLayerNet(3, 40, 40, 40, 3)
+    energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
 
-    model = MultiLayerNet(3, *[80]*6, 3)
-    # energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
-    # energy = GuccioneTransverseActiveEnergyModel(C, bf, bt, bfs, kappa=1E5, Ta=15E3)
-    energy = GuccioneEnergyModel(C, bf, bt, bfs)
-    DemBeam = DeepEnergyMethodBeam(model, energy)
-    # DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[0, 1], lr=0.1, epochs=15, fb=np.array([[0, 0, 0]]))
-    DemBeam.train_model(domain, dirichlet, neumann, shape,dxdydz=[[dX, dY, dZ], [dX_neumann, dZ_neumann]], LHD=LHD, neu_axis=[0, 1], lr=0.5, epochs=15, fb=np.array([[0, 0, 0]]))
-    U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
+    # DemBeam = DeepEnergyMethodBeam(model, energy)
+    # DemBeam.train_model(domain, dirichlet, neumann,
+    #                     shape, LHD, neu_axis=[0, 1], 
+    #                     lr=0.05, epochs=300, fb=np.array([[0, 0, 0]]))
+    # U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
 
-    # np.save('stored_arrays/U_predXZY', np.asarray(U_pred))
-    write_vtk_v2('output/problem1', x_test, y_test, z_test, U_pred)
+    # write_vtk_v2(f'output/problem1{N}', x_test, y_test, z_test, U_pred)
+    # np.save(f'stored_arrays/U_pred{N}', np.asarray(U_pred))
+    U_pred = np.load(f'stored_arrays/U_pred{N}.npy')
 
-    # u_pred = np.load('stored_arrays/U_predXZY.npy')
     
     X, Y, Z = np.meshgrid(x_test, y_test, z_test)
-    # print(np.array(u_pred).shape)
-    # u_pred = np.transpose(np.array(u_pred), [1, 2, 3, 0])
-    # print(u_pred.shape)
     X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
-
 
     pts_x = np.zeros((10, 3))
     pts_x_cur = np.zeros((10, 3))
@@ -202,10 +180,6 @@ if __name__ == '__main__':
     end_x_cur, end_y_cur, end_z_cur = X_cur[condition5], Y_cur[condition5], Z_cur[condition5]
 
 
-    # strain_x = np.zeros(9)
-    # for i in range(9):
-    #     strain_x[i] = (np.linalg.norm(pts_x_cur[i] - pts_x_cur[i+1]) 
-    #                    / np.linalg.norm(pts_x[i] - pts_x[i+1]) - 1) * 100
     strain_x = (np.linalg.norm(pts_x_cur[:-1] - pts_x_cur[1:], axis=1)
                 / np.linalg.norm(pts_x[:-1] - pts_x[1:], axis=1)
                 - 1) * 100
@@ -221,36 +195,35 @@ if __name__ == '__main__':
     ax[0].plot(strain_x, '-x')
     ax[1].plot(strain_y, '-x')
     ax[2].plot(strain_z, '-x')
-    # fig.savefig('figures/strain_plot.pdf')
+    # fig.savefig(f'figures/strain_plot{N}.pdf')
     fig, ax = plt.subplots(1, 1) #, figsize=(4, 2))
     ax.plot(line_x_cur, line_z_cur)
-    # fig.savefig('figures/line_plot.pdf')
+    # fig.savefig(f'figures/line_plot{N}.pdf')
     fig, ax = plt.subplots(1, 1) #, figsize=(4, 2))
-    ax.plot(line_x_cur, line_z_cur)
-    ax.set_xlim([9.25, 9.40])
-    ax.set_xticks([9.25, 9.40])
-    ax.set_ylim([3.60, 3.75])
-    ax.set_yticks([3.60, 3.75])
-    # fig.savefig('figures/zoom_plot.pdf')
+    ax.plot(line_x_cur[-int(N/10)-1:], line_z_cur[-int(N/10)-1:])
+    # ax.set_xlim([9.25, 9.40])
+    # ax.set_xticks([9.25, 9.40])
+    # ax.set_ylim([3.60, 3.75])
+    # ax.set_yticks([3.60, 3.75])
+    # fig.savefig(f'figures/zoom_plot{N}.pdf')
     plt.show()
 
 
-
-    # fig = plt.figure(figsize=(5, 3))
-    # fig.tight_layout()
-    # ax = fig.add_subplot(111, projection='3d')
-    # ax.set_box_aspect((8, 1, 6))
-    # ax.scatter(X, Y, Z, s=1, alpha=.1)
-    # ax.scatter(end_x, end_y, end_z, s=5, c='springgreen')
-    # ax.scatter(line_x, line_y, line_z, s=.5, c='firebrick')
-    # ax.quiver(X[::2, ::10, ::2], Y[::2, ::10, ::2], Z[::2, ::10, ::2], 
-    #           u_pred[0, ::2, ::10, ::2], u_pred[1, ::2, ::10, ::2], u_pred[2, ::2, ::10, ::2],
-    #           alpha=.3, length=.5)
-    # ax.scatter(X_cur, Y_cur, Z_cur, s=1, alpha=1)
-    # ax.scatter(end_x_cur, end_y_cur, end_z_cur, s=5, c='forestgreen')
-    # ax.scatter(pts_y_cur[:, 0], pts_y_cur[:, 1], pts_y_cur[:, 2], s=2, c='midnightblue')
-    # ax.scatter(line_x_cur, line_y_cur, line_z_cur, s=.5, c='firebrick')
-    # ax.set_xlabel('$x$')
-    # ax.set_ylabel('$y$')
-    # ax.set_zlabel('$z$')
-    # plt.show()
+    fig = plt.figure(figsize=(5, 3))
+    fig.tight_layout()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_box_aspect((8, 1, 6))
+    ax.scatter(X, Y, Z, s=1, alpha=.1)
+    ax.scatter(end_x, end_y, end_z, s=5, c='springgreen')
+    ax.scatter(line_x, line_y, line_z, s=.5, c='firebrick')
+    ax.quiver(X[::2, ::10, ::2], Y[::2, ::10, ::2], Z[::2, ::10, ::2], 
+              U_pred[0, ::2, ::10, ::2], U_pred[1, ::2, ::10, ::2], U_pred[2, ::2, ::10, ::2],
+              alpha=.3, length=.5)
+    ax.scatter(X_cur, Y_cur, Z_cur, s=1, alpha=1)
+    ax.scatter(end_x_cur, end_y_cur, end_z_cur, s=5, c='forestgreen')
+    ax.scatter(pts_y_cur[:, 0], pts_y_cur[:, 1], pts_y_cur[:, 2], s=2, c='midnightblue')
+    ax.scatter(line_x_cur, line_y_cur, line_z_cur, s=.5, c='firebrick')
+    ax.set_xlabel('$x$')
+    ax.set_ylabel('$y$')
+    ax.set_zlabel('$z$')
+    plt.show()

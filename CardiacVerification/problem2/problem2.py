@@ -22,15 +22,11 @@ def define_domain(N=15, M=5):
 
     rs_endo = 7
     rl_endo = 17
-    # rs_endo = 7E-3
-    # rl_endo = 17E-3
     u_endo = np.linspace(-np.pi, -np.arccos(5/17), N)
     v_endo = np.linspace(-np.pi, np.pi, N)
 
     rs_epi = 10
     rl_epi = 20
-    # rs_epi = 10E-3
-    # rl_epi = 20E-3
     u_epi = np.linspace(-np.pi, -np.arccos(5/20), N)
     v_epi = np.linspace(-np.pi, np.pi, N)
 
@@ -40,43 +36,25 @@ def define_domain(N=15, M=5):
     rs = np.linspace(rs_endo, rs_epi, M).reshape((1, M, 1))
     rl = np.linspace(rl_endo, rl_epi, M).reshape((1, M, 1))
 
-    # RS = np.ones((1, M, 1))
-    # RL = np.ones((1, M, 1))
-    # for i in range(M):
-    #     # print(f'fra: {int(N*K/M)*i} til: {int(N*K/M)*(i+1)-1}')
-    #     RS[:, i] = rs[i]
-    #     RL[:, i] = rl[i]
 
     x = rs*np.sin(u)*np.cos(v)
     y = rs*np.sin(u)*np.sin(v)
     z = rl*np.cos(u)*np.ones(np.shape(v))
 
-    # x = RS*np.expand_dims(np.outer(np.cos(v), np.sin(u)), 1)
-    # y = RS*np.expand_dims(np.outer(np.sin(v), np.sin(u)), 1)
-    # z = RL*np.expand_dims(np.outer(np.ones(np.size(v)), np.cos(u)), 1)
-    # print(x.shape)
     """ Finn ut hvorfor max(z) = 5.10!!! """
-    # set z_max to 5
 
     # define Dirichlet and Neumann BCs
     dir_BC = 5.0
     neu_BC = rs[0, :, 0] == rs_endo
-    # print(neu_BC)
-    # print(RS[RS == rs_endo]); exit()
-    # define inner points
-    # x0 = x[:, ~neu_BC]
-    # y0 = y[:, ~neu_BC]
-    # z0 = z[:, ~neu_BC]
-    # x0 = x0[~dir_BC(z0)]
-    # y0 = y0[~dir_BC(z0)]
-    # z0 = z0[~dir_BC(z0)]
+
+    # set z_max to 5
     z[..., -1] = dir_BC
+
+    # define all points
     x0 = np.copy(x)
     y0 = np.copy(y)
     z0 = np.copy(z)
-    # print(x.shape, x0.shape); exit()
 
-    # print(x.shape)
     # define points on Dirichlet boundary
     x1 = x0[:, :, -1]
     y1 = y0[:, :, -1]
@@ -86,9 +64,6 @@ def define_domain(N=15, M=5):
     x2 = x0[:, neu_BC]
     y2 = y0[:, neu_BC]
     z2 = z0[:, neu_BC]
-    # x2 = x2[~dir_BC(z2)]
-    # y2 = y2[~dir_BC(z2)]
-    # z2 = z2[~dir_BC(z2)]
 
     # define endocardium surface for illustration
     x_endo = rs_endo*np.outer(np.cos(v_endo), np.sin(u_endo))
@@ -106,25 +81,37 @@ def define_domain(N=15, M=5):
     y_perp = np.copy(y_endo) / rs_endo
     z_perp = np.copy(z_endo) / rl_endo
 
+    # remove forces from lower fifth of ventricle
     end = int((N-1)/4)
-    x_perp[::2, 1:end] = 0
-    y_perp[::2, 1:end] = 0
-    z_perp[::2, 1:end] = 0
-    x_perp[1:-1:4, 1:end] = 0
-    y_perp[1:-1:4, 1:end] = 0
-    z_perp[1:-1:4, 1:end] = 0
-    x_perp[3:-1:8, 1:end] = 0
-    y_perp[3:-1:8, 1:end] = 0
-    z_perp[3:-1:8, 1:end] = 0
+    fifth_bottom = int((N-1)/5)
+    i = 0
+    while 2*2**i <= fifth_bottom:
+        start = 2**i-1
+        skip = 2*2**i
+        x_perp[start::skip, 1:end] = 0
+        y_perp[start::skip, 1:end] = 0
+        z_perp[start::skip, 1:end] = 0
+        i += 1
+
+    # x_perp[0::2, 1:end] = 0
+    # y_perp[0::2, 1:end] = 0
+    # z_perp[0::2, 1:end] = 0
+    # x_perp[1::4, 1:end] = 0
+    # y_perp[1::4, 1:end] = 0
+    # z_perp[1::4, 1:end] = 0
+    # x_perp[3::8, 1:end] = 0
+    # y_perp[3::8, 1:end] = 0
+    # z_perp[3::8, 1:end] = 0
+    
+    # remove forces from apex, 20 points at apex, remove 19
     x_perp[1:, 0] = 0
     y_perp[1:, 0] = 0
     z_perp[1:, 0] = 0
+    # remove force from v = pi
     x_perp[-1] = 0
     y_perp[-1] = 0
     z_perp[-1] = 0
 
-
-    # exit(y_perp[0])
     # reshape to have access to different dimentsions
     # dimension 0 is angle
     # dimension 1 is depth layer
@@ -238,30 +225,39 @@ def write_vtk_v3(filename, x_space, y_space, z_space, U):
         gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
 
 if __name__ == '__main__':
-    rs_endo =  7
-    rl_endo = 17
-    rs_epi =  10
-    rl_epi =  20
-    N = 41; M = 5
-
+    N = 41; M = 3
     middle_layer = int(np.floor(M/2))
 
     domain, dirichlet, neumann = define_domain(N, M)
     shape = [N, M, N]
 
-    u_endo = np.linspace(-np.pi, -np.arccos(5/17), N)
-    u_epi = np.linspace(-np.pi, -np.arccos(5/20), N)
-    middle = int(N/2 + 1)
-    u = np.linspace(u_endo, u_epi, N)
-    u = u.T[:, middle]
-    v = np.linspace(-np.pi, np.pi, N)
-    rs = np.linspace(rs_endo, rs_epi, M)
-    rl = np.linspace(rl_endo, rl_epi, M)
+
+    N_test = 21; M_test = 3
+    rs_endo = 7
+    rl_endo = 17
+    u_endo = np.linspace(-np.pi, -np.arccos(5/17), N_test)
+    v_endo = np.linspace(-np.pi, np.pi, N_test)
+
+    rs_epi = 10
+    rl_epi = 20
+    u_epi = np.linspace(-np.pi, -np.arccos(5/20), N_test)
+    v_epi = np.linspace(-np.pi, np.pi, N_test)
+
+    u = np.linspace(u_endo, u_epi, M_test).reshape(1, M_test, N_test)
+
+    v = np.linspace(-np.pi, np.pi, N_test).reshape(N_test, 1, 1)
+    rs = np.linspace(rs_endo, rs_epi, M_test).reshape((1, M_test, 1))
+    rl = np.linspace(rl_endo, rl_epi, M_test).reshape((1, M_test, 1))
+
+    x_test = rs*np.sin(u)*np.cos(v)
+    y_test = rs*np.sin(u)*np.sin(v)
+    z_test = rl*np.cos(u)*np.ones(np.shape(v))
     
-    dx = rs_endo / 2 * (v[1] - v[0])
-    dy = rs[1] - rs[0]
-    dz = ((rl_epi + rs_epi) / 2 + (rl_endo + rs_endo) / 2) / 2 * (u[1] - u[0])
-    dxdydz = np.asarray([dx, dy, dz])
+    z_test[..., -1] = 5.0
+    # dx = rs_endo / 2 * (v[1] - v[0])
+    # dy = rs[1] - rs[0]
+    # dz = ((rl_epi + rs_epi) / 2 + (rl_endo + rs_endo) / 2) / 2 * (u[1] - u[0])
+    # dxdydz = np.asarray([dx, dy, dz])
 
     dX = np.zeros(shape[0])
     dY = np.zeros(shape[1])
@@ -292,57 +288,34 @@ if __name__ == '__main__':
                         (neumann_domain[1:, -1, 0] - neumann_domain[:-1, -1, 0])**2
                       + (neumann_domain[1:, -1, 1] - neumann_domain[:-1, -1, 1])**2))
 
-
-    u_endo = np.linspace(-np.pi, -np.arccos(5/17), N)
-    v_endo = np.linspace(-np.pi, np.pi, N)
-
-    u_epi = np.linspace(-np.pi, -np.arccos(5/20), N)
-    v_epi = np.linspace(-np.pi, np.pi, N)
-
-
-    RS = np.ones((N, M, N))
-    RL = np.ones((N, M, N))
-    for i in range(M):
-        # print(f'fra: {int(N*K/M)*i} til: {int(N*K/M)*(i+1)-1}')
-        RS[:, i] = rs[i]
-        RL[:, i] = rl[i]
-
-    x = RS*np.expand_dims(np.outer(np.cos(v), np.sin(u)), 1)
-    y = RS*np.expand_dims(np.outer(np.sin(v), np.sin(u)), 1)
-    z = RL*np.expand_dims(np.outer(np.ones(np.size(v)), np.cos(u)), 1)
-
-    z[..., -1] = 5.0
-
-    # z = np.where(np.abs(z - 5E-3) < 1E-3, 5E-3, z)
     
-    model = MultiLayerNet(3, *[80]*6, 3)
+    model = MultiLayerNet(3, *[40]*6, 3)
     energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E5)
-    # energy = NeoHookeanEnergyModel(200, 100)
     DemLV = DeepEnergyMethodLV(model, energy)
-    # DemLV.train_model(domain, dirichlet, neumann, shape=shape, dxdydz=dxdydz, neu_axis=[0, 2], lr=.1, epochs=20, fb=np.array([[0, 0, 0]]))
     DemLV.train_model(domain, dirichlet, neumann, 
-                      shape=shape, dxdydz=[[dX, dY, dZ], [dX_neumann, dZ_neumann]], 
-                      LHD=np.zeros(3), neu_axis=[0, 2], lr=.5, epochs=27, fb=np.array([[0, 0, 0]]))
+                      shape=shape, dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
+                      LHD=np.zeros(3), neu_axis=[0, 2], lr=0.05, epochs=500,
+                      fb=np.array([[0, 0, 0]]),  ventricle_geometry=True)
 
-    # # print()
-    U_pred = DemLV.evaluate_model(x, y, z)
-    write_vtk_v3('output/DemLV', x, y, z, U_pred)
+    U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
+    write_vtk_v3(f'output/DemLV{N}x{M}', x_test, y_test, z_test, U_pred)
     # # exit()
-    # np.save('stored_arrays/DemLV', np.asarray(U_pred))
-    U_pred = np.load('stored_arrays/DemLV.npy')
-    exit()
-    domain = domain.reshape((N, M, N, 3))
-    X, Y, Z = domain[..., 0], domain[..., 1], domain[..., 2]
+    np.save(f'stored_arrays/DemLV{N}x{M}', np.asarray(U_pred))
+    U_pred = np.load(f'stored_arrays/DemLV{N}x{M}.npy')
+
+    X = np.copy(x_test)
+    Y = np.copy(y_test)
+    Z = np.copy(z_test)
+    # print('ferdig med XYZ')
     X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
 
 
-    U = np.asarray(U_pred) + domain.T.reshape((3, N, M, N))
-    k = int((N-1)/2)
+    k = int((N_test-1)/2)
 
-    ref_x = X[k, 2]
-    ref_z = Z[k, 2]
+    ref_x = x_test[k, 2]
+    ref_z = z_test[k, 2]
 
-    line = np.asarray(U_pred)
+    # line = np.asarray(U_pred)
     cur_x = X_cur[k, 2]
     cur_z = Z_cur[k, 2]
 
@@ -350,20 +323,24 @@ if __name__ == '__main__':
     ax1.plot(ref_x, ref_z, c='gray', linestyle=':')
     ax1.plot(cur_x, cur_z, label=f'{k}')
     ax1.legend()
+    fig1.savefig(f'figures/fig1_{N}x{M}')
 
     fig2, ax2 = plt.subplots()
     ax2.plot(cur_x, cur_z)
-    ax2.set_xlim(left=-14,right=-11)
+    # ax2.set_xlim(left=-14,right=-11)
     ax2.set_ylim((-9, -2))
+    fig2.savefig(f'figures/fig2_{N}x{M}')
 
     fig3, ax3 = plt.subplots()
     ax3.plot(cur_x, cur_z)
     ax3.set_xlim((-5, 0))
-    ax3.set_ylim((-28, -25))
+    # ax3.set_ylim((-28, -25))
+    fig3.savefig(f'figures/fig3_{N}x{M}')
 
     fig4, ax4 = plt.subplots()
     ax4.plot(Z_cur[0, 0, 0], marker='x', c='C0')
     ax4.plot(Z_cur[0, -1, 0], marker='x', c='C0')
+    fig4.savefig(f'figures/fig4_{N}x{M}')
     plt.show()
 
     # exit()

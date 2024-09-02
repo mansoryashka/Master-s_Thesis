@@ -1,9 +1,9 @@
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
 import torch
 from torch.autograd import grad
-from pathlib import Path
 
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 350
@@ -13,9 +13,8 @@ sns.set()
 
 import sys
 sys.path.insert(0, "..")
-from DEM import DeepEnergyMethod, MultiLayerNet, dev, L2norm3D, write_vtk_v2
+from DEM import DeepEnergyMethod, MultiLayerNet, L2norm3D, dev, write_vtk_v2
 from EnergyModels import NeoHookeanEnergyModel
-print('Running on GPU') if dev == torch.device('cuda') else print('Running on CPU')
 
 # np.random.seed(2023)
 torch.manual_seed(2023)
@@ -393,18 +392,18 @@ def run1():
     shape = [4*N, N, N]
     num_layers = [2, 3, 4, 5]
     num_neurons = [30, 40, 50, 60]
-    num_expreriments = 10
-    num_epochs = 300
+    num_expreriments = 40
+    num_epochs = 5
     U_norms = 0
     losses = 0
     start = time.time()
     for i in range(num_expreriments):
         print(f'Experiment nr. {i}')
         U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lr, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape)
-        U_norms += U_norms_i
-        losses += losses_i
         print('U_norms_i')
         print(U_norms_i)
+        U_norms += U_norms_i
+        losses += losses_i
     print('U_norms')
     print(U_norms)
     U_norms /= num_expreriments
@@ -414,7 +413,7 @@ def run1():
     plot_heatmap(U_norms, num_neurons, num_layers, 
                  rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 
                  'Number of hidden neurons', 'Number of hidden layers', 
-                 'beam_heatmap_num_neurons_layers')
+                 'beam_heatmap_num_neurons_layers40')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
@@ -426,15 +425,17 @@ def run2():
     lrs = [0.01, 0.05, 0.1, 0.5]
     num_layers = [2, 3, 4, 5]
     num_neurons = 40
-    num_expreriments = 10
-    num_epochs = 300
+    num_expreriments = 40
+    num_epochs = 5
     U_norms = 0
     losses = 0
     start = time.time()
     for i in range(num_expreriments):
+        print(f'Experiment nr. {i}')
         U_norms_i, losses_i= train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape)
-        U_norms += U_norms_i
         print('U_norms_i')
+        print(U_norms_i)
+        U_norms += U_norms_i
         losses += losses_i
         
     print('U_norms')
@@ -447,7 +448,7 @@ def run2():
     np.save(arrays_path / 'losses_lrs_nl', losses)
     plot_heatmap(U_norms, num_layers, lrs, 
                  rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 
-                 'Number of layers', r'$\eta$', f'beam_heatmap_lrs_num_layers')
+                 'Number of layers', r'$\eta$', f'beam_heatmap_lrs_num_layers40')
     # print(U_norms)
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
@@ -466,9 +467,11 @@ def run3():
     losses = 0
     start = time.time()
     for i in range(num_expreriments):
+        print('Experiment nr. ', i)
         U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape)
         U_norms += U_norms_i
         print('U_norms_i')
+        print(U_norms_i)
         losses += losses_i
     print('U_norms')
     print(U_norms)
@@ -496,10 +499,12 @@ def run4():
     losses = 0
     start = time.time()
     for i in range(num_expreriments):
+        print('Experiment nr. ', i)
         U_norms_i, losses_i = train_and_evaluate(Ns=Ns, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs)
+        print('U_norms_i')
+        print(U_norms_i)
         U_norms += U_norms_i
         losses += losses_i
-        print('U_norms_i')
     print('U_norms')
     print(U_norms)
     U_norms /= num_expreriments
@@ -518,7 +523,7 @@ def run4():
 if __name__ == '__main__':
     # u_fem20 = np.load('stored_arrays/u_fem_N20.npy')
     u_fem30 = np.load(arrays_path / 'u_fem_N30.npy')
-    exit(L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz))
+    # exit(L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz))
 
     x = np.linspace(0, L, 4*N_test + 2)[1:-1]
     y = np.linspace(0, D, N_test + 2)[1:-1]
@@ -531,7 +536,7 @@ if __name__ == '__main__':
 
     "______________________________________________"
 
-    # run1()
-    run2()
+    run1()
+    # run2()
     # run3()
     # run4()
