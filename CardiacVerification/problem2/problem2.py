@@ -104,13 +104,13 @@ def define_domain(N=15, M=5):
     # z_perp[3::8, 1:end] = 0
     
     # remove forces from apex, 20 points at apex, remove 19
-    x_perp[1:, 0] = 0
-    y_perp[1:, 0] = 0
-    z_perp[1:, 0] = 0
+    # x_perp[1:, 0] = 0
+    # y_perp[1:, 0] = 0
+    # z_perp[1:, 0] = 0
     # remove force from v = pi
-    x_perp[-1] = 0
-    y_perp[-1] = 0
-    z_perp[-1] = 0
+    # x_perp[-1] = 0
+    # y_perp[-1] = 0
+    # z_perp[-1] = 0
 
     # reshape to have access to different dimentsions
     # dimension 0 is angle
@@ -225,12 +225,11 @@ def write_vtk_v3(filename, x_space, y_space, z_space, U):
         gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
 
 if __name__ == '__main__':
-    N = 41; M = 3
+    N = 40; M = 7
     middle_layer = int(np.floor(M/2))
 
     domain, dirichlet, neumann = define_domain(N, M)
     shape = [N, M, N]
-
 
     N_test = 21; M_test = 3
     rs_endo = 7
@@ -288,13 +287,12 @@ if __name__ == '__main__':
                         (neumann_domain[1:, -1, 0] - neumann_domain[:-1, -1, 0])**2
                       + (neumann_domain[1:, -1, 1] - neumann_domain[:-1, -1, 1])**2))
 
-    
-    model = MultiLayerNet(3, *[40]*6, 3)
+    model = MultiLayerNet(3, *[80]*8, 3)
     energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E5)
     DemLV = DeepEnergyMethodLV(model, energy)
     DemLV.train_model(domain, dirichlet, neumann, 
                       shape=shape, dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
-                      LHD=np.zeros(3), neu_axis=[0, 2], lr=0.05, epochs=500,
+                      LHD=np.zeros(3), neu_axis=[0, 2], lr=0.5, epochs=500,
                       fb=np.array([[0, 0, 0]]),  ventricle_geometry=True)
 
     U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
@@ -306,40 +304,44 @@ if __name__ == '__main__':
     X = np.copy(x_test)
     Y = np.copy(y_test)
     Z = np.copy(z_test)
-    # print('ferdig med XYZ')
-    X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
 
+    X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
 
     k = int((N_test-1)/2)
 
     ref_x = x_test[k, 2]
     ref_z = z_test[k, 2]
 
-    # line = np.asarray(U_pred)
     cur_x = X_cur[k, 2]
     cur_z = Z_cur[k, 2]
 
     fig1, ax1 = plt.subplots(figsize=(3, 6))
     ax1.plot(ref_x, ref_z, c='gray', linestyle=':')
     ax1.plot(cur_x, cur_z, label=f'{k}')
-    ax1.legend()
+    ax1.set_xlabel('$x$ [mm]')
+    ax1.set_ylabel('$y$ [mm]')
     fig1.savefig(f'figures/fig1_{N}x{M}')
 
     fig2, ax2 = plt.subplots()
     ax2.plot(cur_x, cur_z)
+    ax2.set_xlabel('$x$ [mm]')
+    ax2.set_ylabel('$y$ [mm]')
+
     # ax2.set_xlim(left=-14,right=-11)
     ax2.set_ylim((-9, -2))
     fig2.savefig(f'figures/fig2_{N}x{M}')
 
     fig3, ax3 = plt.subplots()
     ax3.plot(cur_x, cur_z)
+    ax2.set_xlabel('$x$ [mm]')
+    ax2.set_ylabel('$y$ [mm]')
     ax3.set_xlim((-5, 0))
     # ax3.set_ylim((-28, -25))
     fig3.savefig(f'figures/fig3_{N}x{M}')
 
     fig4, ax4 = plt.subplots()
     ax4.plot(Z_cur[0, 0, 0], marker='x', c='C0')
-    ax4.plot(Z_cur[0, -1, 0], marker='x', c='C0')
+    ax4.plot(Z_cur[0, -1, 0], marker='o', c='C0')
     fig4.savefig(f'figures/fig4_{N}x{M}')
     plt.show()
 
