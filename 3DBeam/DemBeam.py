@@ -251,7 +251,9 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
             # store solution
             # write_vtk_v2(f'output/DemBeam_N{N}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
             # calculate L2norm
-            u_norms[i] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+
+            u_norms[i] = (L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                / L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz))
             # losses[:, :, i] = np.array(DemBeam.losses.detach().numpy()).T
             losses[:, :, i] = DemBeam.losses
             del model
@@ -272,7 +274,9 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
 
                 # store solution
                 # write_vtk_v2(f'output/DemBeam_lr{lr}_nn{n}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
-                u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                
+                u_norms[i, j] = (L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                                / L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz))
                 # losses[:, :, i, j] = np.array(DemBeam.losses.detach().numpy()).T
                 losses[:, :, i, j] = DemBeam.losses
                 del model
@@ -293,7 +297,9 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 # store solution
                 # write_vtk_v2(f'output/DemBeam_lr{lr}_nl{l}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
 
-                u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                
+                u_norms[i, j] = (L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                                / L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz))
                 # losses[:, :, i, j] = np.array(DemBeam.losses.detach().numpy()).T
                 losses[:, :, i, j] = DemBeam.losses
                 del model
@@ -314,8 +320,10 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
                 # store solution
                 # write_vtk_v2(f'output/DemBeam_nn{n}_nl{l}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
-                u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
                 
+                u_norms[i, j] = (L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                                / L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz))
+
                 # losses[:, :, i, j] = np.array(DemBeam.losses.detach().numpy()).T
                 losses[:, :, i, j] = DemBeam.losses
                 del model
@@ -340,7 +348,9 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 # store solution
                 # write_vtk_v2(f'output/DemBeam_lr{lr}_N{N}', x, y, z, {'Displacement': U_pred, 'vonMises stress': VonMises_pred})
                 # calculate L2norm
-                u_norms[i, j] = L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                
+                u_norms[i, j] = (L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
+                                / L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz))
                 # losses[:, :, i, j] = np.array(DemBeam.losses.detach().numpy()).T
                 losses[:, :, i, j] = DemBeam.losses
                 del model
@@ -361,7 +371,7 @@ def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, c
                 vmax=np.max(data[~np.isnan(data)])
                 )
     ### skriv tester for om title, labels og filnavn blir sendt inn!!! ###
-    ax.set_title(title)
+    # ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     fig.savefig(figures_path / Path(figname + '.pdf'))
@@ -392,8 +402,8 @@ def run1():
     shape = [4*N, N, N]
     num_layers = [2, 3, 4, 5]
     num_neurons = [30, 40, 50, 60]
-    num_expreriments = 40
-    num_epochs = 5
+    num_expreriments = 30
+    num_epochs = 300
     U_norms = 0
     losses = 0
     start = time.time()
@@ -413,7 +423,7 @@ def run1():
     plot_heatmap(U_norms, num_neurons, num_layers, 
                  rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 
                  'Number of hidden neurons', 'Number of hidden layers', 
-                 'beam_heatmap_num_neurons_layers40')
+                 'beam_heatmap_num_neurons_layers')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
@@ -425,8 +435,8 @@ def run2():
     lrs = [0.01, 0.05, 0.1, 0.5]
     num_layers = [2, 3, 4, 5]
     num_neurons = 40
-    num_expreriments = 40
-    num_epochs = 5
+    num_expreriments = 30
+    num_epochs = 300
     U_norms = 0
     losses = 0
     start = time.time()
@@ -448,7 +458,7 @@ def run2():
     np.save(arrays_path / 'losses_lrs_nl', losses)
     plot_heatmap(U_norms, num_layers, lrs, 
                  rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 
-                 'Number of layers', r'$\eta$', f'beam_heatmap_lrs_num_layers40')
+                 'Number of layers', r'$\eta$', f'beam_heatmap_lrs_num_layers')
     # print(U_norms)
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
@@ -461,7 +471,7 @@ def run3():
     lrs = [0.01, 0.05, 0.1, 0.5]
     num_neurons = [30, 40, 50, 60]
     num_layers = 3
-    num_expreriments = 10
+    num_expreriments = 30
     num_epochs = 300
     U_norms = 0
     losses = 0
@@ -492,8 +502,8 @@ def run4():
     Ns = [30, 40, 50, 60]
     lrs = [0.01, 0.05, 0.1, 0.5]
     num_layers = 3
-    num_neurons = 40
-    num_expreriments = 10
+    num_neurons = 50
+    num_expreriments = 30
     num_epochs = 300
     U_norms = 0
     losses = 0
@@ -536,7 +546,7 @@ if __name__ == '__main__':
 
     "______________________________________________"
 
-    run1()
+    # run1()
     # run2()
     # run3()
-    # run4()
+    run4()
