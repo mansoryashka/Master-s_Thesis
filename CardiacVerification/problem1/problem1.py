@@ -144,8 +144,9 @@ if __name__ == '__main__':
 
     # write_vtk_v2(f'output/problem1{N}', x_test, y_test, z_test, U_pred)
     # np.save(f'stored_arrays/U_pred{N}', np.asarray(U_pred))
-    U_pred = np.load(f'stored_arrays/U_pred{N}.npy')
 
+    N = 50
+    U_pred = np.load(f'stored_arrays/U_pred{N}.npy')
     
     X, Y, Z = np.meshgrid(x_test, y_test, z_test)
     X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
@@ -179,6 +180,7 @@ if __name__ == '__main__':
     end_x, end_y, end_z = X[condition5], Y[condition5], Z[condition5]
     end_x_cur, end_y_cur, end_z_cur = X_cur[condition5], Y_cur[condition5], Z_cur[condition5]
 
+    print(N, end_z_cur)
 
     strain_x = (np.linalg.norm(pts_x_cur[:-1] - pts_x_cur[1:], axis=1)
                 / np.linalg.norm(pts_x[:-1] - pts_x[1:], axis=1)
@@ -190,40 +192,69 @@ if __name__ == '__main__':
                 / np.linalg.norm(pts_x - pts_z, axis=1)
                 - 1) * 100
 
-    fig, ax = plt.subplots(1, 3, figsize=(10, 3))
-    fig.tight_layout()
-    ax[0].plot(strain_x, '-x')
-    ax[1].plot(strain_y, '-x')
-    ax[2].plot(strain_z, '-x')
+    # fig, ax = plt.subplots(1, 3, figsize=(13, 5))
+    # # fig.tight_layout()
+    # ax[0].plot(strain_x, '-x')
+    # ax[0].set_ylabel('strain [%]')
+    # ax[0].set_title('$x$-axis')
+    # ax[0].set_xticks(np.arange(9))
+    # ax[0].set_xticklabels(['p1', '', 'p3', '', 'p5', '', 'p7', '', 'p9'])
+
+    # ax[1].plot(strain_y, '-x')
+    # ax[1].set_title('$y$-axis')
+    # ax[1].set_xticks(np.arange(10))
+    # ax[1].set_xticklabels(['p1', '', 'p3', '', 'p5', '', 'p7', '', 'p9', ''])
+
+    # ax[2].plot(strain_z, '-x')
+    # ax[2].set_title('$z$-axis')
+    # ax[2].set_xticks(np.arange(10))
+    # ax[2].set_xticklabels(['p1', '', 'p3', '', 'p5', '', 'p7', '', 'p9', ''])
     # fig.savefig(f'figures/strain_plot{N}.pdf')
-    fig, ax = plt.subplots(1, 1) #, figsize=(4, 2))
-    ax.plot(line_x_cur, line_z_cur)
+    # plt.show()
+
+
+    # fig, ax = plt.subplots(1, 1, figsize=(9, 5))
+    # ax.plot(line_x_cur, line_z_cur)
+    # ax.set_xlabel('$x$ [mm]')
+    # ax.set_ylabel('$z$ [mm]')
     # fig.savefig(f'figures/line_plot{N}.pdf')
-    fig, ax = plt.subplots(1, 1) #, figsize=(4, 2))
-    ax.plot(line_x_cur[-int(N/10)-1:], line_z_cur[-int(N/10)-1:])
+
+    # fig, ax = plt.subplots(1, 1) #, figsize=(4, 2))
+    # ax.plot(line_x_cur[-int(N/10)-1:], line_z_cur[-int(N/10)-1:])
+    # ax.set_xlabel('$x$ [mm]')
+    # ax.set_ylabel('$z$ [mm]')
+    # fig.savefig(f'figures/zoom_plot{N}.pdf')
     # ax.set_xlim([9.25, 9.40])
     # ax.set_xticks([9.25, 9.40])
     # ax.set_ylim([3.60, 3.75])
     # ax.set_yticks([3.60, 3.75])
-    # fig.savefig(f'figures/zoom_plot{N}.pdf')
-    plt.show()
+    # plt.show()
 
+    fig, ax = plt.subplots()
+    z_endpoints = [4.06165695, 4.19167995, 4.26602459, 4.30367184, 4.32637811]
+    nr_points = [10*i**3 for i in range(10, 51, 10)]
+    ax.scatter(nr_points, z_endpoints)
+    ax.set_xscale('log')
+    ax.set_ylabel('Z-deflection at end of bar [mm]')
+    ax.set_xlabel('Nr. of trainig points [N]')
+    fig.savefig('figures/z_endpoints.pdf')
+    # plt.show()
 
-    fig = plt.figure(figsize=(5, 3))
-    fig.tight_layout()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.set_box_aspect((8, 1, 6))
-    ax.scatter(X, Y, Z, s=1, alpha=.1)
-    ax.scatter(end_x, end_y, end_z, s=5, c='springgreen')
-    ax.scatter(line_x, line_y, line_z, s=.5, c='firebrick')
-    ax.quiver(X[::2, ::10, ::2], Y[::2, ::10, ::2], Z[::2, ::10, ::2], 
-              U_pred[0, ::2, ::10, ::2], U_pred[1, ::2, ::10, ::2], U_pred[2, ::2, ::10, ::2],
-              alpha=.3, length=.5)
-    ax.scatter(X_cur, Y_cur, Z_cur, s=1, alpha=1)
-    ax.scatter(end_x_cur, end_y_cur, end_z_cur, s=5, c='forestgreen')
-    ax.scatter(pts_y_cur[:, 0], pts_y_cur[:, 1], pts_y_cur[:, 2], s=2, c='midnightblue')
-    ax.scatter(line_x_cur, line_y_cur, line_z_cur, s=.5, c='firebrick')
-    ax.set_xlabel('$x$')
-    ax.set_ylabel('$y$')
-    ax.set_zlabel('$z$')
-    plt.show()
+    # fig = plt.figure(figsize=(5, 3))
+    # fig.tight_layout()
+    # ax = fig.add_subplot(111, projection='3d')
+    # ax.set_box_aspect((8, 1, 6))
+    # ax.scatter(X, Y, Z, s=1, alpha=.1)
+    # ax.scatter(end_x, end_y, end_z, s=5, c='springgreen')
+    # ax.scatter(line_x, line_y, line_z, s=.5, c='firebrick')
+    # ax.quiver(X[::2, ::10, ::2], Y[::2, ::10, ::2], Z[::2, ::10, ::2], 
+    #           U_pred[0, ::2, ::10, ::2], U_pred[1, ::2, ::10, ::2], U_pred[2, ::2, ::10, ::2],
+    #           alpha=.3, length=.5)
+    # ax.scatter(X_cur, Y_cur, Z_cur, s=1, alpha=1)
+    # ax.scatter(end_x_cur, end_y_cur, end_z_cur, s=5, c='forestgreen')
+    # ax.scatter(pts_y_cur[:, 0], pts_y_cur[:, 1], pts_y_cur[:, 2], s=2, c='midnightblue')
+    # ax.scatter(line_x_cur, line_y_cur, line_z_cur, s=.5, c='firebrick')
+    # ax.set_xlabel('$x$')
+    # ax.set_ylabel('$y$')
+    # ax.set_zlabel('$z$')
+    # plt.show()
