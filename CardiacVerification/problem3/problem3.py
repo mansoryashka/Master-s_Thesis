@@ -97,13 +97,13 @@ def generate_fibers(N=15, M=3):
     s0 = np.cross(f0, n0, axis=0)
     s0 = normalize(s0)
 
-    # f0[:, -1] = 0.0
-    # s0[:, -1] = 0.0
-    # n0[:, -1] = 0.0
+    # f0[-1, :] = 0.0
+    # s0[-1, :] = 0.0
+    # n0[-1, :] = 0.0
     # set apex to zero or one?
-    # f0[..., 0] = 0
-    # s0[..., 0] = 0
-    # n0[..., 0] = 0
+    f0[..., 0] = 0
+    s0[..., 0] = 0
+    n0[..., 0] = 0
     # f0[..., -1] = 0
     # s0[..., -1] = 0
     # n0[..., -1] = 0
@@ -195,6 +195,18 @@ def define_domain(N=15, M=5):
     x_perp = np.copy(x_endo) / rs_endo
     y_perp = np.copy(y_endo) / rs_endo
     z_perp = np.copy(z_endo) / rl_endo
+
+    dx = np.sqrt(
+        (x_perp[1:, :] - x_perp[:-1, :])**2
+      + (y_perp[1:, :] - y_perp[:-1, :])**2
+      + (z_perp[1:, :] - z_perp[:-1, :])**2
+    )
+    dx /= np.max(dx)
+    dx = dx[0]*np.ones((N, N))
+
+    x_perp *= dx
+    y_perp *= dx
+    z_perp *= dx
 
     end = int((N-1)/4)
     # x_perp[::2, 1:end] = 0
@@ -386,13 +398,13 @@ if __name__ == '__main__':
     # s0 = torch.tensor([0, 1, 0]).to(dev)
     # n0 = torch.tensor([0, 0, 1]).to(dev)
 
-    model = MultiLayerNet(3, *[100]*10, 3)
-    energy = GuccioneTransverseActiveEnergyModel(C, bf, bt, bfs, kappa=1E7, Ta=6E4, f0=f0, s0=s0, n0=n0)
+    model = MultiLayerNet(3, *[80]*8, 3)
+    energy = GuccioneTransverseActiveEnergyModel(C, bf, bt, bfs, kappa=1E6, Ta=6E4, f0=f0, s0=s0, n0=n0)
     DemLV = DeepEnergyMethodLV(model, energy)
     # DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, dxdydz=dxdydz, neu_axis=[0, 2], lr=.5, epochs=20, fb=np.array([[0, 0, 0]]))
     DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, 
-                      dxdydz=[[dX, dY, dZ], [dX_neumann, dZ_neumann]], 
-                      neu_axis=[0, 2], lr=.1, epochs=40, fb=np.array([[0, 0, 0]]))
+                      dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
+                      neu_axis=[0, 2], lr=.1, epochs=75, fb=np.array([[0, 0, 0]]), ventricle_geometry=True)
     U_pred = DemLV.evaluate_model(x, y, z)
     write_vtk_v3('output/DemLV', x, y, z, U_pred)
 

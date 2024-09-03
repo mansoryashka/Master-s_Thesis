@@ -163,8 +163,8 @@ def define_domain(N=15, M=5):
     # plot epicardial and endocardial surfaces
     ax.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
     # ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
-    ax.quiver(x_endo[:2, :], y_endo[:2, :], z_endo[:2, :], 
-              x_perp[:2, :], y_perp[:2, :], z_perp[:2, :], alpha=.5)
+    ax.quiver(x_endo[:, :], y_endo[:, :], z_endo[:, :], 
+              x_perp[:, :], y_perp[:, :], z_perp[:, :], alpha=.5)
     # plt.show(); exit()
     plt.savefig('ventricle.pdf')
     plt.close()
@@ -246,7 +246,7 @@ def write_vtk_v3(filename, x_space, y_space, z_space, U):
         gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
 
 if __name__ == '__main__':
-    N = 5; M = 3
+    N = 40; M = 3
     middle_layer = int(np.floor(M/2))
 
     domain, dirichlet, neumann = define_domain(N, M)
@@ -308,18 +308,18 @@ if __name__ == '__main__':
                         (neumann_domain[1:, -1, 0] - neumann_domain[:-1, -1, 0])**2
                       + (neumann_domain[1:, -1, 1] - neumann_domain[:-1, -1, 1])**2))
 
-    # model = MultiLayerNet(3, *[80]*8, 3)
-    # energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E5)
-    # DemLV = DeepEnergyMethodLV(model, energy)
-    # DemLV.train_model(domain, dirichlet, neumann, 
-    #                   shape=shape, dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
-    #                   LHD=np.zeros(3), neu_axis=[0, 2], lr=0.5, epochs=500,
-    #                   fb=np.array([[0, 0, 0]]),  ventricle_geometry=True)
+    model = MultiLayerNet(3, *[80]*8, 3)
+    energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E5)
+    DemLV = DeepEnergyMethodLV(model, energy)
+    DemLV.train_model(domain, dirichlet, neumann, 
+                      shape=shape, dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
+                      LHD=np.zeros(3), neu_axis=[0, 2], lr=0.1, epochs=250,
+                      fb=np.array([[0, 0, 0]]),  ventricle_geometry=True)
 
-    # U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
-    # write_vtk_v3(f'output/DemLV{N}x{M}', x_test, y_test, z_test, U_pred)
-    # # # exit()
-    # np.save(f'stored_arrays/DemLV{N}x{M}', np.asarray(U_pred))
+    U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
+    write_vtk_v3(f'output/DemLV{N}x{M}', x_test, y_test, z_test, U_pred)
+    # # exit()
+    np.save(f'stored_arrays/DemLV{N}x{M}', np.asarray(U_pred))
     U_pred = np.load(f'stored_arrays/DemLV{N}x{M}.npy')
 
     X = np.copy(x_test)
@@ -343,7 +343,7 @@ if __name__ == '__main__':
     ax = plt.subplot2grid((2,2), (0,0), colspan=1, rowspan=2)
     ax.set_xlabel('$x$ [mm]')
     ax.set_ylabel('$y$ [mm]')
-    ax.set_title('Normal distribution')
+    ax.plot(ref_x, ref_z, c='gray', linestyle=':')
     ax.plot(cur_x, cur_z)
 
     ax2 = plt.subplot2grid((2,2), (0,1))
@@ -351,16 +351,18 @@ if __name__ == '__main__':
     ax2.set_xlabel('$x$ [mm]')
     ax2.set_ylabel('$y$ [mm]')
     ax2.set_ylim((-9, -2))
+    ax2.set_xlim((-12.5, -11.5))
 
     ax3 = plt.subplot2grid((2,2), (1,1))
     ax3.plot(cur_x, cur_z)
     ax3.set_xlabel('$x$ [mm]')
     ax3.set_ylabel('$y$ [mm]')
+    ax3.set_ylim((-28.5, -25))
     ax3.set_xlim((-5, 0))
 
     fig.tight_layout()
-    plt.savefig('gs.pdf')
-
+    plt.savefig('gs.png')
+    plt.show()
     # fig1, ax1 = plt.subplots(figsize=(3, 6))
     # ax1.plot(ref_x, ref_z, c='gray', linestyle=':')
     # ax1.plot(cur_x, cur_z, label=f'{k}')
