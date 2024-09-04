@@ -272,12 +272,19 @@ if __name__ == '__main__':
     z_test[..., -1] = 5.0
 
 
-    N = 39; M = 3
+    N = 10; M = 5
     plt.style.use('seaborn-v0_8-darkgrid')
     fig2, ax = plt.subplots()
-    for N in [39]:
+    fig = plt.figure()
+    plt.style.use('seaborn-v0_8-darkgrid')
+    ax1 = plt.subplot2grid((2,2), (0,0), colspan=1, rowspan=2)
+    ax2 = plt.subplot2grid((2,2), (0,1))
+    ax3 = plt.subplot2grid((2,2), (1,1))
+    for N, M in zip([20, 30, 40, 40], [3, 3, 3, 5]):
 
         middle_layer = int(np.floor(M/2))
+
+        # print(M, middle_layer)
         domain, dirichlet, neumann = define_domain(N, M)
         shape = [N, M, N]
 
@@ -310,19 +317,19 @@ if __name__ == '__main__':
                             (neumann_domain[1:, -1, 0] - neumann_domain[:-1, -1, 0])**2
                           + (neumann_domain[1:, -1, 1] - neumann_domain[:-1, -1, 1])**2))
 
-        model = MultiLayerNet(3, *[40]*4, 3)
-        energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E3)
-        DemLV = DeepEnergyMethodLV(model, energy)
-        DemLV.train_model(domain, dirichlet, neumann, 
-                          shape=shape, dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
-                          LHD=np.zeros(3), neu_axis=[0, 2], lr=0.1, epochs=200,
-                          fb=np.array([[0, 0, 0]]),  ventricle_geometry=True)
+        # model = MultiLayerNet(3, *[40]*4, 3)
+        # energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E3)
+        # DemLV = DeepEnergyMethodLV(model, energy)
+        # DemLV.train_model(domain, dirichlet, neumann, 
+        #                   shape=shape, dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
+        #                   LHD=np.zeros(3), neu_axis=[0, 2], lr=0.1, epochs=200,
+        #                   fb=np.array([[0, 0, 0]]),  ventricle_geometry=True)
 
-        U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
-        write_vtk_v3(f'output/DemLV{N}x{M}', x_test, y_test, z_test, U_pred)
+        # U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
+        # write_vtk_v3(f'output/DemLV{N}x{M}', x_test, y_test, z_test, U_pred)
 
         # np.save(f'stored_arrays/DemLV{N}x{M}', np.asarray(U_pred))
-        # U_pred = np.load(f'stored_arrays/DemLV{N}x{M}.npy')
+        U_pred = np.load(f'stored_arrays/DemLV{N}x{M}.npy')
 
         X = np.copy(x_test)
         Y = np.copy(y_test)
@@ -332,52 +339,47 @@ if __name__ == '__main__':
 
         k = int((N_test-1)/2)
 
-        ref_x = x_test[k, middle_layer]
-        ref_z = z_test[k, middle_layer]
+        ref_x = x_test[k, 1]
+        ref_z = z_test[k, 1]
 
-        cur_x = X_cur[k, middle_layer]
-        cur_z = Z_cur[k, middle_layer]
+        cur_x = X_cur[k, 1]
+        cur_z = Z_cur[k, 1]
 
-
-        plt.style.use('seaborn-v0_8-darkgrid')
-        fig = plt.figure()
-        # gs.GridSpec(3,3)
-        
-        ax1 = plt.subplot2grid((2,2), (0,0), colspan=1, rowspan=2)
         ax1.set_xlabel('$x$ [mm]')
         ax1.set_ylabel('$y$ [mm]')
         ax1.plot(ref_x, ref_z, c='gray', linestyle=':')
-        ax1.plot(cur_x, cur_z)
+        ax1.plot(cur_x, cur_z, label=f"({N}, {M}, {N})")
         ax1.set_xticks([-10, -5, 0])
+        ax1.legend()
 
-        ax2 = plt.subplot2grid((2,2), (0,1))
-        ax2.plot(cur_x, cur_z)
+        
+        ax2.plot(cur_x, cur_z, label=f"({N}, {M}, {N})", alpha=0.5)
         ax2.set_xlabel('$x$ [mm]')
         ax2.set_ylabel('$y$ [mm]')
         ax2.set_ylim((-9, -2))
-        # ax2.set_xlim((-12, -10))
+        ax2.set_xlim((-14, -10))
         # ax2.set_xticks([-12, -10])
-        # ax2.set_yticks([-9, -2])
+        ax2.set_yticks([-9, -2])
 
-        ax3 = plt.subplot2grid((2,2), (1,1))
-        ax3.plot(cur_x, cur_z)
+        
+        ax3.plot(cur_x, cur_z, label=f"({N}, {M}, {N})", alpha=0.5)
         ax3.set_xlabel('$x$ [mm]')
         ax3.set_ylabel('$y$ [mm]')
-        # ax3.set_ylim((-26, -23))
+        ax3.set_ylim((-27, -22))
         ax3.set_xlim((-5, 0))
 
-        # ax3.set_xticks([-5, -0])
+        ax3.set_xticks([-5, -0])
         # ax3.set_yticks([-27, -23])
 
         fig.tight_layout()
-        # plt.savefig(f'figures/p2_plot{N}x{M}.pdf')
+        plt.savefig(f'figures/p2_plot_all.pdf')
 
         Z_cur[0, 0, 0], Z_cur[0, -1, 0]
-        # plt.style.use('seaborn-v0_8-darkgrid')
+        plt.style.use('seaborn-v0_8-darkgrid')
         ax.scatter(N*N*M, Z_cur[0, 0, 0], marker='x', c='tab:blue')
         ax.scatter(N*N*M, Z_cur[0, -1, 0], marker='x', c='tab:orange')
         ax.legend(['Endocardial apex', 'Epicardial apex'])
         ax.set_xlabel('Nr. of points [N]')
         ax.set_ylabel('$z$-location of deformed apex')
-        # fig2.savefig('figures/p2_apex.pdf')
-    plt.show()
+        fig2.savefig('figures/p2_apex.pdf')
+    # plt.show()
