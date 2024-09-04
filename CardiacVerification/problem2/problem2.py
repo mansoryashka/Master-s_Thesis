@@ -280,7 +280,7 @@ if __name__ == '__main__':
     ax1 = plt.subplot2grid((2,2), (0,0), colspan=1, rowspan=2)
     ax2 = plt.subplot2grid((2,2), (0,1))
     ax3 = plt.subplot2grid((2,2), (1,1))
-    for N, M in zip([20, 30, 40, 40], [3, 3, 3, 5]):
+    for N, M in zip([10], [3]):
 
         middle_layer = int(np.floor(M/2))
 
@@ -350,29 +350,29 @@ if __name__ == '__main__':
         ax1.plot(ref_x, ref_z, c='gray', linestyle=':')
         ax1.plot(cur_x, cur_z, label=f"({N}, {M}, {N})")
         ax1.set_xticks([-10, -5, 0])
-        ax1.legend()
+        # ax1.legend()
 
         
-        ax2.plot(cur_x, cur_z, label=f"({N}, {M}, {N})", alpha=0.5)
+        ax2.plot(cur_x, cur_z, label=f"({N}, {M}, {N})", alpha=1)
         ax2.set_xlabel('$x$ [mm]')
         ax2.set_ylabel('$y$ [mm]')
         ax2.set_ylim((-9, -2))
-        ax2.set_xlim((-14, -10))
+        ax2.set_xlim((-17, -12))
         # ax2.set_xticks([-12, -10])
         ax2.set_yticks([-9, -2])
 
         
-        ax3.plot(cur_x, cur_z, label=f"({N}, {M}, {N})", alpha=0.5)
+        ax3.plot(cur_x, cur_z, label=f"({N}, {M}, {N})", alpha=1)
         ax3.set_xlabel('$x$ [mm]')
         ax3.set_ylabel('$y$ [mm]')
-        ax3.set_ylim((-27, -22))
-        ax3.set_xlim((-5, 0))
+        ax3.set_ylim((-34, -32))
+        ax3.set_xlim((-13, -9))
 
-        ax3.set_xticks([-5, -0])
+        ax3.set_xticks([-13, -9])
         # ax3.set_yticks([-27, -23])
 
         fig.tight_layout()
-        plt.savefig(f'figures/p2_plot_all.pdf')
+        plt.savefig(f'figures/p2_plot{N}x{M}.pdf')
 
         Z_cur[0, 0, 0], Z_cur[0, -1, 0]
         plt.style.use('seaborn-v0_8-darkgrid')
@@ -381,5 +381,5 @@ if __name__ == '__main__':
         ax.legend(['Endocardial apex', 'Epicardial apex'])
         ax.set_xlabel('Nr. of points [N]')
         ax.set_ylabel('$z$-location of deformed apex')
-        fig2.savefig('figures/p2_apex.pdf')
+        # fig2.savefig('figures/p2_apex.pdf')
     # plt.show()
