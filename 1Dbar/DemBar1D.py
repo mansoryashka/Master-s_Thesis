@@ -152,13 +152,8 @@ if __name__ == '__main__':
             ax3.plot(x_test, du_fem, '--', label='FEM')
             ax3.plot(x_test, du, 'g:', label=f'DEM')
     
-    ax3.set_xlabel('$X$')
-    ax3.set_ylabel('du/dX')
-    ax3.legend(loc='upper right')
-    fig3.savefig('figures/du.pdf')
-
     ax1.set_xlabel('$X$')
-    ax1.set_ylabel('Relative error')
+    ax1.set_ylabel('Absolute error')
     ax1.legend(loc='upper right')
     fig1.savefig('figures/error_u_dem.pdf')
 
@@ -167,8 +162,13 @@ if __name__ == '__main__':
     ax2.legend(loc='lower right')
     fig2.savefig('figures/u.pdf')
 
+    ax3.set_xlabel('$X$')
+    ax3.set_ylabel('du/dX')
+    ax3.legend(loc='upper right')
+    fig3.savefig('figures/du.pdf')
+
     ax4.set_xlabel('$X$')
-    ax4.set_ylabel('$Relative error$')
+    ax4.set_ylabel('Absolute error')
     ax4.legend(loc='upper right')
     fig4.savefig('figures/error_du_dem.pdf')
     plt.show()

@@ -20,8 +20,10 @@ plt.style.use('default')
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 200
 
-C = 10E3
-bf = bt = bfs = 1
+C = 2
+bf = 8
+bt = 2
+bfs = 4
 
 rs_endo = 7
 rl_endo = 17
@@ -97,9 +99,9 @@ def generate_fibers(N=15, M=3):
     s0 = np.cross(f0, n0, axis=0)
     s0 = normalize(s0)
 
-    # f0[:, -1] = 0.0
-    # s0[:, -1] = 0.0
-    # n0[:, -1] = 0.0
+    # f0[-1, :] = 0.0
+    # s0[-1, :] = 0.0
+    # n0[-1, :] = 0.0
     # set apex to zero or one?
     # f0[..., 0] = 0
     # s0[..., 0] = 0
@@ -196,22 +198,17 @@ def define_domain(N=15, M=5):
     y_perp = np.copy(y_endo) / rs_endo
     z_perp = np.copy(z_endo) / rl_endo
 
-    end = int((N-1)/4)
-    # x_perp[::2, 1:end] = 0
-    # y_perp[::2, 1:end] = 0
-    # z_perp[::2, 1:end] = 0
-    # x_perp[1:-1:4, 1:end] = 0
-    # y_perp[1:-1:4, 1:end] = 0
-    # z_perp[1:-1:4, 1:end] = 0
-    # x_perp[3:-1:8, 1:end] = 0
-    # y_perp[3:-1:8, 1:end] = 0
-    # z_perp[3:-1:8, 1:end] = 0
-    # x_perp[1:, 0] = 0
-    # y_perp[1:, 0] = 0
-    # z_perp[1:, 0] = 0
-    # x_perp[-1] = 0
-    # y_perp[-1] = 0
-    # z_perp[-1] = 0
+    dx = np.sqrt(
+        (x_perp[1:, :] - x_perp[:-1, :])**2
+      + (y_perp[1:, :] - y_perp[:-1, :])**2
+      + (z_perp[1:, :] - z_perp[:-1, :])**2
+    )
+    dx /= np.max(dx)
+    dx = dx[0]*np.ones((N, N))
+
+    x_perp *= dx
+    y_perp *= dx
+    z_perp *= dx
 
     # reshape to have access to different dimentsions
     # dimension 0 is angle
@@ -285,7 +282,7 @@ def define_domain(N=15, M=5):
     y_perp = np.expand_dims(y_perp.flatten(), 1)
     z_perp = np.expand_dims(z_perp.flatten(), 1)
 
-    n_cond = 15E3*np.concatenate((x_perp, y_perp, z_perp), -1)
+    n_cond = 15*np.concatenate((x_perp, y_perp, z_perp), -1)
 
 
     x2 = np.expand_dims(x2.flatten(), 1)
@@ -386,14 +383,14 @@ if __name__ == '__main__':
     # s0 = torch.tensor([0, 1, 0]).to(dev)
     # n0 = torch.tensor([0, 0, 1]).to(dev)
 
-    model = MultiLayerNet(3, *[100]*10, 3)
-    energy = GuccioneTransverseActiveEnergyModel(C, bf, bt, bfs, kappa=1E7, Ta=6E4, f0=f0, s0=s0, n0=n0)
+    model = MultiLayerNet(3, *[40]*4, 3)
+    energy = GuccioneTransverseActiveEnergyModel(C, bf, bt, bfs, kappa=1E3, Ta=60, f0=f0, s0=s0, n0=n0)
     DemLV = DeepEnergyMethodLV(model, energy)
     # DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, dxdydz=dxdydz, neu_axis=[0, 2], lr=.5, epochs=20, fb=np.array([[0, 0, 0]]))
     DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, 
-                      dxdydz=[[dX, dY, dZ], [dX_neumann, dZ_neumann]], 
-                      neu_axis=[0, 2], lr=.1, epochs=40, fb=np.array([[0, 0, 0]]))
+                      dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
+                      neu_axis=[0, 2], lr=.1, epochs=75, fb=np.array([[0, 0, 0]]), ventricle_geometry=True)
     U_pred = DemLV.evaluate_model(x, y, z)
-    write_vtk_v3('output/DemLV', x, y, z, U_pred)
+    write_vtk_v3('output/DemLV2', x, y, z, U_pred)
 
-    np.save('stored_arrays/U_pred', np.asarray(U_pred))
+    np.save('stored_arrays/U_pred2', np.asarray(U_pred))
