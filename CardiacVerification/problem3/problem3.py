@@ -141,5 +141,5 @@ if __name__ == '__main__':
                       fb=np.array([[0, 0, 0]]), ventricle_geometry=True)
     
     U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
-    np.save('stored_arrays/U_pred2', np.asarray(U_pred))
-    write_vtk_LV('output/DemLV2', x_test, y_test, z_test, U_pred)
+    np.save('stored_arrays/U_pred3', np.asarray(U_pred))
+    write_vtk_LV('output/DemLV3', x_test, y_test, z_test, U_pred)
