@@ -226,7 +226,7 @@ def VonMises_stress(u, x):
     return SVonMises
 
 ### Skrive blokkene til en egen funksjon? Kalles på helt likt inne i loopene ###
-def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, max_it=20, shape=[20, 20, 20]):
+def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, shape=[20, 20, 20]):
     # if eval_data:
     #     nr_losses = 2
     # else:
@@ -244,7 +244,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
             DemBeam = DeepEnergyMethodBeam(model, energy)
             domain, dirichlet, neumann = define_domain(L, H, D, N=N)
             # train model
-            DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lrs, max_it=max_it, epochs=num_epochs)
+            DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lrs, epochs=num_epochs)
             # evaluate model
             U_pred = DemBeam.evaluate_model(x, y, z)
             # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
@@ -268,7 +268,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 DemBeam = DeepEnergyMethodBeam(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
 
-                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, epochs=num_epochs)
                 U_pred = DemBeam.evaluate_model(x, y, z)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
 
@@ -290,7 +290,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 model = MultiLayerNet(3, *([num_neurons]*l), 3)
                 DemBeam = DeepEnergyMethodBeam(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
-                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, epochs=num_epochs)
                 # evaluate model
                 U_pred = DemBeam.evaluate_model(x, y, z)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
@@ -314,7 +314,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 # print(id(model))
                 DemBeam = DeepEnergyMethodBeam(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
-                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lrs, max_it=max_it, epochs=num_epochs)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lrs, epochs=num_epochs)
                 # evaluate model
                 U_pred = DemBeam.evaluate_model(x, y, z)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
@@ -341,7 +341,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 DemBeam = DeepEnergyMethodBeam(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=N)
                 # train model
-                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs)
+                DemBeam.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, epochs=num_epochs)
                 # evaluate model
                 U_pred = DemBeam.evaluate_model(x, y, z)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
@@ -409,7 +409,11 @@ def run1():
     start = time.time()
     for i in range(num_expreriments):
         print(f'Experiment nr. {i}')
-        U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lr, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape)
+        U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lr,
+                                                 num_neurons=num_neurons, 
+                                                 num_layers=num_layers, 
+                                                 num_epochs=num_epochs, 
+                                                 shape=shape)
         print('U_norms_i')
         print(U_norms_i)
         U_norms += U_norms_i
@@ -442,7 +446,11 @@ def run2():
     start = time.time()
     for i in range(num_expreriments):
         print(f'Experiment nr. {i}')
-        U_norms_i, losses_i= train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape)
+        U_norms_i, losses_i= train_and_evaluate(Ns=N, lrs=lrs, 
+                                                 num_neurons=num_neurons, 
+                                                 num_layers=num_layers, 
+                                                 num_epochs=num_epochs, 
+                                                 shape=shape)
         print('U_norms_i')
         print(U_norms_i)
         U_norms += U_norms_i
@@ -478,7 +486,11 @@ def run3():
     start = time.time()
     for i in range(num_expreriments):
         print('Experiment nr. ', i)
-        U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape)
+        U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lrs, 
+                                                 num_neurons=num_neurons, 
+                                                 num_layers=num_layers, 
+                                                 num_epochs=num_epochs, 
+                                                 shape=shape)
         U_norms += U_norms_i
         print('U_norms_i')
         print(U_norms_i)
@@ -510,7 +522,11 @@ def run4():
     start = time.time()
     for i in range(num_expreriments):
         print('Experiment nr. ', i)
-        U_norms_i, losses_i = train_and_evaluate(Ns=Ns, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs)
+        U_norms_i, losses_i = train_and_evaluate(Ns=Ns, lrs=lrs,
+                                                  num_neurons=num_neurons, 
+                                                  num_layers=num_layers, 
+                                                  num_epochs=num_epochs)
+        
         print('U_norms_i')
         print(U_norms_i)
         U_norms += U_norms_i

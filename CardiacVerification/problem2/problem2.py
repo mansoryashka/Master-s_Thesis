@@ -16,8 +16,10 @@ matplotlib.rcParams['figure.dpi'] = 200
 
 C = 10
 bf = bt = bfs = 1
+n_cond = 10
 
-def define_domain(N=15, M=5,
+def define_domain(N=13, M=3,
+                  n_cond=10,
                   rs_endo=7,
                   rl_endo=17,
                   rs_epi=10,
@@ -39,7 +41,7 @@ def define_domain(N=15, M=5,
     z = rl*np.cos(u)*np.ones(np.shape(v))
 
     # define Neumann BCs
-    neu_BC = rs[0, :, 0] == rs_endo
+    neu_B = rs[0, :, 0] == rs_endo
 
     # define points on Dirichlet boundary
     x1 = x[:, :, -1]
@@ -47,9 +49,9 @@ def define_domain(N=15, M=5,
     z1 = z[:, :, -1]
 
     # define points on Neumann boundary
-    x2 = x[:, neu_BC]
-    y2 = y[:, neu_BC]
-    z2 = z[:, neu_BC]
+    x2 = x[:, neu_B]
+    y2 = y[:, neu_B]
+    z2 = z[:, neu_B]
 
     # define endocardium surface for illustration
     x_endo = x[:, 0]
@@ -62,33 +64,33 @@ def define_domain(N=15, M=5,
     z_epi = z[:, -1]
 
     # define vector penpendicular to the endocardium
-    # from https://math.stackexchange.com/questions/2931909/normal-of-a-point-on-the-surface-of-an-ellipsoid
+    # and scale vector to unit length
     x_perp = np.copy(x_endo) / rs_endo
     y_perp = np.copy(y_endo) / rs_endo
     z_perp = np.copy(z_endo) / rl_endo
 
-    dx = np.sqrt(
-        (x_perp[1:, :] - x_perp[:-1, :])**2
-      + (y_perp[1:, :] - y_perp[:-1, :])**2
-      + (z_perp[1:, :] - z_perp[:-1, :])**2
+    # calculate distances between points
+    dv = np.sqrt(
+        (x_perp[1:] - x_perp[:-1])**2
+      + (y_perp[1:] - y_perp[:-1])**2
+      + (z_perp[1:] - z_perp[:-1])**2
     )
-    dx /= np.max(dx)
-    dx = dx[0]*np.ones((N, N))
+    dv /= np.max(dv)
+    dv = dv[0]*np.ones((N, N))
 
-    x_perp *= dx
-    y_perp *= dx
-    z_perp *= dx
+    x_perp *= dv
+    y_perp *= dv
+    z_perp *= dv
 
-    dy = np.sqrt(
-        (x_perp[:, 1:] - x_perp[:, :-1])**2
-      + (y_perp[:, 1:] - y_perp[:, :-1])**2
-      + (z_perp[:, 1:] - z_perp[:, :-1])**2
-    )
+    # dy = np.sqrt(
+    #     (x_perp[:, 1:] - x_perp[:, :-1])**2
+    #   + (y_perp[:, 1:] - y_perp[:, :-1])**2
+    #   + (z_perp[:, 1:] - z_perp[:, :-1])**2
+    # )
 
 
     # plot domain
     if plot:
-
         fig = plt.figure()
         plt.style.use('default')
         ax = fig.add_subplot(projection='3d')
@@ -112,7 +114,6 @@ def define_domain(N=15, M=5,
 
         # plt.show(); exit()
         plt.savefig('figures/ventricle.pdf')
-        # exit()
         plt.close()
 
     x = np.expand_dims(x.flatten(), 1)
@@ -132,13 +133,11 @@ def define_domain(N=15, M=5,
     y_perp = np.expand_dims(y_perp.flatten(), 1)
     z_perp = np.expand_dims(z_perp.flatten(), 1)
 
-    n_cond = 10*np.concatenate((x_perp, y_perp, z_perp), -1)
-
     x2 = np.expand_dims(x2.flatten(), 1)
     y2 = np.expand_dims(y2.flatten(), 1)
     z2 = np.expand_dims(z2.flatten(), 1)
     nb_pts = np.concatenate((x2, y2, z2), -1)
-    nb_vals = n_cond
+    nb_vals = n_cond*np.concatenate((x_perp, y_perp, z_perp), -1)
 
     dirichlet = {
         'coords': db_pts,
@@ -163,7 +162,7 @@ class DeepEnergyMethodLV(DeepEnergyMethod):
         Nx = len(x[:, 0, 0])
         Ny = len(y[0, :, 0])
         Nz = len(z[0, 0, :])
-        # Nx = N; Ny = M; Nz = N
+
         x1D = np.expand_dims(x.flatten(), 1)
         y1D = np.expand_dims(y.flatten(), 1)
         z1D = np.expand_dims(z.flatten(), 1)
@@ -182,15 +181,58 @@ class DeepEnergyMethodLV(DeepEnergyMethod):
         U = (np.float64(surUx), np.float64(surUy), np.float64(surUz))
         return U
 
+def generate_integration_line(domain, neumann, shape):
+    N, M, N = shape
+    dX = np.zeros(N)
+    dY = np.zeros(M)
+    dZ = np.zeros(N)
+
+    tmp_domain = domain.reshape((N, M, N, 3))
+    middle_layer = int(np.floor(M/2))
+
+    # dZ[1:] = np.cumsum(np.sqrt(
+    #                     (tmp_domain[0, middle_layer, 1:, 0] - tmp_domain[0, middle_layer, :-1, 0])**2
+    #                   + (tmp_domain[0, middle_layer, 1:, 2] - tmp_domain[0, middle_layer, :-1, 2])**2))
+    dZ[1:] = np.cumsum(np.linalg.norm(
+                        tmp_domain[0, middle_layer, 1:, 0::2] 
+                      - tmp_domain[0, middle_layer, :-1, 0::2], axis=-1))
+    
+    dY[1:] = np.cumsum(tmp_domain[0, 1:, -1, 0] - tmp_domain[0, :-1, -1, 0])
+
+    # dX[1:] = np.cumsum(np.sqrt(
+    #                     (tmp_domain[1:, 0, -1, 0] - tmp_domain[:-1, 0, -1, 0])**2
+    #                   + (tmp_domain[1:, 0, -1, 1] - tmp_domain[:-1, 0, -1, 1])**2))
+    dX[1:] = np.cumsum(np.linalg.norm(
+                        tmp_domain[1:, 0, -1, :-1] 
+                      - tmp_domain[:-1, 0, -1, :-1], axis=-1))
+    
+    neumann_domain = neumann['coords'].reshape((N, N, 3))
+    # exit(neumann_domain.shape)
+    dX_neumann = np.zeros(N)
+    dZ_neumann = np.zeros(N)
+
+    # dZ_neumann[1:] = np.cumsum(np.sqrt(
+    #                     (neumann_domain[0, 1:, 0] - neumann_domain[0, :-1, 0])**2
+    #                   + (neumann_domain[0, 1:, 2] - neumann_domain[0, :-1, 2])**2))
+    dZ_neumann[1:] = np.cumsum(np.linalg.norm(
+                        neumann_domain[0, 1:, 0::2] 
+                      - neumann_domain[0, :-1, 0::2], axis=-1))
+    # dX_neumann[1:] = np.cumsum(np.sqrt(
+    #                     (neumann_domain[1:, -1, 0] - neumann_domain[:-1, -1, 0])**2
+    #                   + (neumann_domain[1:, -1, 1] - neumann_domain[:-1, -1, 1])**2))
+    dX_neumann[1:] = np.cumsum(np.linalg.norm(
+                        neumann_domain[1:, -1, :-1] 
+                      - neumann_domain[:-1, -1, :-1], axis=-1))
+    
+    return dX, dY, dZ, dX_neumann, dZ_neumann
+
 if __name__ == '__main__':
-
-    N_test = 41; M_test = 9
-    test_domain, _, _ = define_domain(N_test, M_test)
+    N_test = 9; M_test = 3
+    test_domain, _, _ = define_domain(N_test, M_test, n_cond=n_cond)
     test_domain = test_domain.reshape((N_test, M_test, N_test, 3))
-    x_test = test_domain[..., 0]
-    y_test = test_domain[..., 1]
-    z_test = test_domain[..., 2]
-
+    x_test = np.ascontiguousarray(test_domain[..., 0])
+    y_test = np.ascontiguousarray(test_domain[..., 1])
+    z_test = np.ascontiguousarray(test_domain[..., 2])
 
     plt.style.use('seaborn-v0_8-darkgrid')
     fig2, ax = plt.subplots()
@@ -199,44 +241,19 @@ if __name__ == '__main__':
     ax1 = plt.subplot2grid((2,2), (0,0), colspan=1, rowspan=2)
     ax2 = plt.subplot2grid((2,2), (0,1))
     ax3 = plt.subplot2grid((2,2), (1,1))
-    for N, M in zip([30, 40, 40, 50, 60, 60, 80], [3, 3, 5, 5, 5, 9, 9]):
-    # for N, M in zip([13], [3]):
+    # for N, M in zip([30, 40, 40, 50, 60, 60, 80], [3, 3, 5, 5, 5, 9, 9]):
+    for N, M in zip([100, 100], [3, 9]):
         middle_layer = int(np.floor(M/2))
 
-        # print(M, middle_layer)
-        domain, dirichlet, neumann = define_domain(N, M)
+        domain, dirichlet, neumann = define_domain(N, M, n_cond=n_cond)
         shape = [N, M, N]
 
-        dX = np.zeros(shape[0])
-        dY = np.zeros(shape[1])
-        dZ = np.zeros(shape[2])
-
-        tmp_domain = domain.reshape((N, M, N, 3))
-
-        dZ[1:] = np.cumsum(np.sqrt(
-                            (tmp_domain[0, middle_layer, 1:, 0] - tmp_domain[0, middle_layer, :-1, 0])**2
-                          + (tmp_domain[0, middle_layer, 1:, 2] - tmp_domain[0, middle_layer, :-1, 2])**2))
-
-        dY[1:] = np.cumsum(tmp_domain[0, 1:, -1, 0] - tmp_domain[0, :-1, -1, 0])
-
-        dX[1:] = np.cumsum(np.sqrt(
-                            (tmp_domain[1:, 0, -1, 0] - tmp_domain[:-1, 0, -1, 0])**2
-                          + (tmp_domain[1:, 0, -1, 1] - tmp_domain[:-1, 0, -1, 1])**2))
-
-        neumann_domain = neumann['coords'].reshape((N, N, 3))
-        # exit(neumann_domain.shape)
-        dX_neumann = np.zeros(N)
-        dZ_neumann = np.zeros(N)
-
-        dZ_neumann[1:] = np.cumsum(np.sqrt(
-                            (neumann_domain[0, 1:, 0] - neumann_domain[0, :-1, 0])**2
-                          + (neumann_domain[0, 1:, 2] - neumann_domain[0, :-1, 2])**2))
-
-        dX_neumann[1:] = np.cumsum(np.sqrt(
-                            (neumann_domain[1:, -1, 0] - neumann_domain[:-1, -1, 0])**2
-                          + (neumann_domain[1:, -1, 1] - neumann_domain[:-1, -1, 1])**2))
-
-        model = MultiLayerNet(3, *[40]*4, 3)
+        dX, dY, dZ, dX_neumann, dZ_neumann = generate_integration_line(domain, 
+                                                                       neumann,
+                                                                       shape)
+        
+        # model = MultiLayerNet(3, *[40]*4, 3)
+        model = MultiLayerNet(3, *[60]*4, 3)
         energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E3)
         DemLV = DeepEnergyMethodLV(model, energy)
         # DemLV.train_model(domain, dirichlet, neumann, 
@@ -249,7 +266,7 @@ if __name__ == '__main__':
         U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
         # write_vtk_LV(f'output/DemLV{N}x{M}', x_test, y_test, z_test, U_pred)
 
-        np.save(f'stored_arrays/DemLV{N}x{M}', np.asarray(U_pred))
+        # np.save(f'stored_arrays/DemLV{N}x{M}', np.asarray(U_pred))
         # U_pred = np.load(f'stored_arrays/DemLV{N}x{M}.npy')
 
         X = np.copy(x_test)
@@ -258,9 +275,9 @@ if __name__ == '__main__':
 
         X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
 
-        k = int((N_test-1)/2)
-        middle_test = int(np.floor(M_test/2))
-
+        k = int((N_test - 1) / 2)
+        middle_test = int(np.floor(M_test / 2))
+        
         ref_x = X[k, middle_test]
         ref_z = Z[k, middle_test]
 
@@ -296,12 +313,13 @@ if __name__ == '__main__':
         # ax3.set_yticks([-27, -23)
 
         fig.tight_layout()
-        plt.savefig(f'figures/p2_plot{N}x{M}.pdf')
+        plt.savefig(f'figures/p2_plot_all.pdf')
 
         Z_cur[0, 0, 0], Z_cur[0, -1, 0]
         plt.style.use('seaborn-v0_8-darkgrid')
         ax.scatter(N*N*M, Z_cur[0, 0, 0], marker='x', c='tab:blue')
         ax.scatter(N*N*M, Z_cur[0, -1, 0], marker='x', c='tab:orange')
+        ax.set_xscale('log')
         ax.legend(['Endocardial apex', 'Epicardial apex'])
         ax.set_xlabel('Nr. of points [N]')
         ax.set_ylabel('$z$-location of deformed apex')

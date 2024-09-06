@@ -16,6 +16,7 @@ dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 # dev = torch.device('cpu')
 print('Running on GPU') if dev == torch.device('cuda') else print('Running on CPU')
 
+
 current_path = Path.cwd().resolve()
 figures_path = current_path / 'figures'
 arrays_path = current_path / 'stored_arrays'
@@ -43,8 +44,8 @@ class DeepEnergyMethod:
         self.energy = energy
         
     def train_model(self, data, dirichlet, neumann,
-                    shape,LHD, dxdydz=None, neu_axis=None,
-                    lr=0.5, max_it=20, epochs=20,
+                    shape, LHD, dxdydz=None, 
+                    neu_axis=None, lr=0.5, epochs=20,
                     fb=np.array([[0, -5, 0]]),
                     ventricle_geometry=False):
         dxdydz = dxdydz if dxdydz is not None else np.array(LHD) / (np.array(shape) - 1)

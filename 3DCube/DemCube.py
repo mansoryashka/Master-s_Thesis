@@ -23,6 +23,10 @@ figures_path = current_path / 'figures'
 arrays_path = current_path / 'stored_arrays'
 models_path = current_path / 'trained_models'
 
+E = 1000
+nu = 0.9
+mu = E / (2*(1 + nu))
+
 N_test = 20
 L = H = D = 1.0
 LHD = [L, H, D]
@@ -110,91 +114,8 @@ class DeepEnergyMethodCube(DeepEnergyMethod):
             return U, u_pred_torch, xyz_tensor
         return U
 
-E = 1000
-nu = 0.9
-mu = E / (2*(1 + nu))
-
-
-""" IMPLEMENT VONMISES STRESS!!!! """
-# def VonMises_stress(u, x, f0=torch.tensor([1, 0, 0]).to(dev)):
-#     Nx = N_test; Ny = N_test; Nz = N_test
-
-#     duxdxyz = grad(u[:, 0].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
-#     duydxyz = grad(u[:, 1].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
-#     duzdxyz = grad(u[:, 2].unsqueeze(1), x, torch.ones(x.shape[0], 1, device=dev), create_graph=True, retain_graph=True)[0]
-
-#     Fxx = duxdxyz[:, 0].unsqueeze(1) + 1
-#     Fxy = duxdxyz[:, 1].unsqueeze(1) + 0
-#     Fxz = duxdxyz[:, 2].unsqueeze(1) + 0
-#     Fyx = duydxyz[:, 0].unsqueeze(1) + 0
-#     Fyy = duydxyz[:, 1].unsqueeze(1) + 1
-#     Fyz = duydxyz[:, 2].unsqueeze(1) + 0
-#     Fzx = duzdxyz[:, 0].unsqueeze(1) + 0
-#     Fzy = duzdxyz[:, 1].unsqueeze(1) + 0
-#     Fzz = duzdxyz[:, 2].unsqueeze(1) + 1
-
-#     detF = Fxx * (Fyy * Fzz - Fyz * Fzy) - Fxy * (Fyx * Fzz - Fyz * Fzx) + Fxz * (Fyx * Fzy - Fyy * Fzx)
-#     invF11 = (Fyy * Fzz - Fyz * Fzy) / detF
-#     invF12 = -(Fxy * Fzz - Fxz * Fzy) / detF
-#     invF13 = (Fxy * Fyz - Fxz * Fyy) / detF
-#     invF21 = -(Fyx * Fzz - Fyz * Fzx) / detF
-#     invF22 = (Fxx * Fzz - Fxz * Fzy) / detF
-#     invF23 = -(Fxx * Fyz - Fxz * Fyx) / detF
-#     invF31 = (Fyx * Fzy - Fyy * Fzy) / detF
-#     invF32 = -(Fxx * Fzy - Fxy * Fzx) / detF
-#     invF33 = (Fxx * Fyy - Fxy * Fyx) / detF
-
-#     P11 = mu * Fxx + (lmbd * torch.log(detF) - mu) * invF11
-#     P12 = mu * Fxy + (lmbd * torch.log(detF) - mu) * invF21
-#     P13 = mu * Fxz + (lmbd * torch.log(detF) - mu) * invF31
-#     P21 = mu * Fyx + (lmbd * torch.log(detF) - mu) * invF12
-#     P22 = mu * Fyy + (lmbd * torch.log(detF) - mu) * invF22
-#     P23 = mu * Fyz + (lmbd * torch.log(detF) - mu) * invF32
-#     P31 = mu * Fzx + (lmbd * torch.log(detF) - mu) * invF13
-#     P32 = mu * Fzy + (lmbd * torch.log(detF) - mu) * invF23
-#     P33 = mu * Fzz + (lmbd * torch.log(detF) - mu) * invF33
-    
-#     S11 = invF11 * P11 + invF12 * P21 + invF13 * P31
-#     S12 = invF11 * P12 + invF12 * P22 + invF13 * P32
-#     S13 = invF11 * P13 + invF12 * P23 + invF13 * P33
-#     S21 = invF21 * P11 + invF22 * P21 + invF23 * P31
-#     S22 = invF21 * P12 + invF22 * P22 + invF23 * P32
-#     S23 = invF21 * P13 + invF22 * P23 + invF23 * P33
-#     S31 = invF31 * P11 + invF32 * P21 + invF33 * P31
-#     S32 = invF31 * P12 + invF32 * P22 + invF33 * P32
-#     S33 = invF31 * P13 + invF32 * P23 + invF33 * P33
-    
-#     S11_pred = S11.detach().cpu().numpy()
-#     S12_pred = S12.detach().cpu().numpy()
-#     S13_pred = S13.detach().cpu().numpy()
-#     S21_pred = S21.detach().cpu().numpy()
-#     S22_pred = S22.detach().cpu().numpy()
-#     S23_pred = S23.detach().cpu().numpy()
-#     S31_pred = S31.detach().cpu().numpy()
-#     S32_pred = S32.detach().cpu().numpy()
-#     S33_pred = S33.detach().cpu().numpy()
-    
-#     surS11 = S11_pred.reshape(Ny, Nx, Nz)
-#     surS12 = S12_pred.reshape(Ny, Nx, Nz)
-#     surS13 = S13_pred.reshape(Ny, Nx, Nz)
-#     surS21 = S21_pred.reshape(Ny, Nx, Nz)
-#     surS22 = S22_pred.reshape(Ny, Nx, Nz)
-#     surS23 = S23_pred.reshape(Ny, Nx, Nz)
-#     surS31 = S31_pred.reshape(Ny, Nx, Nz)
-#     surS32 = S32_pred.reshape(Ny, Nx, Nz)
-#     surS33 = S33_pred.reshape(Ny, Nx, Nz)
-
-#     SVonMises = np.float64(
-#                 np.sqrt(0.5 * ((surS11 - surS22) ** 2 
-#                             + (surS22 - surS33) ** 2 
-#                             + (surS33 - surS11) ** 2 
-#                     + 6 * (surS12 ** 2 + surS23 ** 2 + surS31 ** 2)))
-#                 )
-#     return SVonMises
-
-
 ### Skrive blokkene til en egen funksjon? Kalles på helt likt inne i loopene ###
-def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, max_it=20, shape=[20, 20, 20], eval_data=None):
+def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, shape=[20, 20, 20], eval_data=None):
     num_losses = int(num_epochs)
     if eval_data:
         nr_losses = 2
@@ -212,7 +133,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
             DemCube = DeepEnergyMethodCube(model, energy)
             domain, dirichlet, neumann = define_domain(L, H, D, N=N)
             # train model
-            DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lrs, max_it=max_it, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
+            DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lrs, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
             # evaluate model
             U_pred, u_pred_torch, xyz_tensor = DemCube.evaluate_model(x, y, z, return_pred_tensor=True)
             # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
@@ -235,7 +156,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 DemCube = DeepEnergyMethodCube(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
 
-                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
+                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
                 U_pred, u_pred_torch, xyz_tensor = DemCube.evaluate_model(x, y, z, return_pred_tensor=True)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
 
@@ -256,7 +177,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 model = MultiLayerNet(3, *([num_neurons]*l), 3)
                 DemCube = DeepEnergyMethodCube(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
-                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
+                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
                 # evaluate model
                 U_pred, u_pred_torch, xyz_tensor = DemCube.evaluate_model(x, y, z, return_pred_tensor=True)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
@@ -278,7 +199,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 model = MultiLayerNet(3, *([n]*l), 3)
                 DemCube = DeepEnergyMethodCube(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=Ns)
-                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lrs, max_it=max_it, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
+                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lrs, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
                 # evaluate model
                 U_pred, u_pred_torch, xyz_tensor = DemCube.evaluate_model(x, y, z, return_pred_tensor=True)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
@@ -290,7 +211,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 
                 losses[:, :, i, j] = DemCube.losses
                 del model
-    # train on many N values and learning rates
+    # train on N values and learning rates
     elif isinstance(Ns, (list, tuple)) and isinstance(lrs, (list, tuple)):
         # print(type(Ns), type(lrs), isinstance((Ns and lrs), list), Ns); exit()
         print('Ns and lrs')
@@ -304,7 +225,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                 DemCube = DeepEnergyMethodCube(model, energy)
                 domain, dirichlet, neumann = define_domain(L, H, D, N=N)
                 # train model
-                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, max_it=max_it, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
+                DemCube.train_model(domain, dirichlet, neumann, shape, LHD, neu_axis=[1, 2], lr=lr, epochs=num_epochs, fb=np.asarray([[0, 0, 0]]))
                 # evaluate model
                 U_pred, u_pred_torch, xyz_tensor = DemCube.evaluate_model(x, y, z, return_pred_tensor=True)
                 # VonMises_pred = VonMises_stress(u_pred_torch, xyz_tensor)
@@ -321,7 +242,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                         '\t- lrs AND num_neurons\n\t- lrs AND num_layers\n\t- num_neurons AND num_layers')
     return u_norms, losses
 
-def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, cmap='cividis', data_max=1):
+def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, cmap='cividis'):
     fig, ax = plt.subplots(figsize=(5,5))
     xticks = [str(i) for i in xparameter]
     yticks = [str(j) for j in yparameter]
@@ -348,7 +269,10 @@ def run1():
     start = time.time()
     for i in range(num_expreriments):
         print('Experiment: ', i)
-        U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lr, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape) 
+        U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lr, 
+                                                 num_neurons=num_neurons, 
+                                                 num_layers=num_layers, 
+                                                 num_epochs=num_epochs, shape=shape) 
         U_norms += U_norms_i
         losses += losses_i
     losses = losses.detach().numpy()
@@ -378,7 +302,10 @@ def run2():
     start = time.time()
     for i in range(num_expreriments):
         print('Experiment: ', i)
-        U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs, shape=shape)
+        U_norms_i, losses_i = train_and_evaluate(Ns=N, lrs=lrs, 
+                                                 num_neurons=num_neurons, 
+                                                 num_layers=num_layers, 
+                                                 num_epochs=num_epochs, shape=shape)
         U_norms += U_norms_i
         losses += losses_i
         print(i, U_norms_i)
@@ -408,7 +335,10 @@ def run3():
     start = time.time()
     for i in range(num_expreriments):
         print('Experiment: ', i)
-        U_norms_i, losses_i = train_and_evaluate(Ns=Ns, lrs=lrs, num_neurons=num_neurons, num_layers=num_layers, num_epochs=num_epochs)
+        U_norms_i, losses_i = train_and_evaluate(Ns=Ns, lrs=lrs, 
+                                                 num_neurons=num_neurons, 
+                                                 num_layers=num_layers, 
+                                                 num_epochs=num_epochs)
         U_norms += U_norms_i
         losses += losses_i
     losses = losses.detach().numpy()
