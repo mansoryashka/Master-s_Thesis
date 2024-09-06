@@ -5,7 +5,7 @@ from pyevtk.hl import gridToVTK
 import matplotlib.gridspec as gs 
 import sys
 sys.path.insert(0, "../..")
-from DEM import DeepEnergyMethod, MultiLayerNet, dev
+from DEM import DeepEnergyMethod, MultiLayerNet, dev, write_vtk_LV
 from EnergyModels import *
 import seaborn as sns 
 sns.set()
@@ -17,62 +17,49 @@ matplotlib.rcParams['figure.dpi'] = 200
 C = 10
 bf = bt = bfs = 1
 
-def define_domain(N=15, M=5):
+def define_domain(N=15, M=5,
+                  rs_endo=7,
+                  rl_endo=17,
+                  rs_epi=10,
+                  rl_epi=20,
+                  plot=True):
 
-    rs_endo = 7
-    rl_endo = 17
-    u_endo = np.linspace(-np.pi, -np.arccos(5/17), N)
-    v_endo = np.linspace(-np.pi, np.pi, N)
-
-    rs_epi = 10
-    rl_epi = 20
-    u_epi = np.linspace(-np.pi, -np.arccos(5/20), N)
-    v_epi = np.linspace(-np.pi, np.pi, N)
-
-    u = np.linspace(u_endo, u_epi, M).reshape(1, M, N)
-
-    v = np.linspace(-np.pi, np.pi, N).reshape(N, 1, 1)
     rs = np.linspace(rs_endo, rs_epi, M).reshape((1, M, 1))
     rl = np.linspace(rl_endo, rl_epi, M).reshape((1, M, 1))
+    # Dirichlet BC implemented in definition of u
+    u = np.linspace(-np.pi, -np.arccos(5/rl), N).reshape((N, M, 1)).T
+    v = np.linspace(-np.pi, np.pi, N).reshape(N, 1, 1)
 
-
+    # shape of resuling domain
+    # dimension 0 is angle
+    # dimension 1 is depth layer
+    # dimension 2 is vertical level
     x = rs*np.sin(u)*np.cos(v)
     y = rs*np.sin(u)*np.sin(v)
     z = rl*np.cos(u)*np.ones(np.shape(v))
 
-    """ Finn ut hvorfor max(z) = 5.10!!! """
-
-    # define Dirichlet and Neumann BCs
-    dir_BC = 5.0
+    # define Neumann BCs
     neu_BC = rs[0, :, 0] == rs_endo
 
-    # set z_max to 5
-    z[..., -1] = dir_BC
-
-    # define all points
-    x0 = np.copy(x)
-    y0 = np.copy(y)
-    z0 = np.copy(z)
-
     # define points on Dirichlet boundary
-    x1 = x0[:, :, -1]
-    y1 = y0[:, :, -1]
-    z1 = z0[:, :, -1]
+    x1 = x[:, :, -1]
+    y1 = y[:, :, -1]
+    z1 = z[:, :, -1]
 
     # define points on Neumann boundary
-    x2 = x0[:, neu_BC]
-    y2 = y0[:, neu_BC]
-    z2 = z0[:, neu_BC]
+    x2 = x[:, neu_BC]
+    y2 = y[:, neu_BC]
+    z2 = z[:, neu_BC]
 
     # define endocardium surface for illustration
-    x_endo = rs_endo*np.outer(np.cos(v_endo), np.sin(u_endo))
-    y_endo = rs_endo*np.outer(np.sin(v_endo), np.sin(u_endo))
-    z_endo = rl_endo*np.outer(np.ones(np.size(v_endo)), np.cos(u_endo))
+    x_endo = x[:, 0]
+    y_endo = y[:, 0]
+    z_endo = z[:, 0]
 
     # define epicardium surface for illustration
-    x_epi = rs_epi*np.outer(np.cos(v_epi), np.sin(u_epi))
-    y_epi = rs_epi*np.outer(np.sin(v_epi), np.sin(u_epi))
-    z_epi = rl_epi*np.outer(np.ones(np.size(v_epi)), np.cos(u_epi))
+    x_epi = x[:, -1]
+    y_epi = y[:, -1]
+    z_epi = z[:, -1]
 
     # define vector penpendicular to the endocardium
     # from https://math.stackexchange.com/questions/2931909/normal-of-a-point-on-the-surface-of-an-ellipsoid
@@ -91,89 +78,47 @@ def define_domain(N=15, M=5):
     x_perp *= dx
     y_perp *= dx
     z_perp *= dx
-    # dy = np.sqrt(
-    #     (x_perp[:, 1:] - x_perp[:, :-1])**2
-    #   + (y_perp[:, 1:] - y_perp[:, :-1])**2
-    #   + (z_perp[:, 1:] - z_perp[:, :-1])**2
-    # )
-    
-    # dy /= np.max(dy)
-    # print(dx)
 
-    # idx = np.argmax(dx); print(idx); exit()
-    # remove forces from lower fifth of ventricle
-    # end = int((N-1)/4)
-    # fifth_bottom = int((N-1)/5)
-    # i = 0
-    # while 2*2**i <= fifth_bottom:
-    #     start = 2**i-1
-    #     skip = 2*2**i
-    #     x_perp[start::skip, 1:end] = 0
-    #     y_perp[start::skip, 1:end] = 0
-    #     z_perp[start::skip, 1:end] = 0
-    #     i += 1
+    dy = np.sqrt(
+        (x_perp[:, 1:] - x_perp[:, :-1])**2
+      + (y_perp[:, 1:] - y_perp[:, :-1])**2
+      + (z_perp[:, 1:] - z_perp[:, :-1])**2
+    )
 
-    # x_perp[0::2, 1:end] = 0
-    # y_perp[0::2, 1:end] = 0
-    # z_perp[0::2, 1:end] = 0
-    # x_perp[1::4, 1:end] = 0
-    # y_perp[1::4, 1:end] = 0
-    # z_perp[1::4, 1:end] = 0
-    # x_perp[3::8, 1:end] = 0
-    # y_perp[3::8, 1:end] = 0
-    # z_perp[3::8, 1:end] = 0
-    
-    # remove forces from apex, 20 points at apex, remove 19
-    # x_perp[1:, 0] = 0
-    # y_perp[1:, 0] = 0
-    # z_perp[1:, 0] = 0
-    # remove force from v = pi
-    # x_perp[-1] = 0
-    # y_perp[-1] = 0
-    # z_perp[-1] = 0
-
-    # reshape to have access to different dimentsions
-    # dimension 0 is angle
-    # dimension 1 is depth layer
-    # dimension 2 is vertical level
-    # x0 = x0.reshape((N, M, N))
-    # y0 = y0.reshape((N, M, N))
-    # z0 = z0.reshape((N, M, N))
-
-    # x1 = x1.reshape((N, M, 1))
-    # y1 = y1.reshape((N, M, 1))
-    # z1 = z1.reshape((N, M, 1))
-
-    # x2 = x2.reshape((N, 1, N))
-    # y2 = y2.reshape((N, 1, N))
-    # z2 = z2.reshape((N, 1, N))
 
     # plot domain
-    fig = plt.figure()
-    plt.style.use('default')
-    ax = fig.add_subplot(projection='3d')
-    ax.set_aspect('equal')
-    ax.set_xlabel('$x$')
-    ax.set_ylabel('$y$')
-    ax.set_zlabel('$z$')
-    # ax.scatter(x0[0], y0[0], z0[0], s=.1, alpha=0.5, c='tab:blue')
-    # ax.scatter(x0[:, 0, :], y0[:, 0, :], z0[:, 0, :], s=1, c='tab:blue')
-    # ax.scatter(x[7], y[7], z[7], s=1, c='tab:blue')
-    # ax.scatter(x1, y1, z1, s=5, c='tab:green')
-    # ax.scatter(x2, y2, z2, s=5, c='tab:red')
-    # plot epicardial and endocardial surfaces
-    ax.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
-    # ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
-    ax.quiver(x_endo[:, :], y_endo[:, :], z_endo[:, :], 
-              x_perp[:, :], y_perp[:, :], z_perp[:, :], alpha=.5)
-    # plt.show(); exit()
-    plt.savefig('figures/ventricle.pdf')
-    plt.close()
+    if plot:
 
-    x0 = np.expand_dims(x0.flatten(), 1)
-    y0 = np.expand_dims(y0.flatten(), 1)
-    z0 = np.expand_dims(z0.flatten(), 1)
-    domain = np.concatenate((x0, y0, z0), -1)
+        fig = plt.figure()
+        plt.style.use('default')
+        ax = fig.add_subplot(projection='3d')
+        ax.set_aspect('equal')
+        ax.set_xlabel('$x$')
+        ax.set_ylabel('$y$')
+        ax.set_zlabel('$z$')
+        # ax.scatter(x[0], y[0], z[0], s=.1, alpha=0.5, c='tab:blue')
+        # ax.scatter(x[:, 0, :], y[:, 0, :], z[:, 0, :], s=1, c='tab:blue')
+        # ax.scatter(x[7], y[7], z[7], s=1, c='tab:blue')
+
+        ax.scatter(x[..., -2], y[..., -2], z[..., -2], s=.1, alpha=0.5, c='tab:blue')
+        # ax.scatter(x1, y1, z1, s=5, c='tab:green')
+        # ax.scatter(x2, y2, z2, s=5, c='tab:red')
+
+        # plot epicardial and endocardial surfaces
+        ax.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
+        ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
+        # ax.quiver(x_endo[:, :], y_endo[:, :], z_endo[:, :], 
+        #           x_perp[:, :], y_perp[:, :], z_perp[:, :], alpha=.5)
+
+        # plt.show(); exit()
+        plt.savefig('figures/ventricle.pdf')
+        # exit()
+        plt.close()
+
+    x = np.expand_dims(x.flatten(), 1)
+    y = np.expand_dims(y.flatten(), 1)
+    z = np.expand_dims(z.flatten(), 1)
+    domain = np.concatenate((x, y, z), -1)
 
     x1 = np.expand_dims(x1.flatten(), 1)
     y1 = np.expand_dims(y1.flatten(), 1)
@@ -237,42 +182,16 @@ class DeepEnergyMethodLV(DeepEnergyMethod):
         U = (np.float64(surUx), np.float64(surUy), np.float64(surUz))
         return U
 
-
-def write_vtk_v3(filename, x_space, y_space, z_space, U):
-    # xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
-    xx, yy, zz = x_space, y_space, z_space
-    if isinstance(U, dict):
-        gridToVTK(filename, xx, yy, zz, pointData=U)
-    else:
-        gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
-
 if __name__ == '__main__':
 
-    N_test = 21; M_test = 3
-    rs_endo = 7
-    rl_endo = 17
-    u_endo = np.linspace(-np.pi, -np.arccos(5/17), N_test)
-    v_endo = np.linspace(-np.pi, np.pi, N_test)
-
-    rs_epi = 10
-    rl_epi = 20
-    u_epi = np.linspace(-np.pi, -np.arccos(5/20), N_test)
-    v_epi = np.linspace(-np.pi, np.pi, N_test)
-
-    u = np.linspace(u_endo, u_epi, M_test).reshape(1, M_test, N_test)
-
-    v = np.linspace(-np.pi, np.pi, N_test).reshape(N_test, 1, 1)
-    rs = np.linspace(rs_endo, rs_epi, M_test).reshape((1, M_test, 1))
-    rl = np.linspace(rl_endo, rl_epi, M_test).reshape((1, M_test, 1))
-
-    x_test = rs*np.sin(u)*np.cos(v)
-    y_test = rs*np.sin(u)*np.sin(v)
-    z_test = rl*np.cos(u)*np.ones(np.shape(v))
-    
-    z_test[..., -1] = 5.0
+    N_test = 41; M_test = 9
+    test_domain, _, _ = define_domain(N_test, M_test)
+    test_domain = test_domain.reshape((N_test, M_test, N_test, 3))
+    x_test = test_domain[..., 0]
+    y_test = test_domain[..., 1]
+    z_test = test_domain[..., 2]
 
 
-    N = 10; M = 9
     plt.style.use('seaborn-v0_8-darkgrid')
     fig2, ax = plt.subplots()
     fig = plt.figure()
@@ -280,8 +199,8 @@ if __name__ == '__main__':
     ax1 = plt.subplot2grid((2,2), (0,0), colspan=1, rowspan=2)
     ax2 = plt.subplot2grid((2,2), (0,1))
     ax3 = plt.subplot2grid((2,2), (1,1))
-    for N in [60]:
-
+    for N, M in zip([30, 40, 40, 50, 60, 60, 80], [3, 3, 5, 5, 5, 9, 9]):
+    # for N, M in zip([13], [3]):
         middle_layer = int(np.floor(M/2))
 
         # print(M, middle_layer)
@@ -320,13 +239,15 @@ if __name__ == '__main__':
         model = MultiLayerNet(3, *[40]*4, 3)
         energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E3)
         DemLV = DeepEnergyMethodLV(model, energy)
-        DemLV.train_model(domain, dirichlet, neumann, 
-                          shape=shape, dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
-                          LHD=np.zeros(3), neu_axis=[0, 2], lr=0.1, epochs=200,
-                          fb=np.array([[0, 0, 0]]),  ventricle_geometry=True)
-
+        # DemLV.train_model(domain, dirichlet, neumann, 
+        #                   shape=shape, dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
+        #                   LHD=np.zeros(3), neu_axis=[0, 2], lr=0.1, epochs=300,
+        #                   fb=np.array([[0, 0, 0]]),  ventricle_geometry=True)
+        
+        # torch.save(DemLV.model.state_dict(), f'trained_models/run1/model_{N}x{M}')
+        DemLV.model.load_state_dict(torch.load(f'trained_models/run1/model_{N}x{M}'))
         U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
-        write_vtk_v3(f'output/DemLV{N}x{M}', x_test, y_test, z_test, U_pred)
+        # write_vtk_LV(f'output/DemLV{N}x{M}', x_test, y_test, z_test, U_pred)
 
         np.save(f'stored_arrays/DemLV{N}x{M}', np.asarray(U_pred))
         # U_pred = np.load(f'stored_arrays/DemLV{N}x{M}.npy')
@@ -338,12 +259,13 @@ if __name__ == '__main__':
         X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
 
         k = int((N_test-1)/2)
+        middle_test = int(np.floor(M_test/2))
 
-        ref_x = x_test[k, 1]
-        ref_z = z_test[k, 1]
+        ref_x = X[k, middle_test]
+        ref_z = Z[k, middle_test]
 
-        cur_x = X_cur[k, 1]
-        cur_z = Z_cur[k, 1]
+        cur_x = X_cur[k, middle_test]
+        cur_z = Z_cur[k, middle_test]
 
         ax1.set_xlabel('$x$ [mm]')
         ax1.set_ylabel('$y$ [mm]')
@@ -357,19 +279,21 @@ if __name__ == '__main__':
         ax2.set_xlabel('$x$ [mm]')
         ax2.set_ylabel('$y$ [mm]')
         ax2.set_ylim((-9, -2))
-        # ax2.set_xlim((-17, -12))
-        # ax2.set_xticks([-12, -10])
         ax2.set_yticks([-9, -2])
+        ax2.set_xlim(right=-10)
+        # ax2.set_xticks([-12, -10])
 
         
         ax3.plot(cur_x, cur_z, label=f"({N}, {M}, {N})", alpha=0.5)
         ax3.set_xlabel('$x$ [mm]')
         ax3.set_ylabel('$y$ [mm]')
         # ax3.set_ylim((-34, -32))
+        ax3.set_ylim(top=-20)
         ax3.set_xlim((-5, 0))
 
         # ax3.set_xticks([-13, -9])
         # ax3.set_yticks([-27, -23])
+        # ax3.set_yticks([-27, -23)
 
         fig.tight_layout()
         plt.savefig(f'figures/p2_plot{N}x{M}.pdf')

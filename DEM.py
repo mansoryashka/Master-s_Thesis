@@ -216,3 +216,11 @@ def write_vtk_v2(filename, x_space, y_space, z_space, U):
         gridToVTK(filename, xx, yy, zz, pointData=U)
     else:
         gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
+
+def write_vtk_LV(filename, x_space, y_space, z_space, U):
+    # xx, yy, zz = np.meshgrid(x_space, y_space, z_space)
+    xx, yy, zz = x_space, y_space, z_space
+    if isinstance(U, dict):
+        gridToVTK(filename, xx, yy, zz, pointData=U)
+    else:
+        gridToVTK(filename, xx, yy, zz, pointData={"displacement": U})
