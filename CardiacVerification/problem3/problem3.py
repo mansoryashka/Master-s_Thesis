@@ -91,7 +91,8 @@ def generate_fibers(N=15, M=3,
     # s0[..., -1] = 0
     # n0[..., -1] = 0
 
-    return f0.reshape((3, -1, 1)), s0.reshape((3, -1, 1)), n0.reshape((3, -1, 1))
+    return f0.reshape((-1, 3, 1)), s0.reshape((-1, 3, 1)), n0.reshape((-1, 3, 1))
+    # return f0.reshape((3, -1)), s0.reshape((3, -1)), n0.reshape((3, -1))
     # return f0, s0, n0
 
 # ax.quiver(x0, y0, z0, 
@@ -109,6 +110,51 @@ def generate_fibers(N=15, M=3,
 #           f[1][-1, :, :], 
 #           f[2][-1, :, :])
 
+def plot_displacement(X, Z, X_cur, Z_cur, trainin_shape, axs, figname):
+    N, M, N = trainin_shape
+    N_test = len(X[:, 0, 0])
+    M_test = len(X[0, :, 0])
+    ax1, ax2, ax3 = axs
+    # get indexes of line to be plotted
+    k = int((N_test - 1) / 2)
+    middle_layer = int(np.floor(M_test / 2))    
+    # get line in reference configuration
+    ref_x = X[k, middle_layer]
+    ref_z = Z[k, middle_layer]
+    # get line in current configuration
+    cur_x = X_cur[k, middle_layer]
+    cur_z = Z_cur[k, middle_layer]
+
+    ax1.set_xlabel('$x$ [mm]')
+    ax1.set_ylabel('$y$ [mm]')
+    ax1.plot(ref_x, ref_z, c='gray', linestyle=':')
+    ax1.plot(cur_x, cur_z, label=f"({N}, {M}, {N})")
+    # ax1.set_xticks([-10, -5, 0])
+    ax1.legend()
+
+        
+    ax2.plot(cur_x, cur_z, label=f"({N}, {M}, {N})", alpha=0.5)
+    ax2.set_xlabel('$x$ [mm]')
+    ax2.set_ylabel('$y$ [mm]')
+    ax2.set_ylim((-9, -2))
+    ax2.set_yticks([-9, -2])
+    ax2.set_xlim(right=-10)
+    # ax2.set_xticks([-12, -10])
+
+        
+    ax3.plot(cur_x, cur_z, label=f"({N}, {M}, {N})", alpha=0.5)
+    ax3.set_xlabel('$x$ [mm]')
+    ax3.set_ylabel('$y$ [mm]')
+    # ax3.set_ylim((-34, -32))
+    ax3.set_ylim(bottom=-20)
+    ax3.set_xlim((-5, 0))
+    # ax3.set_xticks([-13, -9])
+    # ax3.set_yticks([-27, -23])
+    # ax3.set_yticks([-27, -23)
+
+    plt.tight_layout()
+    plt.savefig(f'figures/{figname}.pdf')
+
 if __name__ == '__main__':
     N_test = 21; M_test = 3
     middle_layer = int(np.floor(M_test/2))
@@ -117,7 +163,7 @@ if __name__ == '__main__':
     x_test = np.ascontiguousarray(test_domain[..., 0])
     y_test = np.ascontiguousarray(test_domain[..., 1])
     z_test = np.ascontiguousarray(test_domain[..., 2])
-    N = 60; M = 5
+    N = 40; M = 5
     shape = [N, M, N]
     domain, dirichlet, neumann = define_domain(N, M, n_cond=15)
     dX, dY, dZ, dX_neumann, dZ_neumann = generate_integration_line(domain, 
@@ -125,9 +171,12 @@ if __name__ == '__main__':
                                                                     shape)
 
     f0, s0, n0 = generate_fibers(N, M)
-    f0 = torch.tensor(f0.reshape((3, -1, 1))).to(dev)
-    s0 = torch.tensor(s0.reshape((3, -1, 1))).to(dev)
-    n0 = torch.tensor(n0.reshape((3, -1, 1))).to(dev)
+    # f0 = torch.tensor(f0.reshape((3, -1, 1))).to(dev)
+    # s0 = torch.tensor(s0.reshape((3, -1, 1))).to(dev)
+    # n0 = torch.tensor(n0.reshape((3, -1, 1))).to(dev)
+    f0 = torch.tensor(f0).to(dev)
+    s0 = torch.tensor(s0).to(dev)
+    n0 = torch.tensor(n0).to(dev)
     # f0 = torch.tensor([1, 0, 0]).to(dev)
     # s0 = torch.tensor([0, 1, 0]).to(dev)
     # n0 = torch.tensor([0, 0, 1]).to(dev)
@@ -141,5 +190,21 @@ if __name__ == '__main__':
                       fb=np.array([[0, 0, 0]]), ventricle_geometry=True)
     
     U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
-    np.save('stored_arrays/U_pred4', np.asarray(U_pred))
-    write_vtk_LV('output/DemLV4', x_test, y_test, z_test, U_pred)
+    np.save('stored_arrays/U_pred', np.asarray(U_pred))
+    write_vtk_LV('output/DemLV', x_test, y_test, z_test, U_pred)
+    # U_pred = np.load('stored_arrays/U_pred2.npy')
+
+    X = np.copy(x_test)
+    Y = np.copy(y_test)
+    Z = np.copy(z_test)
+    X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
+
+    plt.style.use('seaborn-v0_8-darkgrid')
+    fig2, ax = plt.subplots()
+    fig = plt.figure()
+    plt.style.use('seaborn-v0_8-darkgrid')
+    ax1 = plt.subplot2grid((2,2), (0,0), colspan=1, rowspan=2)
+    ax2 = plt.subplot2grid((2,2), (0,1))
+    ax3 = plt.subplot2grid((2,2), (1,1))
+
+    plot_displacement(X, Z, X_cur, Z_cur, shape, [ax1, ax2, ax3], 'fig1')
