@@ -84,9 +84,9 @@ def generate_fibers(N=15, M=3,
     # s0[-1, :] = 0.0
     # n0[-1, :] = 0.0
     # set apex to zero or one?
-    f0[..., 0] = 0
-    s0[..., 0] = 0
-    n0[..., 0] = 0
+    # f0[..., 0] = 0
+    # s0[..., 0] = 0
+    # n0[..., 0] = 0
     # f0[..., -1] = 0
     # s0[..., -1] = 0
     # n0[..., -1] = 0
@@ -141,5 +141,5 @@ if __name__ == '__main__':
                       fb=np.array([[0, 0, 0]]), ventricle_geometry=True)
     
     U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
-    np.save('stored_arrays/U_pred3', np.asarray(U_pred))
-    write_vtk_LV('output/DemLV3', x_test, y_test, z_test, U_pred)
+    np.save('stored_arrays/U_pred4', np.asarray(U_pred))
+    write_vtk_LV('output/DemLV4', x_test, y_test, z_test, U_pred)
