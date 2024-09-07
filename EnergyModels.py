@@ -17,7 +17,7 @@ class NeoHookeanEnergyModel:
         duzdxyz = grad(u[:, 2].unsqueeze(1), x, 
                         torch.ones(x.shape[0], 1, device=dev), 
                         create_graph=True, retain_graph=True)[0]
-
+        # calculate the deformation gradient
         Fxx = duxdxyz[:, 0].unsqueeze(1) + 1
         Fxy = duxdxyz[:, 1].unsqueeze(1) + 0
         Fxz = duxdxyz[:, 2].unsqueeze(1) + 0
@@ -27,11 +27,11 @@ class NeoHookeanEnergyModel:
         Fzx = duzdxyz[:, 0].unsqueeze(1) + 0
         Fzy = duzdxyz[:, 1].unsqueeze(1) + 0
         Fzz = duzdxyz[:, 2].unsqueeze(1) + 1
-
+        # store F for use in active energy model
         self.Fxx = Fxx; self.Fxy = Fxy; self.Fxz = Fxz
         self.Fyx = Fyx; self.Fyy = Fyy; self.Fyz = Fyz
         self.Fzx = Fzx; self.Fzy = Fzy; self.Fzz = Fzz
-
+        # calculate and return the invariants
         detF = (Fxx * (Fyy * Fzz - Fyz * Fzy) 
               - Fxy * (Fyx * Fzz - Fyz * Fzx) 
               + Fxz * (Fyx * Fzy - Fyy * Fzx))
@@ -42,9 +42,6 @@ class NeoHookeanEnergyModel:
 
         return detF, trC
     
-    # def _get_active_strain_energy(self, u, x):
-    #     raise NotImplementedError('Active strain energy function is not implemented for this case!')
-    
     def _get_passive_strain_energy(self, trC):
         return 0.5 * self.mu * (trC - 3)
     
@@ -52,7 +49,6 @@ class NeoHookeanEnergyModel:
         return 0.5 * self.lmbda * (torch.log(detF) * torch.log(detF)) - self.mu * torch.log(detF)
         
     def __call__(self, u, x):
-        ### energy frunction from DEM paper ### 
         detF, trC = self._get_invariants(u, x)
         
         StrainEnergy = (self._get_compressibility(detF) 
@@ -75,25 +71,26 @@ class NeoHookeanActiveEnergyModel(NeoHookeanEnergyModel):
 
     def _get_invariants(self, u, x):
         f0 = self.f0
+        # get invariants from superclass
         detF, trC = super()._get_invariants(u, x)
-
+        # get defomation gradient from superclass
         Fxx = self.Fxx; Fxy = self.Fxy; Fxz = self.Fxz
         Fyx = self.Fyx; Fyy = self.Fyy; Fyz = self.Fyz
         Fzx = self.Fzx; Fzy = self.Fzy; Fzz = self.Fzz
-
-        C11 = Fxx*Fxx + Fyx*Fyx + Fzx*Fzx
-        C12 = Fxx*Fxy + Fyx*Fyy + Fzx*Fzy
-        C13 = Fxx*Fxz + Fyx*Fyz + Fzx*Fzz
-        C21 = Fxy*Fxx + Fyy*Fyx + Fzy*Fzx
-        C22 = Fxy*Fxy + Fyy*Fyy + Fzy*Fzy
-        C23 = Fxy*Fxz + Fyy*Fyz + Fzy*Fzz
-        C31 = Fxz*Fxx + Fyz*Fyx + Fzz*Fzx
-        C32 = Fxz*Fxy + Fyz*Fyy + Fzz*Fzy
-        C33 = Fxz*Fxz + Fyz*Fyz + Fzz*Fzz
-
-        I4f0 = (f0[0] * (f0[0]*C11 + f0[1]*C21 + f0[2]*C31)
-              + f0[1] * (f0[0]*C12 + f0[1]*C22 + f0[2]*C32)
-              + f0[2] * (f0[0]*C13 + f0[1]*C23 + f0[2]*C33))
+        # calculate the right Cauchy-Green deformation tensor
+        Cxx = Fxx*Fxx + Fyx*Fyx + Fzx*Fzx
+        Cxy = Fxx*Fxy + Fyx*Fyy + Fzx*Fzy
+        Cxz = Fxx*Fxz + Fyx*Fyz + Fzx*Fzz
+        Cyx = Fxy*Fxx + Fyy*Fyx + Fzy*Fzx
+        Cyy = Fxy*Fxy + Fyy*Fyy + Fzy*Fzy
+        Cyz = Fxy*Fxz + Fyy*Fyz + Fzy*Fzz
+        Czx = Fxz*Fxx + Fyz*Fyx + Fzz*Fzx
+        Czy = Fxz*Fxy + Fyz*Fyy + Fzz*Fzy
+        Czz = Fxz*Fxz + Fyz*Fyz + Fzz*Fzz
+        # calculate and return invariants
+        I4f0 = (f0[0] * (f0[0]*Cxx + f0[1]*Cyx + f0[2]*Czx)
+              + f0[1] * (f0[0]*Cxy + f0[1]*Cyy + f0[2]*Czy)
+              + f0[2] * (f0[0]*Cxz + f0[1]*Cyz + f0[2]*Czz))
 
         return detF, trC, I4f0
 
@@ -131,7 +128,7 @@ class GuccioneEnergyModel:
         duzdxyz = grad(u[:, 2].unsqueeze(1), x, 
                         torch.ones(x.shape[0], 1, device=dev), 
                         create_graph=True, retain_graph=True)[0]
-
+        # calculate the deformation gradient
         Fxx = duxdxyz[:, 0].unsqueeze(1) + 1
         Fxy = duxdxyz[:, 1].unsqueeze(1) + 0
         Fxz = duxdxyz[:, 2].unsqueeze(1) + 0
@@ -141,7 +138,7 @@ class GuccioneEnergyModel:
         Fzx = duzdxyz[:, 0].unsqueeze(1) + 0
         Fzy = duzdxyz[:, 1].unsqueeze(1) + 0
         Fzz = duzdxyz[:, 2].unsqueeze(1) + 1
-        
+        # calculate the right Cauchy-Green deformation tensor
         Cxx = Fxx*Fxx + Fyx*Fyx + Fzx*Fzx
         Cxy = Fxx*Fxy + Fyx*Fyy + Fzx*Fzy
         Cxz = Fxx*Fxz + Fyx*Fyz + Fzx*Fzz
@@ -151,12 +148,11 @@ class GuccioneEnergyModel:
         Czx = Fxz*Fxx + Fyz*Fyx + Fzz*Fzx
         Czy = Fxz*Fxy + Fyz*Fyy + Fzz*Fzy
         Czz = Fxz*Fxz + Fyz*Fyz + Fzz*Fzz
-
         # store C for use in active Guccione model
         self.Cxx = Cxx; self.Cxy = Cxy; self.Cxz = Cxz
         self.Cyx = Cyx; self.Cyy = Cyy; self.Cyz = Cyz
         self.Czx = Czx; self.Czy = Czy; self.Czz = Czz
-
+        # calculate the Green-Lagrange strain tensor
         Exx = 0.5*(Cxx - 1)
         Exy = 0.5*(Cxy - 0)
         Exz = 0.5*(Cxz - 0)
@@ -166,12 +162,11 @@ class GuccioneEnergyModel:
         Ezx = 0.5*(Czx - 0)
         Ezy = 0.5*(Czy - 0)
         Ezz = 0.5*(Czz - 1)
-
         # store E for use in tranversely isotropic Guccione model
         self.Exx = Exx; self.Exy = Exy; self.Exz = Exz
         self.Eyx = Eyx; self.Eyy = Eyy; self.Eyz = Eyz
         self.Ezx = Ezx; self.Ezy = Ezy; self.Ezz = Ezz
-
+        # calculate and return the invariants
         detF = (Fxx * (Fyy * Fzz - Fyz * Fzy) 
               - Fxy * (Fyx * Fzz - Fyz * Fzx) 
               + Fxz * (Fyx * Fzy - Fyy * Fzx))
@@ -203,12 +198,13 @@ class GuccioneTransverseEnergyModel(GuccioneEnergyModel):
 
     def _get_invariants(self, u, x):
         f0 = self.f0; s0 = self.s0; n0 = self.n0
+        # get invariants from superclass
         detF, _ = super()._get_invariants(u, x)
-        
+        # get Green-Lagrange strain tensor from superclass
         Exx = self.Exx; Exy = self.Exy; Exz = self.Exz
         Eyx = self.Eyx; Eyy = self.Eyy; Eyz = self.Eyz
         Ezx = self.Ezx; Ezy = self.Ezy; Ezz = self.Ezz
-
+        """ HVA REGNER JEG UT HER? """
         E11 = (f0[0] * (f0[0]*Exx + f0[1]*Eyx + f0[2]*Ezx)
              + f0[1] * (f0[0]*Exy + f0[1]*Eyy + f0[2]*Ezy)
              + f0[2] * (f0[0]*Exz + f0[1]*Eyz + f0[2]*Ezz))
@@ -238,7 +234,7 @@ class GuccioneTransverseEnergyModel(GuccioneEnergyModel):
         E33 = (n0[0] * (n0[0]*Exx + n0[1]*Eyx + n0[2]*Ezx)
              + n0[1] * (n0[0]*Exy + n0[1]*Eyy + n0[2]*Ezy)
              + n0[2] * (n0[0]*Exz + n0[1]*Eyz + n0[2]*Ezz))
-
+        # calculate and return invariants
         Q = (self.bf*E11**2
              + self.bt*(E22**2 + E33**2 + E23**2 + E32**2)
              + self.bfs*(E12**2 + E21**2 + E13**2 + E31**2))
@@ -258,12 +254,13 @@ class GuccioneTransverseActiveEnergyModel(GuccioneTransverseEnergyModel):
     
     def _get_invariants(self, u, x):
         f0 = self.f0
+        # get invariants from superclass
         detF, Q = super()._get_invariants(u, x)
-
+        # get right Cauchy-Green deformation tensor
         Cxx = self.Cxx; Cxy = self.Cxy; Cxz = self.Cxz
         Cyx = self.Cyx; Cyy = self.Cyy; Cyz = self.Cyz
         Czx = self.Czx; Czy = self.Czy; Czz = self.Czz
-
+        # calculate and return invariants
         I4f0 = (f0[0] * (f0[0]*Cxx + f0[1]*Cyx + f0[2]*Czx)
               + f0[1] * (f0[0]*Cxy + f0[1]*Cyy + f0[2]*Czy)
               + f0[2] * (f0[0]*Cxz + f0[1]*Cyz + f0[2]*Czz))

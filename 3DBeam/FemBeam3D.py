@@ -6,6 +6,7 @@ l = 4
 h = 1 
 d = 1
 N_test = 30
+N_strain = 21
 
 E = 1000
 nu = 0.3
@@ -44,12 +45,6 @@ def FEM_3D(N):
     I1 = dolfin.tr(C)
     # E = 0.5 * (C - dolfin.Identity(3))
 
-    """ SKRIV HVORFOR DETTE IKKE FUNKA. SKRIV AV KAPPA-MODELLEN FUNKA BEDRE FOR KOMPRESSIBEL MATERIALMODELL"""
-    # F_bar = F / J**(1/3)
-    # C_bar = F_bar.T*F_bar
-    # I1 = dolfin.tr(C_bar)
-    # E = 0.5 * (C_bar - dolfin.Identity(3))
-
     f = dolfin.Constant((0.0, -5.0, 0.0))
 
 
@@ -77,11 +72,11 @@ def FEM_3D(N):
     u.rename('Displacement', '')
     VonMises.rename('VonMises stress', '')
 
-    outfile = dolfin.XDMFFile('output/FemBeam3D.xdmf')
-    outfile.parameters['flush_output'] = True
-    outfile.parameters['functions_share_mesh'] = True
-    outfile.write(u, 0.0)
-    outfile.write(VonMises, 0.0)
+    # outfile = dolfin.XDMFFile('output/FemBeam3D.xdmf')
+    # outfile.parameters['flush_output'] = True
+    # outfile.parameters['functions_share_mesh'] = True
+    # outfile.write(u, 0.0)
+    # outfile.write(VonMises, 0.0)
 
     x = np.linspace(0, l, 4*N_test+2)[1:-1]
     y = np.linspace(0, h, N_test+2)[1:-1]
@@ -93,9 +88,21 @@ def FEM_3D(N):
             for k in range(N_test):
                 u_fem[:, j, i, k] = u(x[i], y[j], z[k])
 
-    np.save(f'stored_arrays/u_fem_N{N}', u_fem)
+    x_strain = np.linspace(0, l, 4*N_strain+2)[1:-1]
+    y_strain = np.linspace(0, h, N_strain)
+    z_strain = np.linspace(0, d, N_strain)
+    u_strain = np.zeros((3, N_strain, 4*N_strain, N_strain))
+
+    for i in range(4*N_strain):
+        for j in range(N_strain):
+            for k in range(N_strain):
+                u_strain[:, j, i, k] = u(x_strain[i], y_strain[j], z_strain[k])
 
 
+
+    np.save(f'stored_arrays/u_strain', u_strain)
+    # np.save(f'stored_arrays/u_fem_N{N}', u_fem)
+    return u
 
     print(dolfin.assemble(psi*dolfin.dx))               # 6.924290983627352
     print(dolfin.assemble(dolfin.dot(f, u)*dolfin.dx))      # 14.651664345327262
@@ -104,7 +111,7 @@ def FEM_3D(N):
     # print(dolfin.assemble(dolfin.dot(f, u)*ds(1)))      # 5.996554979767974
 
 if __name__ == '__main__':
-    for N in [5, 10, 15, 20, 25, 30]:
-    # for N in [5]:
+    # for N in [5, 10, 15, 20, 25, 30]:
+    for N in [30]:
         print('N = ', N)
         FEM_3D(N)
