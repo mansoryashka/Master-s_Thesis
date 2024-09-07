@@ -90,25 +90,7 @@ def generate_fibers(N=15, M=3,
     # f0[..., -1] = 0
     # s0[..., -1] = 0
     # n0[..., -1] = 0
-
-    return f0.reshape((-1, 3, 1)), s0.reshape((-1, 3, 1)), n0.reshape((-1, 3, 1))
-    # return f0.reshape((3, -1)), s0.reshape((3, -1)), n0.reshape((3, -1))
-    # return f0, s0, n0
-
-# ax.quiver(x0, y0, z0, 
-#           f[0], 
-#           f[1], 
-#           f[2])
-
-# ax.scatter(x0[:5, :, :], y0[:5, :, :], z0[:5, :, :], s=1, c='tab:blue')
-# ax.quiver(x0[::6, :, :], y0[::6, :, :], z0[::6, :, :], 
-        #   f[0][::6, :, :], 
-        #   f[1][::6, :, :], 
-        #   f[2][::6, :, :])
-# ax.quiver(x0[-1, :, :], y0[-1, :, :], z0[-1, :, :], 
-#           f[0][-1, :, :], 
-#           f[1][-1, :, :], 
-#           f[2][-1, :, :])
+    return f0.reshape((3, -1)), s0.reshape((3, -1)), n0.reshape((3, -1))
 
 def plot_displacement(X, Z, X_cur, Z_cur, trainin_shape, axs, figname):
     N, M, N = trainin_shape
@@ -156,30 +138,24 @@ def plot_displacement(X, Z, X_cur, Z_cur, trainin_shape, axs, figname):
     plt.savefig(f'figures/{figname}.pdf')
 
 if __name__ == '__main__':
-    N_test = 21; M_test = 3
+    N_test = 41; M_test = 7
     middle_layer = int(np.floor(M_test/2))
     test_domain, _, _ = define_domain(N_test, M_test, n_cond=15)
     test_domain = test_domain.reshape((N_test, M_test, N_test, 3))
     x_test = np.ascontiguousarray(test_domain[..., 0])
     y_test = np.ascontiguousarray(test_domain[..., 1])
     z_test = np.ascontiguousarray(test_domain[..., 2])
-    N = 40; M = 5
+    N = 4; M = 3
     shape = [N, M, N]
-    domain, dirichlet, neumann = define_domain(N, M, n_cond=15)
+    domain, dirichlet, neumann = define_domain(N, M, n_cond=15, plot=True)
     dX, dY, dZ, dX_neumann, dZ_neumann = generate_integration_line(domain, 
                                                                     neumann,
                                                                     shape)
 
     f0, s0, n0 = generate_fibers(N, M)
-    # f0 = torch.tensor(f0.reshape((3, -1, 1))).to(dev)
-    # s0 = torch.tensor(s0.reshape((3, -1, 1))).to(dev)
-    # n0 = torch.tensor(n0.reshape((3, -1, 1))).to(dev)
     f0 = torch.tensor(f0).to(dev)
     s0 = torch.tensor(s0).to(dev)
     n0 = torch.tensor(n0).to(dev)
-    # f0 = torch.tensor([1, 0, 0]).to(dev)
-    # s0 = torch.tensor([0, 1, 0]).to(dev)
-    # n0 = torch.tensor([0, 0, 1]).to(dev)
 
     model = MultiLayerNet(3, *[40]*4, 3)
     energy = GuccioneTransverseActiveEnergyModel(C, bf, bt, bfs, kappa=1E3, Ta=60, f0=f0, s0=s0, n0=n0)
