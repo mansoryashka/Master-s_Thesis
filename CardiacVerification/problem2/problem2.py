@@ -69,6 +69,7 @@ def define_domain(N=13, M=3,
     y_perp = np.copy(y_endo) / rs_endo
     z_perp = np.copy(z_endo) / rl_endo
 
+
     # calculate distances between points
     dv = np.sqrt(
         (x_perp[1:] - x_perp[:-1])**2
@@ -87,6 +88,11 @@ def define_domain(N=13, M=3,
     #   + (y_perp[:, 1:] - y_perp[:, :-1])**2
     #   + (z_perp[:, 1:] - z_perp[:, :-1])**2
     # )
+
+    """ Lurer på om jeg skal sette vektorene i  """
+    # x_perp[-1] = 0
+    # y_perp[-1] = 0
+    # z_perp[-1] = 0
 
 
     # plot domain
@@ -116,27 +122,26 @@ def define_domain(N=13, M=3,
         plt.savefig('figures/ventricle.pdf')
         plt.close()
 
-    x = np.expand_dims(x.flatten(), 1)
-    y = np.expand_dims(y.flatten(), 1)
-    z = np.expand_dims(z.flatten(), 1)
+    x = x.flatten().reshape(-1, 1)
+    y = y.flatten().reshape(-1, 1)
+    z = z.flatten().reshape(-1, 1)
     domain = np.concatenate((x, y, z), -1)
 
-    x1 = np.expand_dims(x1.flatten(), 1)
-    y1 = np.expand_dims(y1.flatten(), 1)
-    z1 = np.expand_dims(z1.flatten(), 1)
+    x1 = x1.flatten().reshape(-1, 1)
+    y1 = y1.flatten().reshape(-1, 1)
+    z1 = z1.flatten().reshape(-1, 1)
     d_cond = 0
     db_pts = np.concatenate((x1, y1, z1), -1)
     db_vals = np.ones(np.shape(db_pts)) * d_cond
 
-
-    x_perp = np.expand_dims(x_perp.flatten(), 1)
-    y_perp = np.expand_dims(y_perp.flatten(), 1)
-    z_perp = np.expand_dims(z_perp.flatten(), 1)
-
-    x2 = np.expand_dims(x2.flatten(), 1)
-    y2 = np.expand_dims(y2.flatten(), 1)
-    z2 = np.expand_dims(z2.flatten(), 1)
+    x2 = x2.flatten().reshape(-1, 1)
+    y2 = y2.flatten().reshape(-1, 1)
+    z2 = z2.flatten().reshape(-1, 1)
     nb_pts = np.concatenate((x2, y2, z2), -1)
+
+    x_perp = x_perp.flatten().reshape(-1, 1)
+    y_perp = y_perp.flatten().reshape(-1, 1)
+    z_perp = z_perp.flatten().reshape(-1, 1)
     nb_vals = n_cond*np.concatenate((x_perp, y_perp, z_perp), -1)
 
     dirichlet = {
@@ -226,8 +231,53 @@ def generate_integration_line(domain, neumann, shape):
     
     return dX, dY, dZ, dX_neumann, dZ_neumann
 
+def plot_displacement(X, Z, X_cur, Z_cur, trainin_shape, axs, figname):
+    N, M, N = trainin_shape
+    N_test = len(X[:, 0, 0])
+    M_test = len(X[0, :, 0])
+    ax1, ax2, ax3 = axs
+    # get indexes of line to be plotted
+    k = int((N_test - 1) / 2)
+    middle_layer = int(np.floor(M_test / 2))    
+    # get line in reference configuration
+    ref_x = X[k, middle_layer]
+    ref_z = Z[k, middle_layer]
+    # get line in current configuration
+    cur_x = X_cur[k, middle_layer]
+    cur_z = Z_cur[k, middle_layer]
+
+    ax1.set_xlabel('$x$ [mm]')
+    ax1.set_ylabel('$y$ [mm]')
+    ax1.plot(ref_x, ref_z, c='gray', linestyle=':')
+    ax1.plot(cur_x, cur_z, label=f"({N}, {M}, {N})")
+    # ax1.set_xticks([-10, -5, 0])
+    ax1.legend()
+
+        
+    ax2.plot(cur_x, cur_z, label=f"({N}, {M}, {N})", alpha=0.5)
+    ax2.set_xlabel('$x$ [mm]')
+    ax2.set_ylabel('$y$ [mm]')
+    ax2.set_ylim((-9, -2))
+    ax2.set_yticks([-9, -2])
+    ax2.set_xlim(right=-10)
+    # ax2.set_xticks([-12, -10])
+
+        
+    ax3.plot(cur_x, cur_z, label=f"({N}, {M}, {N})", alpha=0.5)
+    ax3.set_xlabel('$x$ [mm]')
+    ax3.set_ylabel('$y$ [mm]')
+    # ax3.set_ylim((-34, -32))
+    ax3.set_ylim(top=-20)
+    ax3.set_xlim((-5, 0))
+    # ax3.set_xticks([-13, -9])
+    # ax3.set_yticks([-27, -23])
+    # ax3.set_yticks([-27, -23)
+
+    plt.tight_layout()
+    plt.savefig(f'figures/{figname}.pdf')
+
 if __name__ == '__main__':
-    N_test = 9; M_test = 3
+    N_test = 4; M_test = 3
     test_domain, _, _ = define_domain(N_test, M_test, n_cond=n_cond)
     test_domain = test_domain.reshape((N_test, M_test, N_test, 3))
     x_test = np.ascontiguousarray(test_domain[..., 0])
@@ -272,15 +322,15 @@ if __name__ == '__main__':
         X = np.copy(x_test)
         Y = np.copy(y_test)
         Z = np.copy(z_test)
-
         X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
 
+        # get indexes of line to be plotted
         k = int((N_test - 1) / 2)
         middle_test = int(np.floor(M_test / 2))
-        
+        # get line in reference configuration
         ref_x = X[k, middle_test]
         ref_z = Z[k, middle_test]
-
+        # get line in curent configuration
         cur_x = X_cur[k, middle_test]
         cur_z = Z_cur[k, middle_test]
 
@@ -288,7 +338,7 @@ if __name__ == '__main__':
         ax1.set_ylabel('$y$ [mm]')
         ax1.plot(ref_x, ref_z, c='gray', linestyle=':')
         ax1.plot(cur_x, cur_z, label=f"({N}, {M}, {N})")
-        ax1.set_xticks([-10, -5, 0])
+        # ax1.set_xticks([-10, -5, 0])
         ax1.legend()
 
         
@@ -297,23 +347,24 @@ if __name__ == '__main__':
         ax2.set_ylabel('$y$ [mm]')
         ax2.set_ylim((-9, -2))
         ax2.set_yticks([-9, -2])
-        ax2.set_xlim(right=-10)
+        # ax2.set_xlim(right=-10)
+        ax2.set_xlim(left=10)
         # ax2.set_xticks([-12, -10])
 
-        
         ax3.plot(cur_x, cur_z, label=f"({N}, {M}, {N})", alpha=0.5)
         ax3.set_xlabel('$x$ [mm]')
         ax3.set_ylabel('$y$ [mm]')
         # ax3.set_ylim((-34, -32))
         ax3.set_ylim(top=-20)
-        ax3.set_xlim((-5, 0))
+        # ax3.set_xlim((-5, 0))
+        ax3.set_xlim((0, 5))
 
         # ax3.set_xticks([-13, -9])
         # ax3.set_yticks([-27, -23])
         # ax3.set_yticks([-27, -23)
 
-        fig.tight_layout()
-        plt.savefig(f'figures/p2_plot_all.pdf')
+        plt.tight_layout()
+        plt.savefig(f'figures/p2_plot_all2.pdf')
 
         Z_cur[0, 0, 0], Z_cur[0, -1, 0]
         plt.style.use('seaborn-v0_8-darkgrid')
@@ -323,5 +374,5 @@ if __name__ == '__main__':
         ax.legend(['Endocardial apex', 'Epicardial apex'])
         ax.set_xlabel('Nr. of points [N]')
         ax.set_ylabel('$z$-location of deformed apex')
-        fig2.savefig('figures/p2_apex2.pdf')
+        fig2.savefig('figures/p2_apex3.pdf')
     # plt.show()
