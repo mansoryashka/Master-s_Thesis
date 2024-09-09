@@ -359,8 +359,6 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
                         '\t- lrs AND num_neurons\n\t- lrs AND num_layers\n\t- num_neurons AND num_layers')
     return u_norms, losses
 
-### implementere med define_domain som input? 
-### kan bruke samme funksjon i alle 3D filene
 
 def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, cmap='cividis'):
     fig, ax = plt.subplots(figsize=(5,5))
@@ -566,3 +564,75 @@ if __name__ == '__main__':
     # run2()
     # run3()
     # run4()
+
+    model = MultiLayerNet(3, *[50]*3, 3)
+    energy = NeoHookeanEnergyModel(lmbda, mu)
+    Dem_strain = DeepEnergyMethodBeam(model, energy)
+
+    N_strain = 21
+    x_strain = np.linspace(0, L, 4*N_strain + 2)[1:-1]
+    y_strain = np.linspace(0, D, N_strain)
+    z_strain = np.linspace(0, H, N_strain)
+
+    X_ref, Y_ref, Z_ref = np.meshgrid(x_strain, y_strain, z_strain)
+    c1 = np.logical_and(Y_ref==0.5, Z_ref==0.5)
+    c2 = np.logical_and(np.logical_and(Y_ref==1, Z_ref==0.5), X_ref==x_strain[-1])
+
+    fem_strain = np.load(arrays_path / 'u_strain.npy')
+    Y_fem = Y_ref + fem_strain[1]
+    y1_fem = Y_fem[c1]
+    y2_fem = Y_fem[c2]
+
+
+    fig, ax = plt.subplots()
+    fig2, ax2 = plt.subplots()
+    ax2.set_xscale('log')
+
+    ax.plot(x_strain, y1_fem, label='FEM')
+    ax2.scatter(30*30*30, y2_fem, label='FEM')
+    # plt.show()
+    linestyles = [(5, (10, 3)), (0, (5, 10)), 'dashed', 'dotted']
+    for i, N in enumerate([30, 40, 50, 60]):
+        model_path = models_path / 'run4' / f'model_lr0.05_nn50_nl3_N{N}_0'
+        Dem_strain.model.load_state_dict(torch.load(model_path))
+
+        U_pred = Dem_strain.evaluate_model(x_strain, y_strain, z_strain)
+        # exit(np.asarray(U_pred).shape)
+        X_cur = X_ref + U_pred[0]
+        Y_cur = Y_ref + U_pred[1]
+        Z_cur = Z_ref + U_pred[2]
+
+        # x1_ref = X_ref[c1]
+        # y1_ref = Y_ref[c1]
+        # z1_ref = Z_ref[c1]
+
+        # x1_cur = X_cur[c1]
+        y1_cur = Y_cur[c1]
+        # z1_cur = Z_cur[c1]
+
+        # x2_ref = X_ref[c2]
+        # y2_ref = Y_ref[c2]
+        # z2_ref = Z_ref[c2]
+
+        # x2_cur = X_cur[c2]
+        y2_cur = Y_cur[c2]
+        # z2_cur = Z_cur[c2]
+
+        ax.plot(x_strain, y1_cur, linestyle=linestyles[i], alpha=0.9, label=f'N = {N}', linewidth=0.5)
+        ax2.scatter(N*N*N, y2_cur, c='tab:red', label=f'N = {N}')
+    ax.legend()
+    ax2.legend()
+    plt.show()
+        # plot linjeendring
+        # plot enring i toppunkt
+        # hent tilsvarende resultater fra FEM
+
+
+
+        # fig = plt.figure()
+        # ax = fig.add_subplot(projection='3d')
+        # ax.set_box_aspect((4, 1, 1))
+        # ax.scatter(X_cur, Z_cur, Y_cur, s=0.5, alpha=0.8)
+        # ax.scatter(x1_cur, z1_cur, y1_cur, c='tab:red')
+        # ax.scatter(x2_cur, z2_cur, y2_cur, c='tab:green')
+        # plt.show()
