@@ -562,7 +562,7 @@ if __name__ == '__main__':
 
     # run1()
     # run2()
-    # run3()
+    run3()
     # run4()
 
 
