@@ -1,14 +1,13 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from pyevtk.hl import gridToVTK
-import matplotlib.gridspec as gs 
+
 import sys
 sys.path.insert(0, "../..")
 from DEM import DeepEnergyMethod, MultiLayerNet, dev, write_vtk_LV
 from EnergyModels import *
-import seaborn as sns 
-sns.set()
+# import seaborn as sns 
+# sns.set()
 
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 200
@@ -23,7 +22,7 @@ def define_domain(N=13, M=3,
                   rl_endo=17,
                   rs_epi=10,
                   rl_epi=20,
-                  plot=True):
+                  plot=False):
 
     rs = np.linspace(rs_endo, rs_epi, M).reshape((1, M, 1))
     rl = np.linspace(rl_endo, rl_epi, M).reshape((1, M, 1))
@@ -306,71 +305,14 @@ if __name__ == '__main__':
         # energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E3)
         energy = GuccioneIncompressibleEnergyModel(C, bf, bt, bfs, kappa=1E3)
         DemLV = DeepEnergyMethodLV(model, energy)
-        DemLV.train_model(domain, dirichlet, neumann, 
-                          shape=shape, dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
-                          LHD=np.zeros(3), neu_axis=[0, 2], lr=0.1, epochs=300,
-                          fb=np.array([[0, 0, 0]]),  ventricle_geometry=True)
+        # DemLV.train_model(domain, dirichlet, neumann, 
+        #                   shape=shape, dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
+        #                   LHD=np.zeros(3), neu_axis=[0, 2], lr=0.1, epochs=300,
+        #                   fb=np.array([[0, 0, 0]]),  ventricle_geometry=True)
         
         # torch.save(DemLV.model.state_dict(), f'trained_models/run1/model_{N}x{M}')
-        # DemLV.model.load_state_dict(torch.load(f'trained_models/run1/model_{N}x{M}'))
+        DemLV.model.load_state_dict(torch.load(f'trained_models/run1/model_{N}x{M}'))
         U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
-        write_vtk_LV(f'output/DemLV{N}x{M}', x_test, y_test, z_test, U_pred)
+        # write_vtk_LV(f'output/DemLV{N}x{M}', x_test, y_test, z_test, U_pred)
 
         # np.save(f'stored_arrays/DemLV{N}x{M}', np.asarray(U_pred))
-        # U_pred = np.load(f'stored_arrays/DemLV{N}x{M}.npy')
-
-        X = np.copy(x_test)
-        Y = np.copy(y_test)
-        Z = np.copy(z_test)
-        X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
-
-        # get indexes of line to be plotted
-        k = int((N_test - 1) / 2)
-        middle_test = int(np.floor(M_test / 2))
-        # get line in reference configuration
-        ref_x = X[k, middle_test]
-        ref_z = Z[k, middle_test]
-        # get line in curent configuration
-        cur_x = X_cur[k, middle_test]
-        cur_z = Z_cur[k, middle_test]
-
-        ax1.set_xlabel('$x$ [mm]')
-        ax1.set_ylabel('$y$ [mm]')
-        ax1.plot(ref_x, ref_z, c='gray', linestyle=':')
-        ax1.plot(cur_x, cur_z, label=f"({N}, {M}, {N})")
-        # ax1.set_xticks([-10, -5, 0])
-        ax1.legend()
-
-        
-        ax2.plot(cur_x, cur_z, label=f"({N}, {M}, {N})", alpha=0.5)
-        ax2.set_xlabel('$x$ [mm]')
-        ax2.set_ylabel('$y$ [mm]')
-        ax2.set_ylim((-9, -2))
-        ax2.set_yticks([-9, -2])
-        # ax2.set_xlim(right=-10)
-        ax2.set_xticks([-12, -10])
-
-        ax3.plot(cur_x, cur_z, label=f"({N}, {M}, {N})", alpha=0.5)
-        ax3.set_xlabel('$x$ [mm]')
-        ax3.set_ylabel('$y$ [mm]')
-        # ax3.set_ylim((-34, -32))
-        ax3.set_ylim(top=-20)
-        # ax3.set_xlim((-5, 0))
-
-        # ax3.set_xticks([-13, -9])
-        # ax3.set_yticks([-27, -23])
-        # ax3.set_yticks([-27, -23)
-
-        plt.tight_layout()
-        # plt.savefig(f'figures/p2_plot_all2.pdf')
-
-        Z_cur[0, 0, 0], Z_cur[0, -1, 0]
-        plt.style.use('seaborn-v0_8-darkgrid')
-        ax.scatter(N*N*M, Z_cur[0, 0, 0], marker='x', c='tab:blue')
-        ax.scatter(N*N*M, Z_cur[0, -1, 0], marker='x', c='tab:orange')
-        ax.set_xscale('log')
-        ax.legend(['Endocardial apex', 'Epicardial apex'])
-        ax.set_xlabel('Nr. of points [N]')
-        ax.set_ylabel('$z$-location of deformed apex')
-        # fig2.savefig('figures/p2_apex3.pdf')
-    plt.show()

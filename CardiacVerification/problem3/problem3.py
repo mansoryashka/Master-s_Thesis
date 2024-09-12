@@ -90,7 +90,7 @@ def generate_fibers(N=15, M=3,
     # f0[..., -1] = 0
     # s0[..., -1] = 0
     # n0[..., -1] = 0
-    return f0.reshape((3, -1)), s0.reshape((3, -1)), n0.reshape((3, -1))
+    return f0.reshape((3, -1, 1)), s0.reshape((3, -1, 1)), n0.reshape((3, -1, 1))
 
 def plot_displacement(X, Z, X_cur, Z_cur, trainin_shape, axs, figname):
     N, M, N = trainin_shape
@@ -138,16 +138,16 @@ def plot_displacement(X, Z, X_cur, Z_cur, trainin_shape, axs, figname):
     plt.savefig(f'figures/{figname}.pdf')
 
 if __name__ == '__main__':
-    N_test = 41; M_test = 7
+    N_test = 21; M_test = 5
     middle_layer = int(np.floor(M_test/2))
     test_domain, _, _ = define_domain(N_test, M_test, n_cond=15)
     test_domain = test_domain.reshape((N_test, M_test, N_test, 3))
     x_test = np.ascontiguousarray(test_domain[..., 0])
     y_test = np.ascontiguousarray(test_domain[..., 1])
     z_test = np.ascontiguousarray(test_domain[..., 2])
-    N = 4; M = 3
+    N = 80; M = 5
     shape = [N, M, N]
-    domain, dirichlet, neumann = define_domain(N, M, n_cond=15, plot=True)
+    domain, dirichlet, neumann = define_domain(N, M, n_cond=15, plot=False)
     dX, dY, dZ, dX_neumann, dZ_neumann = generate_integration_line(domain, 
                                                                     neumann,
                                                                     shape)
@@ -157,14 +157,14 @@ if __name__ == '__main__':
     s0 = torch.tensor(s0).to(dev)
     n0 = torch.tensor(n0).to(dev)
 
-    model = MultiLayerNet(3, *[40]*4, 3)
+    model = MultiLayerNet(3, *[60]*4, 3)
     energy = GuccioneTransverseActiveEnergyModel(C, bf, bt, bfs, kappa=1E3, Ta=60, f0=f0, s0=s0, n0=n0)
     DemLV = DeepEnergyMethodLV(model, energy)
     DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, 
                       dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
-                      neu_axis=[0, 2], lr=.1, epochs=200, 
+                      neu_axis=[0, 2], lr=.1, epochs=300, 
                       fb=np.array([[0, 0, 0]]), ventricle_geometry=True)
-    
+    torch.save(DemLV.model.state_dict(), f'trained_models/run1/model11')
     U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
     np.save('stored_arrays/U_pred', np.asarray(U_pred))
     write_vtk_LV('output/DemLV', x_test, y_test, z_test, U_pred)

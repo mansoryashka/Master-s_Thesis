@@ -13,6 +13,7 @@ torch.manual_seed(2023)
 rng = np.random.default_rng(2023)
 
 dev = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+# print(dev)
 # dev = torch.device('cpu')
 print('Running on GPU') if dev == torch.device('cuda') else print('Running on CPU')
 
@@ -85,11 +86,11 @@ class DeepEnergyMethod:
         prev_loss = torch.tensor([0.0]).to(dev)
         start_time = time.time()
 
-        nn = self.model.linears[0].out_features
-        nl = len(self.model.linears) - 1
-        j = 0
-        while Path(models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}').exists():
-            j += 1
+        # nn = self.model.linears[0].out_features
+        # nl = len(self.model.linears) - 1
+        # j = 0
+        # while Path(models_path / f'model_lr{lr}_nn{nn}_nl{nl}_N{shape[-1]}_{j}').exists():
+        #     j += 1
         
         for i in range(epochs):
             def closure():
