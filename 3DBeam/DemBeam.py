@@ -437,7 +437,7 @@ def run2():
     lrs = [0.01, 0.05, 0.1, 0.5]
     num_layers = [2, 3, 4, 5]
     num_neurons = 40
-    num_expreriments = 30
+    num_expreriments = 20
     num_epochs = 300
     U_norms = 0
     losses = 0
@@ -513,7 +513,7 @@ def run4():
     lrs = [0.01, 0.05, 0.1, 0.5]
     num_layers = 3
     num_neurons = 50
-    num_expreriments = 30
+    num_expreriments = 20
     num_epochs = 300
     U_norms = 0
     losses = 0
@@ -562,7 +562,7 @@ if __name__ == '__main__':
 
     # run1()
     # run2()
-    run3()
-    # run4()
+    # run3()
+    run4()
 
 
