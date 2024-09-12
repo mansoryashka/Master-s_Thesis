@@ -185,6 +185,103 @@ class GuccioneEnergyModel:
 
         return StrainEnergy
     
+class GuccioneIncompressibleEnergyModel:
+    def __init__(self, C, bf, bt, bfs, kappa=1E3):
+        self.C = C
+        self.bf = bf
+        self.bt = bt
+        self.bfs = bfs
+        self.kappa = kappa
+
+    def _get_passive_strain_energy(self, Q):
+        return 0.5 * self.C * (torch.exp(Q) - 1)
+
+    def _get_compressibility(self, detF):
+        return  0.5 * self.kappa * (detF - 1)**2
+
+    def _get_invariants(self, u, x):
+        # Guccione energy mode. Get source from verification paper!!!
+        duxdxyz = grad(u[:, 0].unsqueeze(1), x, 
+                        torch.ones(x.shape[0], 1, device=dev), 
+                        create_graph=True, retain_graph=True)[0]
+        duydxyz = grad(u[:, 1].unsqueeze(1), x, 
+                        torch.ones(x.shape[0], 1, device=dev), 
+                        create_graph=True, retain_graph=True)[0]
+        duzdxyz = grad(u[:, 2].unsqueeze(1), x, 
+                        torch.ones(x.shape[0], 1, device=dev), 
+                        create_graph=True, retain_graph=True)[0]
+        # calculate the deformation gradient
+        Fxx = duxdxyz[:, 0].unsqueeze(1) + 1
+        Fxy = duxdxyz[:, 1].unsqueeze(1) + 0
+        Fxz = duxdxyz[:, 2].unsqueeze(1) + 0
+        Fyx = duydxyz[:, 0].unsqueeze(1) + 0
+        Fyy = duydxyz[:, 1].unsqueeze(1) + 1
+        Fyz = duydxyz[:, 2].unsqueeze(1) + 0
+        Fzx = duzdxyz[:, 0].unsqueeze(1) + 0
+        Fzy = duzdxyz[:, 1].unsqueeze(1) + 0
+        Fzz = duzdxyz[:, 2].unsqueeze(1) + 1
+
+        detF = (Fxx * (Fyy * Fzz - Fyz * Fzy) 
+              - Fxy * (Fyx * Fzz - Fyz * Fzx) 
+              + Fxz * (Fyx * Fzy - Fyy * Fzx))
+
+        Fxx_bar = Fxx / detF**(1/3)
+        Fxy_bar = Fxy / detF**(1/3)
+        Fxz_bar = Fxz / detF**(1/3)
+        Fyx_bar = Fyx / detF**(1/3)
+        Fyy_bar = Fyy / detF**(1/3)
+        Fyz_bar = Fyz / detF**(1/3)
+        Fzx_bar = Fzx / detF**(1/3)
+        Fzy_bar = Fzy / detF**(1/3)
+        Fzz_bar = Fzz / detF**(1/3)
+
+        # calculate the right Cauchy-Green deformation tensor
+        Cxx = Fxx_bar*Fxx_bar + Fyx_bar*Fyx_bar + Fzx_bar*Fzx_bar
+        Cxy = Fxx_bar*Fxy_bar + Fyx_bar*Fyy_bar + Fzx_bar*Fzy_bar
+        Cxz = Fxx_bar*Fxz_bar + Fyx_bar*Fyz_bar + Fzx_bar*Fzz_bar
+        Cyx = Fxy_bar*Fxx_bar + Fyy_bar*Fyx_bar + Fzy_bar*Fzx_bar
+        Cyy = Fxy_bar*Fxy_bar + Fyy_bar*Fyy_bar + Fzy_bar*Fzy_bar
+        Cyz = Fxy_bar*Fxz_bar + Fyy_bar*Fyz_bar + Fzy_bar*Fzz_bar
+        Czx = Fxz_bar*Fxx_bar + Fyz_bar*Fyx_bar + Fzz_bar*Fzx_bar
+        Czy = Fxz_bar*Fxy_bar + Fyz_bar*Fyy_bar + Fzz_bar*Fzy_bar
+        Czz = Fxz_bar*Fxz_bar + Fyz_bar*Fyz_bar + Fzz_bar*Fzz_bar
+        # store C for use in active Guccione model
+        self.Cxx = Cxx; self.Cxy = Cxy; self.Cxz = Cxz
+        self.Cyx = Cyx; self.Cyy = Cyy; self.Cyz = Cyz
+        self.Czx = Czx; self.Czy = Czy; self.Czz = Czz
+        # calculate the Green-Lagrange strain tensor
+        Exx = 0.5*(Cxx - 1)
+        Exy = 0.5*(Cxy - 0)
+        Exz = 0.5*(Cxz - 0)
+        Eyx = 0.5*(Cyx - 0)
+        Eyy = 0.5*(Cyy - 1)
+        Eyz = 0.5*(Cyz - 0)
+        Ezx = 0.5*(Czx - 0)
+        Ezy = 0.5*(Czy - 0)
+        Ezz = 0.5*(Czz - 1)
+        # store E for use in tranversely isotropic Guccione model
+        self.Exx = Exx; self.Exy = Exy; self.Exz = Exz
+        self.Eyx = Eyx; self.Eyy = Eyy; self.Eyz = Eyz
+        self.Ezx = Ezx; self.Ezy = Ezy; self.Ezz = Ezz
+        # calculate and return the invariants
+        # detF = (Fxx * (Fyy * Fzz - Fyz * Fzy) 
+        #       - Fxy * (Fyx * Fzz - Fyz * Fzx) 
+        #       + Fxz * (Fyx * Fzy - Fyy * Fzx))
+        
+        Q = (self.bf*Exx**2
+             + self.bt*(Eyy**2 + Ezz**2 + Eyz**2 + Ezy**2)
+             + self.bfs*(Exy**2 + Eyx**2 + Exz**2 + Ezx**2))
+        
+        return detF, Q
+
+    def __call__(self, u, x):
+        detF, Q = self._get_invariants(u, x)
+
+        StrainEnergy = (self._get_passive_strain_energy(Q)
+                      + self._get_compressibility(detF))
+
+        return StrainEnergy
+    
 class GuccioneTransverseEnergyModel(GuccioneEnergyModel):
     # Guccione energy model. Get source from verification paper!!!
     def __init__(self, C, bf, bt, bfs, kappa=1E3, 

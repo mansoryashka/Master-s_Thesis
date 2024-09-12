@@ -6,6 +6,7 @@ from pathlib import Path
 import seaborn as sns
 sns.set()
 
+from matplotlib.patches import Rectangle
 
 import sys
 sys.path.insert(0, "..")
@@ -15,6 +16,7 @@ from DemBeam import DeepEnergyMethodBeam, lmbda, mu, L, H, D
 
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 150
+
 if __name__ == '__main__':
     model = MultiLayerNet(3, *[50]*3, 3)
     energy = NeoHookeanEnergyModel(lmbda, mu)
@@ -31,7 +33,9 @@ if __name__ == '__main__':
     c2 = np.logical_and(np.logical_and(Y_ref==1, Z_ref==0.5), X_ref==x_strain[-1])
 
     fem_strain = np.load(arrays_path / 'u_strain.npy')
+    X_fem = X_ref + fem_strain[0]
     Y_fem = Y_ref + fem_strain[1]
+    x1_fem = X_fem[c1]
     y1_fem = Y_fem[c1]
     y2_fem = Y_fem[c2]
 
@@ -42,14 +46,12 @@ if __name__ == '__main__':
     ax13 = plt.subplot2grid((2,3), (1,1))
     ax14 = plt.subplot2grid((2,3), (1,2))
 
-    fig2, ax2 = plt.subplots()
-    ax11.plot(x_strain, y1_fem, label='FEM')
-    ax12.plot(x_strain[:2], y1_fem[:2], label='FEM')
-    ax13.plot(x_strain[middle-1:middle+2], y1_fem[middle-1:middle+2], label='FEM')
-    ax14.plot(x_strain[-2:], y1_fem[-2:], label='FEM')
-
-
-    ax2.axhline(y=y2_fem, label='FEM', linestyle='--', alpha=0.8)
+    p1 = 4; p2 = -4
+    # fig2, ax2 = plt.subplots()
+    ax11.plot(x1_fem, y1_fem, label='FEM')
+    ax12.plot(x1_fem[:p1], y1_fem[:p1], label='FEM')
+    ax13.plot(x1_fem[middle-2:middle+3], y1_fem[middle-2:middle+3], label='FEM')
+    ax14.plot(x1_fem[p2:], y1_fem[p2:], label='FEM')
 
     colors = ['C1', 'C2', 'C3', 'yellow']
 
@@ -66,9 +68,9 @@ if __name__ == '__main__':
         # y1_ref = Y_ref[c1]
         # z1_ref = Z_ref[c1]
 
-        # x1_cur = X_cur[c1]
-        y1_cur = Y_cur[c1]
-        # z1_cur = Z_cur[c1]
+        x_cur = X_cur[c1]
+        y_cur = Y_cur[c1]
+        # z_cur = Z_cur[c1]
 
         # x2_ref = X_ref[c2]
         # y2_ref = Y_ref[c2]
@@ -76,21 +78,19 @@ if __name__ == '__main__':
 
         # x2_cur = X_cur[c2]
         y2_cur = Y_cur[c2]
-        # z2_cur = Z_cur[c2]
 
-        ax11.plot(x_strain, y1_cur, c=colors[i],
+        ax11.plot(x_cur, y_cur, c=colors[i],
                  linestyle='--', linewidth=0.8, 
                  alpha=0.9, label=f'N = {N}')
-        ax12.plot(x_strain[:2], y1_cur[:2], c=colors[i],
+        ax12.plot(x_cur[:p1], y_cur[:p1], c=colors[i],
                  linestyle='--', linewidth=0.8, 
                  alpha=0.9, label=f'N = {N}')
-        ax13.plot(x_strain[middle-1:middle+2], y1_cur[middle-1:middle+2], c=colors[i],
+        ax13.plot(x_cur[middle-2:middle+3], y_cur[middle-2:middle+3], c=colors[i],
                  linestyle='--', linewidth=0.8, 
                  alpha=0.9, label=f'N = {N}')
-        ax14.plot(x_strain[-2:], y1_cur[-2:], c=colors[i],
+        ax14.plot(x_cur[p2:], y_cur[p2:], c=colors[i],
                  linestyle='--', linewidth=0.8, 
                  alpha=0.9, label=f'N = {N}')
-        ax2.scatter(4*N*N*N, y2_cur, c='tab:red')
 
     ax11.set_xlabel('$x$ [m]')
     ax11.set_ylabel('$y$-deflection [m]')
@@ -98,19 +98,76 @@ if __name__ == '__main__':
 
     ax12.set_xlabel('$x$ [m]')
     ax12.set_ylabel('$y$-deflection [m]')
-    ax12.set_ylim(bottom=y1_fem[1])
-    ax12.set_xlim(right=x_strain[1])
+    ax12.set_ylim(bottom=y1_fem[p1-1])
+    ax12.set_xlim(right=x1_fem[p1-1])
 
-    ax13.set_ylim((y1_fem[middle+1], y1_fem[middle-1]))
-    ax13.set_xlim((x_strain[middle-1], x_strain[middle+1]))
+    ticks1 = ax12.get_yticks()
+    ax12.set_yticks([ticks1[0], ticks1[-1]])
+    ax12.set_yticklabels([f'{x:.3f}' for x in [ticks1[0], ticks1[-1]]])
+
+    ax13.set_ylim((y1_fem[middle+2], y1_fem[middle-2]))
+    ax13.set_xlim((x1_fem[middle-2], x1_fem[middle+2]))
     ax13.set_xlabel('$x$ [m]')
 
-    ax14.set_ylim(top=y1_fem[-2])
-    ax14.set_xlim(left=x_strain[-2])
+    ticks1 = ax13.get_yticks()
+    ax13.set_yticks([ticks1[0], ticks1[-1]])
+    ax13.set_yticklabels([f'{x:.3f}' for x in [ticks1[0], ticks1[-1]]])
+
+    ax14.set_ylim(top=y1_fem[p2])
+    ax14.set_xlim(left=x1_fem[p2])
     ax14.set_xlabel('$x$ [m]')
     
-    ax2.set_xscale('log')
-    ax2.legend(['FEM', 'DEM'])
+    ticks1 = ax14.get_yticks()
+    ax14.set_yticks([ticks1[0], ticks1[-1]])
+    ax14.set_yticklabels([f'{x:.3f}' for x in [ticks1[0], ticks1[-1]]])
+
+    patch1_limx = ax12.get_xlim()
+    patch1_limy = ax12.get_ylim()
+
+    patch2_limx = ax13.get_xlim()
+    patch2_limy = ax13.get_ylim()
+
+    patch3_limx = ax14.get_xlim()
+    patch3_limy = ax14.get_ylim()
+
+    ax11.add_patch(Rectangle([patch1_limx[0], patch1_limy[0]], 
+                             patch1_limx[1] - patch1_limx[0], 
+                             patch1_limy[1] - patch1_limy[0],
+                             facecolor='None', edgecolor='tab:blue',
+                             linestyle='--'
+                             ))
+    ax12.add_patch(Rectangle([patch1_limx[0], patch1_limy[0]], 
+                             patch1_limx[1] - patch1_limx[0], 
+                             patch1_limy[1] - patch1_limy[0],
+                             facecolor='None', edgecolor='tab:blue',
+                             linestyle='--', linewidth=3
+                             ))
+    
+    ax11.add_patch(Rectangle([patch2_limx[0], patch2_limy[0]], 
+                             patch2_limx[1] - patch2_limx[0], 
+                             patch2_limy[1] - patch2_limy[0],
+                             facecolor='None', edgecolor='tab:green',
+                             linestyle='--'
+                             ))
+    ax13.add_patch(Rectangle([patch2_limx[0], patch2_limy[0]], 
+                             patch2_limx[1] - patch2_limx[0], 
+                             patch2_limy[1] - patch2_limy[0],
+                             facecolor='None', edgecolor='tab:green',
+                             linestyle='--', linewidth=3
+                             ))
+
+    ax11.add_patch(Rectangle([patch3_limx[0], patch3_limy[0]], 
+                             patch3_limx[1] - patch3_limx[0], 
+                             patch3_limy[1] - patch3_limy[0],
+                             facecolor='None', edgecolor='tab:red',
+                             linestyle='--'
+                             ))
+    ax14.add_patch(Rectangle([patch3_limx[0], patch3_limy[0]], 
+                             patch3_limx[1] - patch3_limx[0], 
+                             patch3_limy[1] - patch3_limy[0],
+                             facecolor='None', edgecolor='tab:red',
+                             linestyle='--', linewidth=3
+                             ))
     plt.show()
     # plot linjeendring
     # plot enring i toppunkt
