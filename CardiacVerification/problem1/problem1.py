@@ -28,7 +28,7 @@ dx = L / (10*N_test)
 dy = H / (N_test)
 dz = D / (N_test)
 
-C = 2E3
+C = 2
 bf = 8
 bt = 2
 bfs = 4
@@ -37,7 +37,7 @@ d_boundary = 0.0
 d_cond = [0, 0, 0]
 
 n_boundary = 0.0
-n_cond = [0, 0, 4]
+n_cond = [0, 0, 0.004]
 
 def define_domain(L, H, D, N=10):
     x = np.linspace(0, L, 10*N)
@@ -98,7 +98,7 @@ def define_domain(L, H, D, N=10):
 
 if __name__ == '__main__':
     N = 30
-    # print(int(N/10)); exit()
+
     N_test = 10
     LHD = [L, H, D]
     shape = [10*N, N, N]
@@ -108,42 +108,20 @@ if __name__ == '__main__':
     z_test = np.linspace(0, D, N_test+1)
 
     domain, dirichlet, neumann = define_domain(L, H, D, N=N)
-
-    # dX = np.zeros(domain.shape[0])
-    # dX[1:] = np.cumsum(domain[1:, 0] - domain[:-1, 0])
-    # dX = dX.reshape((shape[1], shape[0], shape[2]))[0, :, 0]
-
-    # dY = np.zeros(domain.shape[0])
-    # dY[1:] = np.cumsum(domain[1:, 1] - domain[:-1, 1])
-    # dY = dY.reshape((shape[1], shape[0], shape[2]))[0, 0, :]
-
-    # dZ = np.zeros(domain.shape[0])
-    # dZ[1:] = np.cumsum(domain[1:, 2] - domain[:-1, 2])
-    # dZ = dZ.reshape((shape[1], shape[0], shape[2]))[:, 0, 0]
-
-    # neumann_domain = neumann['coords']
-
-    # dX_neumann = np.zeros(neumann_domain.shape[0])
-    # dX_neumann[1:] = np.cumsum(neumann_domain[1:, 0] - neumann_domain[:-1, 0])
-    # dX_neumann = dX_neumann.reshape((shape[0], shape[2]))[:, 0]
     
-    
-    # dZ_neumann = np.zeros(neumann['coords'].shape[0])
-    # dZ_neumann[1:] = np.cumsum(neumann_domain[1:, 1] - neumann_domain[:-1, 1])
-    # dZ_neumann = dZ_neumann.reshape((shape[0], shape[1]))[0, :]
-    
-
     model = MultiLayerNet(3, 40, 40, 40, 3)
     energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
 
-    # DemBeam = DeepEnergyMethodBeam(model, energy)
-    # DemBeam.train_model(domain, dirichlet, neumann,
-    #                     shape, LHD, neu_axis=[0, 1], 
-    #                     lr=0.05, epochs=300, fb=np.array([[0, 0, 0]]))
-    # U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
+    DemBeam = DeepEnergyMethodBeam(model, energy)
+    DemBeam.train_model(domain, dirichlet, neumann,
+                        shape, LHD, neu_axis=[0, 1], 
+                        lr=0.1, epochs=300, fb=np.array([[0, 0, 0]]))
+    U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
 
-    # write_vtk_v2(f'output/problem1{N}', x_test, y_test, z_test, U_pred)
-    # np.save(f'stored_arrays/U_pred{N}', np.asarray(U_pred))
+    torch.save(DemBeam.model.state_dict(), Path('trained_models') / 'run1' / 'model1')
+    write_vtk_v2(f'output/problem1{N}', x_test, y_test, z_test, U_pred)
+    np.save(f'stored_arrays/U_pred{N}', np.asarray(U_pred))
+    # exit()
 
     N = 50
     U_pred = np.load(f'stored_arrays/U_pred{N}.npy')

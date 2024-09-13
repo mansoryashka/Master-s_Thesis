@@ -28,17 +28,21 @@ def FEM_3D(N):
     u = dolfin.Function(V)  
     v = dolfin.TestFunction(V)
 
-    neumann_domain = dolfin.MeshFunction("size_t", mesh, 2)
-    neumann_domain.set_all(0)
-    dolfin.CompiledSubDomain("near(x[0], side) && on_boundary", side=4.0, tol=10e-10).mark(neumann_domain, 1)
-    ds = dolfin.Measure("ds", subdomain_data=neumann_domain)
-
     # boundary condtions
     def boundary(x, on_boundary):
         return on_boundary and x[0] < 1e-10
 
     bc = dolfin.DirichletBC(V, dolfin.Constant((0.0, 0.0, 0.0)), boundary)
 
+    left = dolfin.CompiledSubDomain("near(x[0], 0)")
+
+    ffun = dolfin.MeshFunction("size_t", mesh, 2)
+    ffun.set_all(0)
+    left.mark(ffun, 1)
+    with dolfin.XDMFFile("output/ffun.xdmf") as ffun_file:
+        ffun_file.write(ffun)
+
+    exit()
     F = dolfin.grad(u) + dolfin.Identity(3)
     J = dolfin.det(F)
     C = F.T * F
@@ -112,6 +116,6 @@ def FEM_3D(N):
 
 if __name__ == '__main__':
     # for N in [5, 10, 15, 20, 25, 30]:
-    for N in [30]:
+    for N in [5]:
         print('N = ', N)
         FEM_3D(N)
