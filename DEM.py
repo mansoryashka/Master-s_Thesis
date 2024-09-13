@@ -21,7 +21,7 @@ print('Running on GPU') if dev == torch.device('cuda') else print('Running on CP
 current_path = Path.cwd().resolve()
 figures_path = current_path / 'figures'
 arrays_path = current_path / 'stored_arrays'
-models_path = current_path / 'trained_models' / 'run3'
+models_path = current_path / 'trained_models' / 'run1'
 msg = "You have to run the files from their respective folders!"
 
 assert figures_path.exists(), msg
