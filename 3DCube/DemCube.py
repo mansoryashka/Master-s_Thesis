@@ -257,13 +257,13 @@ def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, c
     fig.savefig(figures_path / Path(figname + '.pdf'))
 
 def run1():
-    N = 40
+    N = 20
     lr = 0.1
     shape = [N, N, N]
     num_layers = [2, 3, 4, 5]
     num_neurons = [20, 30, 40, 50]
     num_expreriments = 1
-    num_epochs = 700
+    num_epochs = 600
     U_norms = 0
     losses = 0
     start = time.time()
@@ -283,7 +283,7 @@ def run1():
     plot_heatmap(U_norms, num_neurons, num_layers, 
                  rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 
                  'Number of hidden neurons', 'Number of hidden layers', 
-                 'cube_heatmap_num_neurons_layers700')
+                 'cube_heatmap_num_neurons_layers600')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
@@ -320,7 +320,7 @@ def run2():
     plot_heatmap(U_norms, num_neurons, lrs, 
                  rf'$L^2$ norm of error with N={N} and {num_layers} hidden layers', 
                  'Number of neurons in hidden layers', r'$\eta$', 
-                 'cube_heatmap_lrs_num_neurons')
+                 'cube_heatmap_lrs_num_neurons1')
     np.save(arrays_path / 'losses_lrs_nn', losses)
 
 def run3():
