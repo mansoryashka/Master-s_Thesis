@@ -145,9 +145,14 @@ if __name__ == '__main__':
     x_test = np.ascontiguousarray(test_domain[..., 0])
     y_test = np.ascontiguousarray(test_domain[..., 1])
     z_test = np.ascontiguousarray(test_domain[..., 2])
-    N = 80; M = 5
+    # N = 80; M = 5
+    N = 41; M = 3
     shape = [N, M, N]
+
     domain, dirichlet, neumann = define_domain(N, M, n_cond=15, plot=False)
+    f0, s0, n0 = generate_fibers(N, M, alpha_endo=60, alpha_epi=-60)
+
+
     dX, dY, dZ, dX_neumann, dZ_neumann = generate_integration_line(domain, 
                                                                     neumann,
                                                                     shape)
