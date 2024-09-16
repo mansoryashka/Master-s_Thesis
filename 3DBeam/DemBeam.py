@@ -253,7 +253,7 @@ def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=
             # calculate L2norm
 
             u_norms[i] = (L2norm3D(U_pred - u_fem30, 4*N_test, N_test, N_test, dx, dy, dz)
-                / L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz))
+                        / L2norm3D(u_fem30, 4*N_test, N_test, N_test, dx, dy, dz))
             # losses[:, :, i] = np.array(DemBeam.losses.detach().numpy()).T
             losses[:, :, i] = DemBeam.losses
             del model
@@ -400,7 +400,7 @@ def run1():
     shape = [4*N, N, N]
     num_layers = [2, 3, 4, 5]
     num_neurons = [30, 40, 50, 60]
-    num_expreriments = 30
+    num_expreriments = 10
     num_epochs = 300
     U_norms = 0
     losses = 0
@@ -437,7 +437,7 @@ def run2():
     lrs = [0.01, 0.05, 0.1, 0.5]
     num_layers = [2, 3, 4, 5]
     num_neurons = 40
-    num_expreriments = 20
+    num_expreriments = 10
     num_epochs = 300
     U_norms = 0
     losses = 0
@@ -477,7 +477,7 @@ def run3():
     lrs = [0.01, 0.05, 0.1, 0.5]
     num_neurons = [30, 40, 50, 60]
     num_layers = 3
-    num_expreriments = 30
+    num_expreriments = 10
     num_epochs = 300
     U_norms = 0
     losses = 0
@@ -513,7 +513,7 @@ def run4():
     lrs = [0.01, 0.05, 0.1, 0.5]
     num_layers = 3
     num_neurons = 50
-    num_expreriments = 20
+    num_expreriments = 10
     num_epochs = 300
     U_norms = 0
     losses = 0

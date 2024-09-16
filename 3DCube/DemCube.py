@@ -262,8 +262,8 @@ def run1():
     shape = [N, N, N]
     num_layers = [2, 3, 4, 5]
     num_neurons = [20, 30, 40, 50]
-    num_expreriments = 1
-    num_epochs = 600
+    num_expreriments = 5
+    num_epochs = 120
     U_norms = 0
     losses = 0
     start = time.time()
@@ -283,7 +283,7 @@ def run1():
     plot_heatmap(U_norms, num_neurons, num_layers, 
                  rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 
                  'Number of hidden neurons', 'Number of hidden layers', 
-                 'cube_heatmap_num_neurons_layers600')
+                 'cube_heatmap_num_neurons_layers120')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
