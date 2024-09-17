@@ -561,6 +561,17 @@ if __name__ == '__main__':
     "______________________________________________"
 
     # run1()
-    run2()
+    # run2()
     # run3()
     # run4()
+
+    N = 30
+    shape = [120, 30, 30]
+    LHD = [4, 1, 1]
+    domain, dirichlet, neumann = define_domain(L, H, D, N=N)
+    for lr, nl in zip([0.5, 0.1, 0.05, 0.05], [2, 3, 3, 4]):
+        model = MultiLayerNet(3, *[40]*nl, 3)
+        energy = NeoHookeanEnergyModel(lmbda, mu)
+        DemBeam = DeepEnergyMethodBeam(model, energy)
+        DemBeam.train_model(domain, dirichlet, neumann, shape, neu_axis=[1, 2], LHD=LHD, epochs=300)
+        torch.save(DemBeam.model.state_dict(), f'trained_models/model_lr{lr}_nl{nl}')
