@@ -28,6 +28,7 @@ rl_endo = 17
 
 rs_epi = 10
 rl_epi = 20
+n_cond = 15
 
 def normalize(u):
     return u / np.linalg.norm(u, axis=0, keepdims=True)

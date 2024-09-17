@@ -37,7 +37,7 @@ def define_domain(N=13, M=3,
     x = rs*np.sin(u)*np.cos(v)
     y = rs*np.sin(u)*np.sin(v)
     z = rl*np.cos(u)*np.ones(np.shape(v))
-
+    
     # define Neumann BCs
     neu_B = rs[0, :, 0] == rs_endo
 
@@ -67,31 +67,21 @@ def define_domain(N=13, M=3,
     y_perp = np.copy(y_endo) / rs_endo
     z_perp = np.copy(z_endo) / rl_endo
 
-
     # calculate distances between points
     dv = np.sqrt(
         (x_perp[1:] - x_perp[:-1])**2
       + (y_perp[1:] - y_perp[:-1])**2
       + (z_perp[1:] - z_perp[:-1])**2
     )
+    # scale dv such that maximum value is 1
     dv /= np.max(dv)
     dv = dv[0]*np.ones((N, N))
-
+    # multiply with scaled dv, so the largest 
+    # force stays as it is while all other forces
+    # get scaled down based on their closeness to other vectors
     x_perp *= dv
     y_perp *= dv
     z_perp *= dv
-
-    # dy = np.sqrt(
-    #     (x_perp[:, 1:] - x_perp[:, :-1])**2
-    #   + (y_perp[:, 1:] - y_perp[:, :-1])**2
-    #   + (z_perp[:, 1:] - z_perp[:, :-1])**2
-    # )
-
-    """ Lurer på om jeg skal sette vektorene i  """
-    # x_perp[-1] = 0
-    # y_perp[-1] = 0
-    # z_perp[-1] = 0
-
 
     # plot domain
     if plot:
@@ -112,9 +102,9 @@ def define_domain(N=13, M=3,
 
         # plot epicardial and endocardial surfaces
         ax.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
-        ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
-        # ax.quiver(x_endo[:, :], y_endo[:, :], z_endo[:, :], 
-        #           x_perp[:, :], y_perp[:, :], z_perp[:, :], alpha=.5)
+        # ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
+        ax.quiver(x_endo[:, :], y_endo[:, :], z_endo[:, :], 
+                  x_perp[:, :], y_perp[:, :], z_perp[:, :], alpha=.5)
 
         # plt.show(); exit()
         plt.savefig('figures/ventricle.pdf')
@@ -275,7 +265,7 @@ def plot_displacement(X, Z, X_cur, Z_cur, trainin_shape, axs, figname):
     plt.savefig(f'figures/{figname}.pdf')
 
 if __name__ == '__main__':
-    N_test = 21; M_test = 5
+    N_test = 4; M_test = 3
     test_domain, _, _ = define_domain(N_test, M_test, n_cond=n_cond)
     test_domain = test_domain.reshape((N_test, M_test, N_test, 3))
     x_test = np.ascontiguousarray(test_domain[..., 0])

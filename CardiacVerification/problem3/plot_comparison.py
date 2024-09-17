@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 sys.path.insert(0, "../..")
-from problem2 import C, bf, bt, bfs, n_cond, define_domain, DeepEnergyMethodLV
+from problem3 import C, bf, bt, bfs, n_cond, define_domain, DeepEnergyMethodLV
 from DEM import MultiLayerNet, write_vtk_LV
 from EnergyModels import *
 
@@ -37,9 +37,9 @@ if __name__ == '__main__':
     ax3 = plt.subplot2grid((2,2), (1,1))
     # for N, M in zip([30, 40, 40, 50, 60, 60, 80], [3, 3, 5, 5, 5, 9, 9]):
 
-    U_fem = np.load('stored_arrays/u_predFEM2.npy')
+    U_fem = np.load('stored_arrays/u_predFEM3.npy')
     write_vtk_LV('output/FEM_solution', x_test, y_test, z_test, (U_fem[1], U_fem[2], U_fem[0]))
-    # exit()
+    exit()
     X_fem, Y_fem, Z_fem = X + U_fem[1], Y + U_fem[2], Z + U_fem[0]
     fem_x, fem_z = X_fem[k, middle_test], Z_fem[k, middle_test]
     ax1.plot(fem_x, fem_z)

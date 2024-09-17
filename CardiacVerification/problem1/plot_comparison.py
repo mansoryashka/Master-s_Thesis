@@ -22,7 +22,7 @@ matplotlib.rcParams['figure.dpi'] = 150
 if __name__ == '__main__':
     L = 10; H = 1; D = 1
 
-    N = 30
+    N = 50
     N_test = 10
     middle = int(np.floor(5*N_test))
     middle_z = int(np.floor(N_test))
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
     DemBeam = DeepEnergyMethodBeam(model, energy)
     DemBeam.model.load_state_dict(torch.load(Path('trained_models') / 'run1' / 'model1'))
-
+    # U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
     X, Y, Z = np.meshgrid(x_test, y_test, z_test)
     X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
 
@@ -105,7 +105,12 @@ if __name__ == '__main__':
     ax13 = plt.subplot2grid((2,3), (1,1))
     ax14 = plt.subplot2grid((2,3), (1,2))
 
-    # ax11.plot(line_x_cur, line_z_cur)
+    u_pred_fem = np.load('stored_arrays/u_predFEM.npy')
+    X_fem, Y_fem, Z_fem = X + u_pred_fem[0], Y + u_pred_fem[1], Z + u_pred_fem[2]
+    line_x_fem, line_z_fem = X_fem[condition4], Z_fem[condition4]
+    ax11.plot(line_x_fem, line_z_fem, label='FEM')
+
+
     # ax11.set_xlabel('$x$ [mm]')
     # ax11.set_ylabel('$z$ [mm]')
     # fig.savefig(f'figures/line_plot{N}.pdf')
