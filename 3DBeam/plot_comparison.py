@@ -54,9 +54,9 @@ if __name__ == '__main__':
     ax14.plot(x1_fem[p2:], y1_fem[p2:], label='FEM')
 
     colors = ['C1', 'C2', 'C3', 'yellow']
-
-    for i, N in enumerate([30, 40, 50, 60]):
-        model_path = Path('trained_models') / 'run4' / f'model_lr0.5_nn50_nl3_N{N}_0'
+    i = 0
+    for lr, nl in zip([0.5, 0.1, 0.05, 0.05], [2, 3, 3, 4]):
+        model_path = Path('trained_models') / f'model_lr{lr}_nl{nl}'
         Dem_strain.model.load_state_dict(torch.load(model_path))
         U_pred = Dem_strain.evaluate_model(x_strain, y_strain, z_strain)
         # exit(np.asarray(U_pred).shape)
@@ -81,16 +81,17 @@ if __name__ == '__main__':
 
         ax11.plot(x_cur, y_cur, c=colors[i],
                  linestyle='--', linewidth=0.8, 
-                 alpha=0.9, label=f'N = {N}')
+                 alpha=0.9, label=f'model{1}')
         ax12.plot(x_cur[:p1], y_cur[:p1], c=colors[i],
                  linestyle='--', linewidth=0.8, 
-                 alpha=0.9, label=f'N = {N}')
+                 alpha=0.9, label=f'model{2}')
         ax13.plot(x_cur[middle-2:middle+3], y_cur[middle-2:middle+3], c=colors[i],
                  linestyle='--', linewidth=0.8, 
-                 alpha=0.9, label=f'N = {N}')
+                 alpha=0.9, label=f'model{3}')
         ax14.plot(x_cur[p2:], y_cur[p2:], c=colors[i],
                  linestyle='--', linewidth=0.8, 
-                 alpha=0.9, label=f'N = {N}')
+                 alpha=0.9, label=f'model{4}')
+        i += 1
 
     ax11.set_xlabel('$x$ [m]')
     ax11.set_ylabel('$y$-deflection [m]')
