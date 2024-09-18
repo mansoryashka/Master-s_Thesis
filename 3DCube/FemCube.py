@@ -167,14 +167,14 @@ def FEM_Cube(N):
     #         append=False,
     #     )
 
-    # N_test = 20
-    # x = y = z = np.linspace(0, 1, N_test+2)[1:-1]
-    # u_fem = np.zeros((3, N_test, N_test, N_test))
-    # for i in range(N_test):
-    #     for j in range(N_test):
-    #         for k in range(N_test):
-    #             u_fem[:, j, i, k] = u(x[i], y[j], z[k])
-    # np.save(f'stored_arrays/u_fem{N}', u_fem)
+    N_test = 20
+    x = y = z = np.linspace(0, 1, N_test+2)[1:-1]
+    u_fem = np.zeros((3, N_test, N_test, N_test))
+    for i in range(N_test):
+        for j in range(N_test):
+            for k in range(N_test):
+                u_fem[:, j, i, k] = u(x[i], y[j], z[k])
+    np.save(f'stored_arrays/u_fem{N}', u_fem)
     
     N_test = 21
     x = y = z = np.linspace(0, 1, N_test+2)[1:-1]

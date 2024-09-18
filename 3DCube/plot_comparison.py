@@ -17,7 +17,7 @@ sns.set()
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 150
 
-models_path = Path('trained_models') / 'run1'
+models_path = Path('trained_models')
 arrays_path = Path('stored_arrays')
 
 if __name__ == '__main__':
@@ -66,9 +66,10 @@ if __name__ == '__main__':
         model = MultiLayerNet(3, *[nn]*nl, 3)
         Dem_strain = DeepEnergyMethodCube(model, energy)
 
-        model_path = models_path / f'trained_models/model_nn{nn}_nl{nl}'
+        model_path = models_path / f'model_nn{nn}_nl{nl}'
         Dem_strain.model.load_state_dict(torch.load(model_path))
         U_pred = Dem_strain.evaluate_model(x_strain, y_strain, z_strain)
+        write_vtk_v2(f'output/U{nn}_{nl}', x_strain, y_strain, z_strain, U_pred)
 
         x = X_ref + U_pred[0]
         y = Y_ref + U_pred[1]

@@ -88,9 +88,12 @@ class NeoHookeanActiveEnergyModel(NeoHookeanEnergyModel):
         Czy = Fxz*Fxy + Fyz*Fyy + Fzz*Fzy
         Czz = Fxz*Fxz + Fyz*Fyz + Fzz*Fzz
         # calculate and return invariants
-        I4f0 = (f0[0] * (f0[0]*Cxx + f0[1]*Cyx + f0[2]*Czx)
-              + f0[1] * (f0[0]*Cxy + f0[1]*Cyy + f0[2]*Czy)
-              + f0[2] * (f0[0]*Cxz + f0[1]*Cyz + f0[2]*Czz))
+        # I4f0 = (f0[0] * (f0[0]*Cxx + f0[1]*Cyx + f0[2]*Czx)
+        #       + f0[1] * (f0[0]*Cxy + f0[1]*Cyy + f0[2]*Czy)
+        #       + f0[2] * (f0[0]*Cxz + f0[1]*Cyz + f0[2]*Czz))
+        I4f0 = (f0[0] * (f0[0]*Cxx + f0[1]*Cxy + f0[2]*Cxz)
+              + f0[1] * (f0[0]*Cyx + f0[1]*Cyy + f0[2]*Cyz)
+              + f0[2] * (f0[0]*Czx + f0[1]*Czy + f0[2]*Czz))
 
         return detF, trC, I4f0
 
