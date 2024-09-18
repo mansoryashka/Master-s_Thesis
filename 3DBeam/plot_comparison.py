@@ -18,9 +18,7 @@ import matplotlib
 matplotlib.rcParams['figure.dpi'] = 150
 
 if __name__ == '__main__':
-    model = MultiLayerNet(3, *[50]*3, 3)
     energy = NeoHookeanEnergyModel(lmbda, mu)
-    Dem_strain = DeepEnergyMethodBeam(model, energy)
 
     N_strain = 21
     middle = int(np.floor(2*N_strain))
@@ -55,7 +53,9 @@ if __name__ == '__main__':
 
     colors = ['C1', 'C2', 'C3', 'yellow']
     i = 0
-    for lr, nl in zip([0.5, 0.1, 0.05, 0.05], [2, 3, 3, 4]):
+    for lr, nl in zip([0.5, 0.1, 0.05], [2, 3, 4]):
+        model = MultiLayerNet(3, *[40]*nl, 3)
+        Dem_strain = DeepEnergyMethodBeam(model, energy)
         model_path = Path('trained_models') / f'model_lr{lr}_nl{nl}'
         Dem_strain.model.load_state_dict(torch.load(model_path))
         U_pred = Dem_strain.evaluate_model(x_strain, y_strain, z_strain)
@@ -79,17 +79,17 @@ if __name__ == '__main__':
         # x2_cur = X_cur[c2]
         y2_cur = Y_cur[c2]
 
-        ax11.plot(x_cur, y_cur, c=colors[i],
-                 linestyle='--', linewidth=0.8, 
+        ax11.plot(x_cur, y_cur, #c=colors[i],
+                 linestyle='--', linewidth=1.0, 
                  alpha=0.9, label=f'model{1}')
-        ax12.plot(x_cur[:p1], y_cur[:p1], c=colors[i],
-                 linestyle='--', linewidth=0.8, 
+        ax12.plot(x_cur[:p1], y_cur[:p1], #c=colors[i],
+                 linestyle='--', linewidth=1.0, 
                  alpha=0.9, label=f'model{2}')
-        ax13.plot(x_cur[middle-2:middle+3], y_cur[middle-2:middle+3], c=colors[i],
-                 linestyle='--', linewidth=0.8, 
+        ax13.plot(x_cur[middle-2:middle+3], y_cur[middle-2:middle+3], #c=colors[i],
+                 linestyle='--', linewidth=1.0, 
                  alpha=0.9, label=f'model{3}')
-        ax14.plot(x_cur[p2:], y_cur[p2:], c=colors[i],
-                 linestyle='--', linewidth=0.8, 
+        ax14.plot(x_cur[p2:], y_cur[p2:], #c=colors[i],
+                 linestyle='--', linewidth=1.0, 
                  alpha=0.9, label=f'model{4}')
         i += 1
 
@@ -134,42 +134,43 @@ if __name__ == '__main__':
     ax11.add_patch(Rectangle([patch1_limx[0], patch1_limy[0]], 
                              patch1_limx[1] - patch1_limx[0], 
                              patch1_limy[1] - patch1_limy[0],
-                             facecolor='None', edgecolor='tab:blue',
+                             facecolor='None', edgecolor='blue',
                              linestyle='--'
                              ))
     ax12.add_patch(Rectangle([patch1_limx[0], patch1_limy[0]], 
                              patch1_limx[1] - patch1_limx[0], 
                              patch1_limy[1] - patch1_limy[0],
-                             facecolor='None', edgecolor='tab:blue',
+                             facecolor='None', edgecolor='blue',
                              linestyle='--', linewidth=3
                              ))
     
     ax11.add_patch(Rectangle([patch2_limx[0], patch2_limy[0]], 
                              patch2_limx[1] - patch2_limx[0], 
                              patch2_limy[1] - patch2_limy[0],
-                             facecolor='None', edgecolor='tab:green',
+                             facecolor='None', edgecolor='green',
                              linestyle='--'
                              ))
     ax13.add_patch(Rectangle([patch2_limx[0], patch2_limy[0]], 
                              patch2_limx[1] - patch2_limx[0], 
                              patch2_limy[1] - patch2_limy[0],
-                             facecolor='None', edgecolor='tab:green',
+                             facecolor='None', edgecolor='green',
                              linestyle='--', linewidth=3
                              ))
 
     ax11.add_patch(Rectangle([patch3_limx[0], patch3_limy[0]], 
                              patch3_limx[1] - patch3_limx[0], 
                              patch3_limy[1] - patch3_limy[0],
-                             facecolor='None', edgecolor='tab:red',
+                             facecolor='None', edgecolor='red',
                              linestyle='--'
                              ))
     ax14.add_patch(Rectangle([patch3_limx[0], patch3_limy[0]], 
                              patch3_limx[1] - patch3_limx[0], 
                              patch3_limy[1] - patch3_limy[0],
-                             facecolor='None', edgecolor='tab:red',
+                             facecolor='None', edgecolor='red',
                              linestyle='--', linewidth=3
                              ))
-    plt.show()
+    fig.savefig('figures/line_plot.pdf')
+    # plt.show()
     # plot linjeendring
     # plot enring i toppunkt
     # hent tilsvarende resultater fra FEM

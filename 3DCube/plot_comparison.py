@@ -61,12 +61,12 @@ if __name__ == '__main__':
     ax13.plot(x_fem[middle-2:middle+3], y_fem[middle-2:middle+3])
     ax14.plot(x_fem[:p2], y_fem[:p2])
 
-    for nn in [20, 30, 40, 50]:
-        model = MultiLayerNet(3, *[nn]*3, 3)
-        energy = NeoHookeanActiveEnergyModel(mu)
+    energy = NeoHookeanActiveEnergyModel(mu)
+    for nn, nl in zip([20, 30, 40], [5, 3, 4]):
+        model = MultiLayerNet(3, *[nn]*nl, 3)
         Dem_strain = DeepEnergyMethodCube(model, energy)
 
-        model_path = models_path / f'model_lr0.1_nn{nn}_nl3_N40_0'
+        model_path = models_path / f'trained_models/model_nn{nn}_nl{nl}'
         Dem_strain.model.load_state_dict(torch.load(model_path))
         U_pred = Dem_strain.evaluate_model(x_strain, y_strain, z_strain)
 
