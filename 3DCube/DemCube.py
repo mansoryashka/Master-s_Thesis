@@ -380,5 +380,5 @@ if __name__ == '__main__':
         model = MultiLayerNet(3, *[nn]*nl, 3)
         energy = NeoHookeanActiveEnergyModel(mu)
         DemBeam = DeepEnergyMethodCube(model, energy)
-        DemBeam.train_model(domain, dirichlet, neumann, shape, neu_axis=[1, 2], LHD=LHD, epochs=200)
+        DemBeam.train_model(domain, dirichlet, neumann, shape, neu_axis=[1, 2], LHD=LHD, epochs=300)
         torch.save(DemBeam.model.state_dict(), f'trained_models/model_nn{nn}_nl{nl}_1')
