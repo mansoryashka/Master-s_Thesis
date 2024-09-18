@@ -108,131 +108,20 @@ if __name__ == '__main__':
     z_test = np.linspace(0, D, N_test+1)
 
     domain, dirichlet, neumann = define_domain(L, H, D, N=N)
-    
-    model = MultiLayerNet(3, 40, 40, 40, 3)
     energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
-
-    DemBeam = DeepEnergyMethodBeam(model, energy)
-    DemBeam.train_model(domain, dirichlet, neumann,
-                        shape, LHD, neu_axis=[0, 1], 
-                        lr=0.1, epochs=300, fb=np.array([[0, 0, 0]]))
-    U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
-
-    torch.save(DemBeam.model.state_dict(), Path('trained_models') / 'run1' / 'model1')
-    write_vtk_v2(f'output/problem1{N}', x_test, y_test, z_test, U_pred)
-    np.save(f'stored_arrays/U_pred{N}', np.asarray(U_pred))
-    # exit()
-
-    N = 50
-    U_pred = np.load(f'stored_arrays/U_pred{N}.npy')
     
-    X, Y, Z = np.meshgrid(x_test, y_test, z_test)
-    X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
+    # for lr, nn, nl in zip([0.05, 0.1, 0.1, 0.5], 
+    #                       [50, 50, 40, 40],
+    #                       [3, 3, 2, 5]):
+    for lr, nn, nl in zip([0.1, 0.5], 
+                          [40, 40],
+                          [2, 5]):
 
-    pts_x = np.zeros((10, 3))
-    pts_x_cur = np.zeros((10, 3))
-    pts_y = np.zeros((10, 3))
-    pts_y_cur = np.zeros((10, 3))
-    pts_z = np.zeros((10, 3))
-    pts_z_cur = np.zeros((10, 3))
-
-    for i in range(10):
-        condition1 = np.logical_and(np.logical_and(Z==0.5, Y==0.5), X==i)
-        pts_x[i] = X[condition1][0], Y[condition1][0], Z[condition1][0]
-        pts_x_cur[i] = X_cur[condition1][0], Y_cur[condition1][0], Z_cur[condition1][0]
-
-        condition2 = np.logical_and(np.logical_and(Z==0.5, Y==0.9), X==i)
-        pts_y[i] = X[condition2][0], Y[condition2][0], Z[condition2][0]
-        pts_y_cur[i] = X_cur[condition2][0], Y_cur[condition2][0], Z_cur[condition2][0]
-
-        condition3 = np.logical_and(np.logical_and(Z==0.9, Y==0.5), X==i)
-        pts_z[i] = X[condition3][0], Y[condition3][0], Z[condition3][0]
-        pts_z_cur[i] = X_cur[condition3][0], Y_cur[condition3][0], Z_cur[condition3][0]
-
-    condition4 = np.logical_and(Y==0.5, Z==0.5)
-    line_x, line_y, line_z = X[condition4], Y[condition4], Z[condition4]
-    line_x_cur, line_y_cur, line_z_cur = X_cur[condition4], Y_cur[condition4], Z_cur[condition4]
-
-
-    condition5 = np.logical_and(np.logical_and(X==10, Y==0.5), Z==1)
-    end_x, end_y, end_z = X[condition5], Y[condition5], Z[condition5]
-    end_x_cur, end_y_cur, end_z_cur = X_cur[condition5], Y_cur[condition5], Z_cur[condition5]
-
-    print(N, end_z_cur)
-
-    strain_x = (np.linalg.norm(pts_x_cur[:-1] - pts_x_cur[1:], axis=1)
-                / np.linalg.norm(pts_x[:-1] - pts_x[1:], axis=1)
-                - 1) * 100
-    strain_y = (np.linalg.norm(pts_x_cur - pts_y_cur, axis=1)
-                / np.linalg.norm(pts_x - pts_y, axis=1)
-                - 1) * 100
-    strain_z = (np.linalg.norm(pts_x_cur - pts_z_cur, axis=1)
-                / np.linalg.norm(pts_x - pts_z, axis=1)
-                - 1) * 100
-
-    # fig, ax = plt.subplots(1, 3, figsize=(13, 5))
-    # # fig.tight_layout()
-    # ax[0].plot(strain_x, '-x')
-    # ax[0].set_ylabel('strain [%]')
-    # ax[0].set_title('$x$-axis')
-    # ax[0].set_xticks(np.arange(9))
-    # ax[0].set_xticklabels(['p1', '', 'p3', '', 'p5', '', 'p7', '', 'p9'])
-
-    # ax[1].plot(strain_y, '-x')
-    # ax[1].set_title('$y$-axis')
-    # ax[1].set_xticks(np.arange(10))
-    # ax[1].set_xticklabels(['p1', '', 'p3', '', 'p5', '', 'p7', '', 'p9', ''])
-
-    # ax[2].plot(strain_z, '-x')
-    # ax[2].set_title('$z$-axis')
-    # ax[2].set_xticks(np.arange(10))
-    # ax[2].set_xticklabels(['p1', '', 'p3', '', 'p5', '', 'p7', '', 'p9', ''])
-    # fig.savefig(f'figures/strain_plot{N}.pdf')
-    # plt.show()
-
-
-    # fig, ax = plt.subplots(1, 1, figsize=(9, 5))
-    # ax.plot(line_x_cur, line_z_cur)
-    # ax.set_xlabel('$x$ [mm]')
-    # ax.set_ylabel('$z$ [mm]')
-    # fig.savefig(f'figures/line_plot{N}.pdf')
-
-    # fig, ax = plt.subplots(1, 1) #, figsize=(4, 2))
-    # ax.plot(line_x_cur[-int(N/10)-1:], line_z_cur[-int(N/10)-1:])
-    # ax.set_xlabel('$x$ [mm]')
-    # ax.set_ylabel('$z$ [mm]')
-    # fig.savefig(f'figures/zoom_plot{N}.pdf')
-    # ax.set_xlim([9.25, 9.40])
-    # ax.set_xticks([9.25, 9.40])
-    # ax.set_ylim([3.60, 3.75])
-    # ax.set_yticks([3.60, 3.75])
-    # plt.show()
-
-    fig, ax = plt.subplots()
-    z_endpoints = [4.06165695, 4.19167995, 4.26602459, 4.30367184, 4.32637811]
-    nr_points = [10*i**3 for i in range(10, 51, 10)]
-    ax.scatter(nr_points, z_endpoints)
-    ax.set_xscale('log')
-    ax.set_ylabel('Z-deflection at end of bar [mm]')
-    ax.set_xlabel('Nr. of trainig points [N]')
-    fig.savefig('figures/z_endpoints.pdf')
-    # plt.show()
-
-    # fig = plt.figure(figsize=(5, 3))
-    # fig.tight_layout()
-    # ax = fig.add_subplot(111, projection='3d')
-    # ax.set_box_aspect((8, 1, 6))
-    # ax.scatter(X, Y, Z, s=1, alpha=.1)
-    # ax.scatter(end_x, end_y, end_z, s=5, c='springgreen')
-    # ax.scatter(line_x, line_y, line_z, s=.5, c='firebrick')
-    # ax.quiver(X[::2, ::10, ::2], Y[::2, ::10, ::2], Z[::2, ::10, ::2], 
-    #           U_pred[0, ::2, ::10, ::2], U_pred[1, ::2, ::10, ::2], U_pred[2, ::2, ::10, ::2],
-    #           alpha=.3, length=.5)
-    # ax.scatter(X_cur, Y_cur, Z_cur, s=1, alpha=1)
-    # ax.scatter(end_x_cur, end_y_cur, end_z_cur, s=5, c='forestgreen')
-    # ax.scatter(pts_y_cur[:, 0], pts_y_cur[:, 1], pts_y_cur[:, 2], s=2, c='midnightblue')
-    # ax.scatter(line_x_cur, line_y_cur, line_z_cur, s=.5, c='firebrick')
-    # ax.set_xlabel('$x$')
-    # ax.set_ylabel('$y$')
-    # ax.set_zlabel('$z$')
-    # plt.show()
+        model = MultiLayerNet(3, *[nn]*nl, 3)
+        DemBeam = DeepEnergyMethodBeam(model, energy)
+        DemBeam.train_model(domain, dirichlet, neumann,
+                            shape, LHD, neu_axis=[0, 1], 
+                            lr=lr, epochs=300)
+        U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
+        torch.save(DemBeam.model.state_dict(), Path('trained_models') / f'model_lr{lr}_nn{nn}_nl{nl}')
+    

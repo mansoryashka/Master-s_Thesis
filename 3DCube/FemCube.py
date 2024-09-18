@@ -167,51 +167,51 @@ def FEM_Cube(N):
     #         append=False,
     #     )
 
-    N_test = 20
-    x = y = z = np.linspace(0, 1, N_test+2)[1:-1]
-    u_fem = np.zeros((3, N_test, N_test, N_test))
-    for i in range(N_test):
-        for j in range(N_test):
-            for k in range(N_test):
-                u_fem[:, j, i, k] = u(x[i], y[j], z[k])
-    np.save(f'stored_arrays/u_fem{N}', u_fem)
+    # N_test = 20
+    # x = y = z = np.linspace(0, 1, N_test+2)[1:-1]
+    # u_fem = np.zeros((3, N_test, N_test, N_test))
+    # for i in range(N_test):
+    #     for j in range(N_test):
+    #         for k in range(N_test):
+    #             u_fem[:, j, i, k] = u(x[i], y[j], z[k])
+    # np.save(f'stored_arrays/u_fem{N}', u_fem)
     
-    N_test = 21
-    x = y = z = np.linspace(0, 1, N_test+2)[1:-1]
-    u_fem = np.zeros((3, N_test, N_test, N_test))
-    for i in range(N_test):
-        for j in range(N_test):
-            for k in range(N_test):
-                u_fem[:, j, i, k] = u(x[i], y[j], z[k])
-    np.save(f'stored_arrays/u_strain_diag', u_fem)
+    # N_test = 21
+    # x = y = z = np.linspace(0, 1, N_test+2)[1:-1]
+    # u_fem = np.zeros((3, N_test, N_test, N_test))
+    # for i in range(N_test):
+    #     for j in range(N_test):
+    #         for k in range(N_test):
+    #             u_fem[:, j, i, k] = u(x[i], y[j], z[k])
+    # np.save(f'stored_arrays/u_strain_diag', u_fem)
 
-    N_test = 21
-    x = np.linspace(0, 1, N_test+2)[1:-1]
-    y = z = np.linspace(0, 1, N_test)
-    u_fem = np.zeros((3, N_test, N_test, N_test))
-    for i in range(N_test):
-        for j in range(N_test):
-            for k in range(N_test):
-                u_fem[:, j, i, k] = u(x[i], y[j], z[k])
-    np.save(f'stored_arrays/u_strain_x', u_fem)
+    # N_test = 21
+    # x = np.linspace(0, 1, N_test+2)[1:-1]
+    # y = z = np.linspace(0, 1, N_test)
+    # u_fem = np.zeros((3, N_test, N_test, N_test))
+    # for i in range(N_test):
+    #     for j in range(N_test):
+    #         for k in range(N_test):
+    #             u_fem[:, j, i, k] = u(x[i], y[j], z[k])
+    # np.save(f'stored_arrays/u_strain_x', u_fem)
 
-    N_test = 21
-    z = np.linspace(0, 1, N_test+2)[1:-1]
-    y = x = np.linspace(0, 1, N_test)
-    u_fem = np.zeros((3, N_test, N_test, N_test))
-    for i in range(N_test):
-        for j in range(N_test):
-            for k in range(N_test):
-                u_fem[:, j, i, k] = u(x[i], y[j], z[k])
-    np.save(f'stored_arrays/u_strain_z', u_fem)
+    # N_test = 21
+    # z = np.linspace(0, 1, N_test+2)[1:-1]
+    # y = x = np.linspace(0, 1, N_test)
+    # u_fem = np.zeros((3, N_test, N_test, N_test))
+    # for i in range(N_test):
+    #     for j in range(N_test):
+    #         for k in range(N_test):
+    #             u_fem[:, j, i, k] = u(x[i], y[j], z[k])
+    # np.save(f'stored_arrays/u_strain_z', u_fem)
 
     print(dolfin.assemble(elastic_energy*dolfin.dx))            # -37.3210
-    print(dolfin.assemble(dolfin.inner(u, n)*ds(right_marker))) # 0.048729
+    print(dolfin.assemble(dolfin.inner(u_test, n)*ds(right_marker))) # 0.048729
 
 
 if __name__ == '__main__':
     # Ns = [5, 10, 15, 20]
-    Ns = [20]
+    Ns = [15]
     for N in Ns:
         print('N = ', N)
         FEM_Cube(N)

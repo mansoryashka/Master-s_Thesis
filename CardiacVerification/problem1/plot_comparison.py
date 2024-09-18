@@ -105,7 +105,7 @@ if __name__ == '__main__':
     ax13 = plt.subplot2grid((2,3), (1,1))
     ax14 = plt.subplot2grid((2,3), (1,2))
 
-    u_pred_fem = np.load('stored_arrays/u_predFEM.npy')
+    u_pred_fem = np.load('stored_arrays/u_fem.npy')
     X_fem, Y_fem, Z_fem = X + u_pred_fem[0], Y + u_pred_fem[1], Z + u_pred_fem[2]
     line_x_fem, line_z_fem = X_fem[condition4], Z_fem[condition4]
     ax11.plot(line_x_fem, line_z_fem, label='FEM')
@@ -153,8 +153,8 @@ if __name__ == '__main__':
     ax13.set_yticks([ticks1[0], ticks1[-1]])
     ax13.set_yticklabels([f'{x:.3f}' for x in [ticks1[0], ticks1[-1]]])
 
-    ax14.set_ylim(bottom=y1_fem[p2])
-    ax14.set_xlim(left=x1_fem[p2])
+    ax14.set_ylim(bottom=y1_fem[p2-1])
+    ax14.set_xlim(left=x1_fem[p2-1])
     ax14.set_xlabel('$x$ [m]')
     
     ticks1 = ax14.get_yticks()
