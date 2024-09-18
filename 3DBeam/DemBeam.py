@@ -464,7 +464,7 @@ def run2():
     np.save(arrays_path / 'losses_lrs_nl', losses)
     plot_heatmap(U_norms, num_layers, lrs, 
                  rf'$L^2$ norm of error with N={N} and {num_neurons} hidden neurons', 
-                 'Number of layers', r'$\eta$', f'beam_heatmap_lrs_num_layers2')
+                 'Number of layers', r'$\eta$', f'beam_heatmap_lrs_num_layers')
     # print(U_norms)
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')

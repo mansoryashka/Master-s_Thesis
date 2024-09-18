@@ -75,6 +75,7 @@ def define_domain(L, H, D, N=20):
     ax.set_zlabel('z')
     ax.view_init(elev=20, azim=-75)
     plt.close()
+    fig.savefig('figures/domain.pdf')
     # plt.show()
     # exit()
 
@@ -87,7 +88,7 @@ def define_domain(L, H, D, N=20):
         'coords': nb_pts,
         'values': nb_vals
     }
-
+    
     return domain, dirichlet, neumann
 
 class DeepEnergyMethodCube(DeepEnergyMethod):
@@ -257,7 +258,7 @@ def plot_heatmap(data, xparameter, yparameter, title, xlabel, ylabel, figname, c
     fig.savefig(figures_path / Path(figname + '.pdf'))
 
 def run1():
-    N = 20
+    N = 40
     lr = 0.1
     shape = [N, N, N]
     num_layers = [2, 3, 4, 5]
@@ -368,17 +369,15 @@ if __name__ == '__main__':
 
     # run1()
     # run2()
-    # run3()
+    run3()
 
-    N = 20
-    shape = [N, N, N]
-    LHD = [1, 1, 1]
-    domain, dirichlet, neumann = define_domain(L, H, D, N=N)
+    # N = 40
+    # shape = [N, N, N]
+    # LHD = [1, 1, 1]
+    # domain, dirichlet, neumann = define_domain(L, H, D, N=N)
     # for nn, nl in zip([20, 30, 40], [5, 3, 4]):
-    # print(neumann);exit()
-    for nn, nl in zip([30], [3]):
-        model = MultiLayerNet(3, *[nn]*nl, 3)
-        energy = NeoHookeanActiveEnergyModel(mu)
-        DemBeam = DeepEnergyMethodCube(model, energy)
-        DemBeam.train_model(domain, dirichlet, neumann, shape, neu_axis=[1, 2], LHD=LHD, epochs=300)
-        torch.save(DemBeam.model.state_dict(), f'trained_models/model_nn{nn}_nl{nl}_0')
+    #     model = MultiLayerNet(3, *[nn]*nl, 3)
+    #     energy = NeoHookeanActiveEnergyModel(mu, Ta=1.0)
+    #     DemBeam = DeepEnergyMethodCube(model, energy)
+    #     DemBeam.train_model(domain, dirichlet, neumann, shape, lr=1.0, neu_axis=[1, 2], LHD=LHD, epochs=300)
+    #     torch.save(DemBeam.model.state_dict(), f'trained_models/model_nn{nn}_nl{nl}_0')
