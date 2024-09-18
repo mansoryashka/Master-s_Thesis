@@ -47,7 +47,7 @@ class DeepEnergyMethod:
     def train_model(self, data, dirichlet, neumann,
                     shape, LHD, dxdydz=None, 
                     neu_axis=None, lr=0.5, epochs=20,
-                    fb=np.array([[0, -5, 0]]),
+                    fb=np.array([[0, 0, 0]]),
                     ventricle_geometry=False):
         dxdydz = dxdydz if dxdydz is not None else np.array(LHD) / (np.array(shape) - 1)
         if len(dxdydz) == 3:
@@ -79,7 +79,9 @@ class DeepEnergyMethod:
 
         # use different integration functions based on geometry 
         integral2D = simps2D_LV if ventricle_geometry else simps2D
-        integral3D = simps3D_LV if ventricle_geometry else simps3D
+        integral3D = simps3D_LV if ventricle_geometry else simps3D        
+        # integral2D = simps2D
+        # integral3D = simps3D
 
         self.losses = torch.zeros(epochs).to(dev)
         self.eval_losses = []
@@ -109,10 +111,13 @@ class DeepEnergyMethod:
                 # neumann loss
                 neu_pred = self(self.model, neuBC_coords)
                 bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
-                neu_loss = integral2D(bc_neu, dx=dxdydz_neu[0], dy=dxdydz_neu[1], shape=[shape[neu_axis[0]], shape[neu_axis[1]]])
+                neu_loss = simps2D(bc_neu, dx=dxdydz[1], dy=dxdydz[2], shape=[shape[1], shape[2]])
+
+                # neu_loss = integral2D(bc_neu, dx=dxdydz_neu[0], dy=dxdydz_neu[1], shape=[shape[neu_axis[1]], shape[neu_axis[0]]])
 
                 # external loss
                 body_f = torch.matmul(u_pred.unsqueeze(1), fb.unsqueeze(2))
+                
                 body_loss = integral3D(body_f, dx=dxdydz_dom[0], dy=dxdydz_dom[1], dz=dxdydz_dom[2], shape=shape)
                 external_loss = body_loss + neu_loss
 
