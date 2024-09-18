@@ -199,3 +199,335 @@ Iter: 197, Energy:  -38.26609, Int:  -38.30404, Ext:   -0.03795, Loss_change:   
 Iter: 198, Energy:  -38.26734, Int:  -38.30391, Ext:   -0.03658, Loss_change:    0.00124
 Iter: 199, Energy:  -38.26844, Int:  -38.30615, Ext:   -0.03771, Loss_change:    0.00110
 Iter: 200, Energy:  -38.26934, Int:  -38.30712, Ext:   -0.03778, Loss_change:    0.00091
+Running on GPU
+Traceback (most recent call last):
+  File "/itf-fi-ml/home/mansurd/Master/3DCube/DemCube.py", line 383, in <module>
+    DemBeam.train_model(domain, dirichlet, neumann, shape, neu_axis=[1, 2], LHD=LHD, epochs=300)
+  File "/itf-fi-ml/home/mansurd/Master/3DCube/../DEM.py", line 132, in train_model
+    optimizer.step(closure)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/optim/optimizer.py", line 109, in wrapper
+    return func(*args, **kwargs)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/autograd/grad_mode.py", line 27, in decorate_context
+    return func(*args, **kwargs)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/optim/lbfgs.py", line 437, in step
+    loss = float(closure())
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/autograd/grad_mode.py", line 27, in decorate_context
+    return func(*args, **kwargs)
+  File "/itf-fi-ml/home/mansurd/Master/3DCube/../DEM.py", line 102, in closure
+    internal_loss = integral3D(IntEnergy, dx=dxdydz_dom[0], dy=dxdydz_dom[1], dz=dxdydz_dom[2], shape=shape)
+  File "/itf-fi-ml/home/mansurd/Master/3DCube/../DEM.py", line 207, in simps3D
+    return simpson(simpson(simpson(U3D, dx=dz), dx=dy), dx=dx)
+  File "/itf-fi-ml/home/mansurd/Master/3DCube/../simps.py", line 49, in simpson
+    result += _basic_simps(y, 1, N - 2, x, dx, axis)
+  File "/itf-fi-ml/home/mansurd/Master/3DCube/../simps.py", line 76, in _basic_simps
+    result = torch.sum(dx / 3.0 * (y[slice0] + 4 * y[slice1] + y[slice2]), axis)
+  File "/storage/software/Python/3.10.4-GCCcore-11.3.0/lib/python3.10/traceback.py", line 213, in format_stack
+    return format_list(extract_stack(f, limit=limit))
+  File "/storage/software/Python/3.10.4-GCCcore-11.3.0/lib/python3.10/traceback.py", line 227, in extract_stack
+    stack = StackSummary.extract(walk_stack(f), limit=limit)
+  File "/storage/software/Python/3.10.4-GCCcore-11.3.0/lib/python3.10/traceback.py", line 379, in extract
+    linecache.checkcache(filename)
+  File "/storage/software/Python/3.10.4-GCCcore-11.3.0/lib/python3.10/linecache.py", line 72, in checkcache
+    stat = os.stat(fullname)
+KeyboardInterrupt
+Running on GPU
+Iter:   1, Energy:  -34.99839, Int:  -35.42944, Ext:   -0.43106, Loss_change:   34.99839
+Iter:   2, Energy:  -35.89300, Int:  -36.32567, Ext:   -0.43267, Loss_change:    0.89461
+Iter:   3, Energy:  -36.18799, Int:  -36.62211, Ext:   -0.43412, Loss_change:    0.29499
+Iter:   4, Energy:  -36.32025, Int:  -36.75544, Ext:   -0.43518, Loss_change:    0.13227
+Iter:   5, Energy:  -36.41761, Int:  -36.85291, Ext:   -0.43529, Loss_change:    0.09736
+Iter:   6, Energy:  -36.48026, Int:  -36.91605, Ext:   -0.43579, Loss_change:    0.06265
+Iter:   7, Energy:  -36.51702, Int:  -36.95331, Ext:   -0.43628, Loss_change:    0.03676
+Iter:   8, Energy:  -36.55616, Int:  -36.99240, Ext:   -0.43623, Loss_change:    0.03914
+Iter:   9, Energy:  -36.57576, Int:  -37.01205, Ext:   -0.43629, Loss_change:    0.01960
+Iter:  10, Energy:  -36.59420, Int:  -37.03049, Ext:   -0.43628, Loss_change:    0.01844
+Iter:  11, Energy:  -36.60583, Int:  -37.04206, Ext:   -0.43624, Loss_change:    0.01162
+Iter:  12, Energy:  -36.62110, Int:  -37.05745, Ext:   -0.43635, Loss_change:    0.01528
+Iter:  13, Energy:  -36.62630, Int:  -37.06273, Ext:   -0.43643, Loss_change:    0.00519
+Iter:  14, Energy:  -36.63117, Int:  -37.06766, Ext:   -0.43650, Loss_change:    0.00487
+Iter:  15, Energy:  -36.63640, Int:  -37.07264, Ext:   -0.43625, Loss_change:    0.00523
+Iter:  16, Energy:  -36.64248, Int:  -37.07897, Ext:   -0.43649, Loss_change:    0.00608
+Iter:  17, Energy:  -36.64957, Int:  -37.08603, Ext:   -0.43646, Loss_change:    0.00709
+Iter:  18, Energy:  -36.65290, Int:  -37.08946, Ext:   -0.43656, Loss_change:    0.00333
+Iter:  19, Energy:  -36.65743, Int:  -37.09399, Ext:   -0.43657, Loss_change:    0.00453
+Iter:  20, Energy:  -36.66317, Int:  -37.09968, Ext:   -0.43651, Loss_change:    0.00575
+Iter:  21, Energy:  -36.66504, Int:  -37.10156, Ext:   -0.43652, Loss_change:    0.00187
+Iter:  22, Energy:  -36.66717, Int:  -37.10375, Ext:   -0.43658, Loss_change:    0.00214
+Iter:  23, Energy:  -36.66919, Int:  -37.10562, Ext:   -0.43643, Loss_change:    0.00202
+Iter:  24, Energy:  -36.67383, Int:  -37.11028, Ext:   -0.43645, Loss_change:    0.00463
+Iter:  25, Energy:  -36.67702, Int:  -37.11364, Ext:   -0.43662, Loss_change:    0.00319
+Iter:  26, Energy:  -36.68165, Int:  -37.11820, Ext:   -0.43655, Loss_change:    0.00463
+Iter:  27, Energy:  -36.68574, Int:  -37.12236, Ext:   -0.43661, Loss_change:    0.00410
+Iter:  28, Energy:  -36.68935, Int:  -37.12599, Ext:   -0.43664, Loss_change:    0.00361
+Iter:  29, Energy:  -36.69146, Int:  -37.12810, Ext:   -0.43664, Loss_change:    0.00211
+Iter:  30, Energy:  -36.69516, Int:  -37.13184, Ext:   -0.43668, Loss_change:    0.00370
+Iter:  31, Energy:  -36.69759, Int:  -37.13423, Ext:   -0.43665, Loss_change:    0.00242
+Iter:  32, Energy:  -36.70082, Int:  -37.13761, Ext:   -0.43680, Loss_change:    0.00323
+Iter:  33, Energy:  -36.70330, Int:  -37.13994, Ext:   -0.43664, Loss_change:    0.00248
+Iter:  34, Energy:  -36.70712, Int:  -37.14389, Ext:   -0.43677, Loss_change:    0.00382
+Iter:  35, Energy:  -36.70893, Int:  -37.14562, Ext:   -0.43669, Loss_change:    0.00181
+Iter:  36, Energy:  -36.71286, Int:  -37.14960, Ext:   -0.43674, Loss_change:    0.00393
+Iter:  37, Energy:  -36.71584, Int:  -37.15253, Ext:   -0.43668, Loss_change:    0.00298
+Iter:  38, Energy:  -36.71915, Int:  -37.15588, Ext:   -0.43674, Loss_change:    0.00331
+Iter:  39, Energy:  -36.72379, Int:  -37.16054, Ext:   -0.43675, Loss_change:    0.00464
+Iter:  40, Energy:  -36.72731, Int:  -37.16405, Ext:   -0.43674, Loss_change:    0.00352
+Iter:  41, Energy:  -36.73138, Int:  -37.16808, Ext:   -0.43670, Loss_change:    0.00407
+Iter:  42, Energy:  -36.73451, Int:  -37.17139, Ext:   -0.43689, Loss_change:    0.00313
+Iter:  43, Energy:  -36.73630, Int:  -37.17317, Ext:   -0.43687, Loss_change:    0.00179
+Iter:  44, Energy:  -36.73860, Int:  -37.17532, Ext:   -0.43671, Loss_change:    0.00230
+Iter:  45, Energy:  -36.74102, Int:  -37.17789, Ext:   -0.43687, Loss_change:    0.00241
+Iter:  46, Energy:  -36.74379, Int:  -37.18066, Ext:   -0.43687, Loss_change:    0.00277
+Iter:  47, Energy:  -36.74532, Int:  -37.18223, Ext:   -0.43691, Loss_change:    0.00153
+Iter:  48, Energy:  -36.74848, Int:  -37.18543, Ext:   -0.43694, Loss_change:    0.00317
+Iter:  49, Energy:  -36.75216, Int:  -37.18903, Ext:   -0.43687, Loss_change:    0.00368
+Iter:  50, Energy:  -36.75546, Int:  -37.19243, Ext:   -0.43697, Loss_change:    0.00329
+Iter:  51, Energy:  -36.75833, Int:  -37.19524, Ext:   -0.43691, Loss_change:    0.00287
+Iter:  52, Energy:  -36.76049, Int:  -37.19738, Ext:   -0.43689, Loss_change:    0.00216
+Iter:  53, Energy:  -36.76472, Int:  -37.20161, Ext:   -0.43689, Loss_change:    0.00423
+Iter:  54, Energy:  -36.76698, Int:  -37.20394, Ext:   -0.43696, Loss_change:    0.00226
+Iter:  55, Energy:  -36.77002, Int:  -37.20702, Ext:   -0.43700, Loss_change:    0.00304
+Iter:  56, Energy:  -36.77328, Int:  -37.21033, Ext:   -0.43705, Loss_change:    0.00327
+Iter:  57, Energy:  -36.77716, Int:  -37.21414, Ext:   -0.43698, Loss_change:    0.00388
+Iter:  58, Energy:  -36.78025, Int:  -37.21728, Ext:   -0.43703, Loss_change:    0.00308
+Iter:  59, Energy:  -36.78299, Int:  -37.22017, Ext:   -0.43718, Loss_change:    0.00274
+Iter:  60, Energy:  -36.78810, Int:  -37.22507, Ext:   -0.43696, Loss_change:    0.00512
+Iter:  61, Energy:  -36.79391, Int:  -37.23098, Ext:   -0.43708, Loss_change:    0.00580
+Iter:  62, Energy:  -36.80366, Int:  -37.24092, Ext:   -0.43726, Loss_change:    0.00976
+Iter:  63, Energy:  -36.81535, Int:  -37.25246, Ext:   -0.43711, Loss_change:    0.01169
+Iter:  64, Energy:  -36.83792, Int:  -37.27544, Ext:   -0.43753, Loss_change:    0.02257
+Iter:  65, Energy:  -36.89988, Int:  -37.33776, Ext:   -0.43788, Loss_change:    0.06197
+Iter:  66, Energy:  -36.94336, Int:  -37.38178, Ext:   -0.43842, Loss_change:    0.04348
+Iter:  67, Energy:  -37.01097, Int:  -37.45010, Ext:   -0.43913, Loss_change:    0.06761
+Iter:  68, Energy:  -37.05911, Int:  -37.49848, Ext:   -0.43937, Loss_change:    0.04814
+Iter:  69, Energy:  -37.16666, Int:  -37.60749, Ext:   -0.44083, Loss_change:    0.10755
+Iter:  70, Energy:  -37.22891, Int:  -37.67080, Ext:   -0.44189, Loss_change:    0.06225
+Iter:  71, Energy:  -37.27579, Int:  -37.71834, Ext:   -0.44255, Loss_change:    0.04688
+Iter:  72, Energy:  -37.33414, Int:  -37.77738, Ext:   -0.44325, Loss_change:    0.05835
+Iter:  73, Energy:  -37.39122, Int:  -37.83584, Ext:   -0.44462, Loss_change:    0.05709
+Iter:  74, Energy:  -37.42658, Int:  -37.87165, Ext:   -0.44507, Loss_change:    0.03536
+Iter:  75, Energy:  -37.47300, Int:  -37.91907, Ext:   -0.44607, Loss_change:    0.04642
+Iter:  76, Energy:  -37.52218, Int:  -37.96889, Ext:   -0.44671, Loss_change:    0.04917
+Iter:  77, Energy:  -37.55072, Int:  -37.99769, Ext:   -0.44697, Loss_change:    0.02854
+Iter:  78, Energy:  -37.57907, Int:  -38.02629, Ext:   -0.44722, Loss_change:    0.02835
+Iter:  79, Energy:  -37.61743, Int:  -38.06483, Ext:   -0.44740, Loss_change:    0.03836
+Iter:  80, Energy:  -37.64769, Int:  -38.09591, Ext:   -0.44822, Loss_change:    0.03026
+Iter:  81, Energy:  -37.69242, Int:  -38.14058, Ext:   -0.44816, Loss_change:    0.04473
+Iter:  82, Energy:  -37.71784, Int:  -38.16609, Ext:   -0.44826, Loss_change:    0.02541
+Iter:  83, Energy:  -37.73871, Int:  -38.18717, Ext:   -0.44846, Loss_change:    0.02087
+Iter:  84, Energy:  -37.75216, Int:  -38.20027, Ext:   -0.44811, Loss_change:    0.01345
+Iter:  85, Energy:  -37.76398, Int:  -38.21247, Ext:   -0.44848, Loss_change:    0.01182
+Iter:  86, Energy:  -37.77728, Int:  -38.22523, Ext:   -0.44795, Loss_change:    0.01329
+Iter:  87, Energy:  -37.78987, Int:  -38.23734, Ext:   -0.44747, Loss_change:    0.01259
+Iter:  88, Energy:  -37.79877, Int:  -38.24602, Ext:   -0.44725, Loss_change:    0.00891
+Iter:  89, Energy:  -37.80501, Int:  -38.25238, Ext:   -0.44737, Loss_change:    0.00624
+Iter:  90, Energy:  -37.81034, Int:  -38.25831, Ext:   -0.44797, Loss_change:    0.00533
+Iter:  91, Energy:  -37.81570, Int:  -38.26362, Ext:   -0.44793, Loss_change:    0.00535
+Iter:  92, Energy:  -37.82065, Int:  -38.26868, Ext:   -0.44803, Loss_change:    0.00495
+Iter:  93, Energy:  -37.82469, Int:  -38.27222, Ext:   -0.44753, Loss_change:    0.00404
+Iter:  94, Energy:  -37.82697, Int:  -38.27453, Ext:   -0.44756, Loss_change:    0.00228
+Iter:  95, Energy:  -37.83052, Int:  -38.27830, Ext:   -0.44778, Loss_change:    0.00355
+Iter:  96, Energy:  -37.83223, Int:  -38.28014, Ext:   -0.44791, Loss_change:    0.00171
+Iter:  97, Energy:  -37.83465, Int:  -38.28274, Ext:   -0.44809, Loss_change:    0.00242
+Iter:  98, Energy:  -37.83683, Int:  -38.28481, Ext:   -0.44799, Loss_change:    0.00218
+Iter:  99, Energy:  -37.83940, Int:  -38.28748, Ext:   -0.44809, Loss_change:    0.00257
+Iter: 100, Energy:  -37.84469, Int:  -38.29254, Ext:   -0.44785, Loss_change:    0.00529
+Iter: 101, Energy:  -37.84762, Int:  -38.29533, Ext:   -0.44771, Loss_change:    0.00293
+Iter: 102, Energy:  -37.85183, Int:  -38.29934, Ext:   -0.44751, Loss_change:    0.00420
+Iter: 103, Energy:  -37.85471, Int:  -38.30220, Ext:   -0.44750, Loss_change:    0.00288
+Iter: 104, Energy:  -37.85763, Int:  -38.30513, Ext:   -0.44751, Loss_change:    0.00292
+Iter: 105, Energy:  -37.85983, Int:  -38.30695, Ext:   -0.44712, Loss_change:    0.00220
+Iter: 106, Energy:  -37.86231, Int:  -38.30934, Ext:   -0.44703, Loss_change:    0.00248
+Iter: 107, Energy:  -37.86490, Int:  -38.31178, Ext:   -0.44688, Loss_change:    0.00260
+Iter: 108, Energy:  -37.86702, Int:  -38.31337, Ext:   -0.44636, Loss_change:    0.00211
+Iter: 109, Energy:  -37.86894, Int:  -38.31542, Ext:   -0.44648, Loss_change:    0.00193
+Iter: 110, Energy:  -37.87118, Int:  -38.31762, Ext:   -0.44644, Loss_change:    0.00223
+Iter: 111, Energy:  -37.87310, Int:  -38.31958, Ext:   -0.44648, Loss_change:    0.00193
+Iter: 112, Energy:  -37.87505, Int:  -38.32154, Ext:   -0.44649, Loss_change:    0.00195
+Iter: 113, Energy:  -37.87704, Int:  -38.32329, Ext:   -0.44625, Loss_change:    0.00199
+Iter: 114, Energy:  -37.88047, Int:  -38.32615, Ext:   -0.44568, Loss_change:    0.00343
+Iter: 115, Energy:  -37.88296, Int:  -38.32868, Ext:   -0.44572, Loss_change:    0.00249
+Iter: 116, Energy:  -37.88562, Int:  -38.33092, Ext:   -0.44530, Loss_change:    0.00266
+Iter: 117, Energy:  -37.88731, Int:  -38.33253, Ext:   -0.44522, Loss_change:    0.00169
+Iter: 118, Energy:  -37.88882, Int:  -38.33377, Ext:   -0.44495, Loss_change:    0.00151
+Iter: 119, Energy:  -37.89039, Int:  -38.33517, Ext:   -0.44477, Loss_change:    0.00157
+Iter: 120, Energy:  -37.89237, Int:  -38.33724, Ext:   -0.44487, Loss_change:    0.00198
+Iter: 121, Energy:  -37.89513, Int:  -38.33984, Ext:   -0.44472, Loss_change:    0.00275
+Iter: 122, Energy:  -37.89719, Int:  -38.34196, Ext:   -0.44477, Loss_change:    0.00206
+Iter: 123, Energy:  -37.89997, Int:  -38.34440, Ext:   -0.44444, Loss_change:    0.00278
+Iter: 124, Energy:  -37.90267, Int:  -38.34696, Ext:   -0.44428, Loss_change:    0.00271
+Iter: 125, Energy:  -37.90592, Int:  -38.34993, Ext:   -0.44401, Loss_change:    0.00324
+Iter: 126, Energy:  -37.90871, Int:  -38.35253, Ext:   -0.44382, Loss_change:    0.00280
+Iter: 127, Energy:  -37.91094, Int:  -38.35501, Ext:   -0.44406, Loss_change:    0.00223
+Iter: 128, Energy:  -37.91299, Int:  -38.35702, Ext:   -0.44403, Loss_change:    0.00205
+Iter: 129, Energy:  -37.91476, Int:  -38.35879, Ext:   -0.44403, Loss_change:    0.00177
+Iter: 130, Energy:  -37.91687, Int:  -38.36073, Ext:   -0.44387, Loss_change:    0.00211
+Iter: 131, Energy:  -37.91877, Int:  -38.36259, Ext:   -0.44382, Loss_change:    0.00190
+Iter: 132, Energy:  -37.92006, Int:  -38.36381, Ext:   -0.44375, Loss_change:    0.00129
+Iter: 133, Energy:  -37.92179, Int:  -38.36554, Ext:   -0.44374, Loss_change:    0.00173
+Iter: 134, Energy:  -37.92370, Int:  -38.36751, Ext:   -0.44381, Loss_change:    0.00191
+Iter: 135, Energy:  -37.92532, Int:  -38.36921, Ext:   -0.44390, Loss_change:    0.00161
+Iter: 136, Energy:  -37.92671, Int:  -38.37058, Ext:   -0.44386, Loss_change:    0.00140
+Iter: 137, Energy:  -37.92832, Int:  -38.37247, Ext:   -0.44415, Loss_change:    0.00161
+Iter: 138, Energy:  -37.93022, Int:  -38.37432, Ext:   -0.44410, Loss_change:    0.00190
+Iter: 139, Energy:  -37.93260, Int:  -38.37668, Ext:   -0.44408, Loss_change:    0.00238
+Iter: 140, Energy:  -37.93469, Int:  -38.37875, Ext:   -0.44406, Loss_change:    0.00209
+Iter: 141, Energy:  -37.93660, Int:  -38.38071, Ext:   -0.44411, Loss_change:    0.00191
+Iter: 142, Energy:  -37.93856, Int:  -38.38265, Ext:   -0.44408, Loss_change:    0.00196
+Iter: 143, Energy:  -37.93942, Int:  -38.38341, Ext:   -0.44398, Loss_change:    0.00086
+Iter: 144, Energy:  -37.94069, Int:  -38.38460, Ext:   -0.44391, Loss_change:    0.00127
+Iter: 145, Energy:  -37.94160, Int:  -38.38553, Ext:   -0.44393, Loss_change:    0.00091
+Iter: 146, Energy:  -37.94309, Int:  -38.38697, Ext:   -0.44388, Loss_change:    0.00149
+Iter: 147, Energy:  -37.94417, Int:  -38.38791, Ext:   -0.44374, Loss_change:    0.00108
+Iter: 148, Energy:  -37.94534, Int:  -38.38913, Ext:   -0.44379, Loss_change:    0.00117
+Iter: 149, Energy:  -37.94621, Int:  -38.39004, Ext:   -0.44383, Loss_change:    0.00087
+Iter: 150, Energy:  -37.94730, Int:  -38.39113, Ext:   -0.44383, Loss_change:    0.00109
+Iter: 151, Energy:  -37.94880, Int:  -38.39264, Ext:   -0.44385, Loss_change:    0.00150
+Iter: 152, Energy:  -37.94967, Int:  -38.39350, Ext:   -0.44383, Loss_change:    0.00088
+Iter: 153, Energy:  -37.95025, Int:  -38.39413, Ext:   -0.44388, Loss_change:    0.00058
+Iter: 154, Energy:  -37.95132, Int:  -38.39523, Ext:   -0.44391, Loss_change:    0.00107
+Iter: 155, Energy:  -37.95220, Int:  -38.39611, Ext:   -0.44391, Loss_change:    0.00088
+Iter: 156, Energy:  -37.95335, Int:  -38.39703, Ext:   -0.44368, Loss_change:    0.00115
+Iter: 157, Energy:  -37.95464, Int:  -38.39823, Ext:   -0.44360, Loss_change:    0.00128
+Iter: 158, Energy:  -37.95531, Int:  -38.39885, Ext:   -0.44354, Loss_change:    0.00068
+Iter: 159, Energy:  -37.95619, Int:  -38.39971, Ext:   -0.44352, Loss_change:    0.00088
+Iter: 160, Energy:  -37.95670, Int:  -38.40018, Ext:   -0.44347, Loss_change:    0.00052
+Iter: 161, Energy:  -37.95722, Int:  -38.40075, Ext:   -0.44352, Loss_change:    0.00052
+Iter: 162, Energy:  -37.95773, Int:  -38.40124, Ext:   -0.44351, Loss_change:    0.00051
+Iter: 163, Energy:  -37.95841, Int:  -38.40193, Ext:   -0.44352, Loss_change:    0.00068
+Iter: 164, Energy:  -37.95883, Int:  -38.40243, Ext:   -0.44359, Loss_change:    0.00042
+Iter: 165, Energy:  -37.95922, Int:  -38.40288, Ext:   -0.44365, Loss_change:    0.00039
+Iter: 166, Energy:  -37.95978, Int:  -38.40336, Ext:   -0.44358, Loss_change:    0.00056
+Iter: 167, Energy:  -37.96026, Int:  -38.40393, Ext:   -0.44366, Loss_change:    0.00048
+Iter: 168, Energy:  -37.96075, Int:  -38.40439, Ext:   -0.44364, Loss_change:    0.00049
+Iter: 169, Energy:  -37.96143, Int:  -38.40509, Ext:   -0.44366, Loss_change:    0.00067
+Iter: 170, Energy:  -37.96187, Int:  -38.40553, Ext:   -0.44366, Loss_change:    0.00044
+Iter: 171, Energy:  -37.96216, Int:  -38.40579, Ext:   -0.44364, Loss_change:    0.00029
+Iter: 172, Energy:  -37.96250, Int:  -38.40610, Ext:   -0.44360, Loss_change:    0.00034
+Iter: 173, Energy:  -37.96288, Int:  -38.40645, Ext:   -0.44356, Loss_change:    0.00039
+Iter: 174, Energy:  -37.96315, Int:  -38.40673, Ext:   -0.44357, Loss_change:    0.00027
+Iter: 175, Energy:  -37.96352, Int:  -38.40705, Ext:   -0.44353, Loss_change:    0.00037
+Iter: 176, Energy:  -37.96406, Int:  -38.40758, Ext:   -0.44352, Loss_change:    0.00054
+Iter: 177, Energy:  -37.96444, Int:  -38.40793, Ext:   -0.44349, Loss_change:    0.00038
+Iter: 178, Energy:  -37.96491, Int:  -38.40834, Ext:   -0.44343, Loss_change:    0.00047
+Iter: 179, Energy:  -37.96534, Int:  -38.40871, Ext:   -0.44336, Loss_change:    0.00044
+Iter: 180, Energy:  -37.96567, Int:  -38.40904, Ext:   -0.44337, Loss_change:    0.00033
+Iter: 181, Energy:  -37.96589, Int:  -38.40925, Ext:   -0.44336, Loss_change:    0.00022
+Iter: 182, Energy:  -37.96626, Int:  -38.40953, Ext:   -0.44327, Loss_change:    0.00036
+Iter: 183, Energy:  -37.96660, Int:  -38.40985, Ext:   -0.44325, Loss_change:    0.00035
+Iter: 184, Energy:  -37.96696, Int:  -38.41011, Ext:   -0.44315, Loss_change:    0.00036
+Iter: 185, Energy:  -37.96715, Int:  -38.41029, Ext:   -0.44314, Loss_change:    0.00019
+Iter: 186, Energy:  -37.96743, Int:  -38.41046, Ext:   -0.44303, Loss_change:    0.00028
+Iter: 187, Energy:  -37.96762, Int:  -38.41065, Ext:   -0.44304, Loss_change:    0.00019
+Iter: 188, Energy:  -37.96789, Int:  -38.41086, Ext:   -0.44297, Loss_change:    0.00027
+Iter: 189, Energy:  -37.96811, Int:  -38.41106, Ext:   -0.44295, Loss_change:    0.00022
+Iter: 190, Energy:  -37.96834, Int:  -38.41126, Ext:   -0.44292, Loss_change:    0.00023
+Iter: 191, Energy:  -37.96863, Int:  -38.41150, Ext:   -0.44288, Loss_change:    0.00028
+Iter: 192, Energy:  -37.96888, Int:  -38.41175, Ext:   -0.44288, Loss_change:    0.00025
+Iter: 193, Energy:  -37.96922, Int:  -38.41208, Ext:   -0.44286, Loss_change:    0.00034
+Iter: 194, Energy:  -37.96950, Int:  -38.41236, Ext:   -0.44286, Loss_change:    0.00028
+Iter: 195, Energy:  -37.96986, Int:  -38.41275, Ext:   -0.44289, Loss_change:    0.00036
+Iter: 196, Energy:  -37.97014, Int:  -38.41305, Ext:   -0.44291, Loss_change:    0.00028
+Iter: 197, Energy:  -37.97035, Int:  -38.41327, Ext:   -0.44292, Loss_change:    0.00021
+Iter: 198, Energy:  -37.97057, Int:  -38.41341, Ext:   -0.44284, Loss_change:    0.00022
+Iter: 199, Energy:  -37.97073, Int:  -38.41357, Ext:   -0.44284, Loss_change:    0.00017
+Iter: 200, Energy:  -37.97084, Int:  -38.41370, Ext:   -0.44285, Loss_change:    0.00011
+Iter: 201, Energy:  -37.97103, Int:  -38.41386, Ext:   -0.44282, Loss_change:    0.00019
+Iter: 202, Energy:  -37.97124, Int:  -38.41407, Ext:   -0.44284, Loss_change:    0.00020
+Iter: 203, Energy:  -37.97152, Int:  -38.41436, Ext:   -0.44284, Loss_change:    0.00028
+Iter: 204, Energy:  -37.97163, Int:  -38.41445, Ext:   -0.44281, Loss_change:    0.00011
+Iter: 205, Energy:  -37.97179, Int:  -38.41460, Ext:   -0.44281, Loss_change:    0.00016
+Iter: 206, Energy:  -37.97191, Int:  -38.41467, Ext:   -0.44276, Loss_change:    0.00012
+Iter: 207, Energy:  -37.97205, Int:  -38.41477, Ext:   -0.44272, Loss_change:    0.00014
+Iter: 208, Energy:  -37.97226, Int:  -38.41493, Ext:   -0.44267, Loss_change:    0.00021
+Iter: 209, Energy:  -37.97246, Int:  -38.41509, Ext:   -0.44264, Loss_change:    0.00020
+Iter: 210, Energy:  -37.97264, Int:  -38.41517, Ext:   -0.44253, Loss_change:    0.00018
+Iter: 211, Energy:  -37.97286, Int:  -38.41532, Ext:   -0.44246, Loss_change:    0.00022
+Iter: 212, Energy:  -37.97299, Int:  -38.41547, Ext:   -0.44247, Loss_change:    0.00013
+Iter: 213, Energy:  -37.97318, Int:  -38.41560, Ext:   -0.44243, Loss_change:    0.00019
+Iter: 214, Energy:  -37.97330, Int:  -38.41577, Ext:   -0.44247, Loss_change:    0.00012
+Iter: 215, Energy:  -37.97342, Int:  -38.41590, Ext:   -0.44247, Loss_change:    0.00012
+Iter: 216, Energy:  -37.97359, Int:  -38.41604, Ext:   -0.44244, Loss_change:    0.00017
+Iter: 217, Energy:  -37.97369, Int:  -38.41615, Ext:   -0.44246, Loss_change:    0.00009
+Iter: 218, Energy:  -37.97381, Int:  -38.41627, Ext:   -0.44245, Loss_change:    0.00013
+Iter: 219, Energy:  -37.97398, Int:  -38.41648, Ext:   -0.44250, Loss_change:    0.00016
+Iter: 220, Energy:  -37.97407, Int:  -38.41659, Ext:   -0.44252, Loss_change:    0.00010
+Iter: 221, Energy:  -37.97424, Int:  -38.41680, Ext:   -0.44256, Loss_change:    0.00017
+Iter: 222, Energy:  -37.97434, Int:  -38.41690, Ext:   -0.44256, Loss_change:    0.00010
+Iter: 223, Energy:  -37.97450, Int:  -38.41703, Ext:   -0.44253, Loss_change:    0.00016
+Iter: 224, Energy:  -37.97463, Int:  -38.41716, Ext:   -0.44253, Loss_change:    0.00013
+Iter: 225, Energy:  -37.97473, Int:  -38.41722, Ext:   -0.44249, Loss_change:    0.00010
+Iter: 226, Energy:  -37.97487, Int:  -38.41737, Ext:   -0.44250, Loss_change:    0.00014
+Iter: 227, Energy:  -37.97504, Int:  -38.41750, Ext:   -0.44246, Loss_change:    0.00017
+Iter: 228, Energy:  -37.97515, Int:  -38.41761, Ext:   -0.44246, Loss_change:    0.00010
+Iter: 229, Energy:  -37.97529, Int:  -38.41772, Ext:   -0.44243, Loss_change:    0.00014
+Iter: 230, Energy:  -37.97540, Int:  -38.41786, Ext:   -0.44246, Loss_change:    0.00012
+Iter: 231, Energy:  -37.97550, Int:  -38.41793, Ext:   -0.44243, Loss_change:    0.00010
+Iter: 232, Energy:  -37.97557, Int:  -38.41801, Ext:   -0.44244, Loss_change:    0.00007
+Iter: 233, Energy:  -37.97563, Int:  -38.41807, Ext:   -0.44245, Loss_change:    0.00006
+Iter: 234, Energy:  -37.97576, Int:  -38.41820, Ext:   -0.44244, Loss_change:    0.00013
+Iter: 235, Energy:  -37.97586, Int:  -38.41831, Ext:   -0.44245, Loss_change:    0.00010
+Iter: 236, Energy:  -37.97596, Int:  -38.41841, Ext:   -0.44245, Loss_change:    0.00010
+Iter: 237, Energy:  -37.97613, Int:  -38.41858, Ext:   -0.44245, Loss_change:    0.00017
+Iter: 238, Energy:  -37.97622, Int:  -38.41870, Ext:   -0.44248, Loss_change:    0.00009
+Iter: 239, Energy:  -37.97635, Int:  -38.41880, Ext:   -0.44245, Loss_change:    0.00013
+Iter: 240, Energy:  -37.97657, Int:  -38.41897, Ext:   -0.44240, Loss_change:    0.00022
+Iter: 241, Energy:  -37.97680, Int:  -38.41919, Ext:   -0.44238, Loss_change:    0.00023
+Iter: 242, Energy:  -37.97694, Int:  -38.41929, Ext:   -0.44235, Loss_change:    0.00014
+Iter: 243, Energy:  -37.97706, Int:  -38.41940, Ext:   -0.44233, Loss_change:    0.00012
+Iter: 244, Energy:  -37.97718, Int:  -38.41954, Ext:   -0.44236, Loss_change:    0.00012
+Iter: 245, Energy:  -37.97734, Int:  -38.41966, Ext:   -0.44232, Loss_change:    0.00016
+Iter: 246, Energy:  -37.97751, Int:  -38.41985, Ext:   -0.44234, Loss_change:    0.00017
+Iter: 247, Energy:  -37.97761, Int:  -38.41992, Ext:   -0.44231, Loss_change:    0.00010
+Iter: 248, Energy:  -37.97767, Int:  -38.42001, Ext:   -0.44234, Loss_change:    0.00006
+Iter: 249, Energy:  -37.97776, Int:  -38.42010, Ext:   -0.44234, Loss_change:    0.00009
+Iter: 250, Energy:  -37.97788, Int:  -38.42021, Ext:   -0.44233, Loss_change:    0.00012
+Iter: 251, Energy:  -37.97803, Int:  -38.42038, Ext:   -0.44235, Loss_change:    0.00015
+Iter: 252, Energy:  -37.97817, Int:  -38.42052, Ext:   -0.44235, Loss_change:    0.00014
+Iter: 253, Energy:  -37.97832, Int:  -38.42070, Ext:   -0.44238, Loss_change:    0.00015
+Iter: 254, Energy:  -37.97842, Int:  -38.42080, Ext:   -0.44237, Loss_change:    0.00010
+Iter: 255, Energy:  -37.97847, Int:  -38.42084, Ext:   -0.44237, Loss_change:    0.00005
+Iter: 256, Energy:  -37.97855, Int:  -38.42092, Ext:   -0.44237, Loss_change:    0.00008
+Iter: 257, Energy:  -37.97862, Int:  -38.42101, Ext:   -0.44239, Loss_change:    0.00007
+Iter: 258, Energy:  -37.97870, Int:  -38.42107, Ext:   -0.44237, Loss_change:    0.00008
+Iter: 259, Energy:  -37.97880, Int:  -38.42120, Ext:   -0.44240, Loss_change:    0.00010
+Iter: 260, Energy:  -37.97886, Int:  -38.42125, Ext:   -0.44239, Loss_change:    0.00006
+Iter: 261, Energy:  -37.97893, Int:  -38.42132, Ext:   -0.44239, Loss_change:    0.00007
+Iter: 262, Energy:  -37.97902, Int:  -38.42137, Ext:   -0.44236, Loss_change:    0.00009
+Iter: 263, Energy:  -37.97910, Int:  -38.42146, Ext:   -0.44236, Loss_change:    0.00008
+Iter: 264, Energy:  -37.97919, Int:  -38.42150, Ext:   -0.44231, Loss_change:    0.00009
+Iter: 265, Energy:  -37.97929, Int:  -38.42160, Ext:   -0.44231, Loss_change:    0.00010
+Iter: 266, Energy:  -37.97939, Int:  -38.42168, Ext:   -0.44229, Loss_change:    0.00011
+Iter: 267, Energy:  -37.97946, Int:  -38.42171, Ext:   -0.44225, Loss_change:    0.00007
+Iter: 268, Energy:  -37.97957, Int:  -38.42179, Ext:   -0.44222, Loss_change:    0.00011
+Iter: 269, Energy:  -37.97970, Int:  -38.42190, Ext:   -0.44220, Loss_change:    0.00013
+Iter: 270, Energy:  -37.97982, Int:  -38.42201, Ext:   -0.44219, Loss_change:    0.00012
+Iter: 271, Energy:  -37.97993, Int:  -38.42211, Ext:   -0.44218, Loss_change:    0.00010
+Iter: 272, Energy:  -37.98002, Int:  -38.42217, Ext:   -0.44215, Loss_change:    0.00009
+Iter: 273, Energy:  -37.98013, Int:  -38.42225, Ext:   -0.44212, Loss_change:    0.00011
+Iter: 274, Energy:  -37.98023, Int:  -38.42234, Ext:   -0.44211, Loss_change:    0.00010
+Iter: 275, Energy:  -37.98031, Int:  -38.42238, Ext:   -0.44207, Loss_change:    0.00007
+Iter: 276, Energy:  -37.98044, Int:  -38.42246, Ext:   -0.44202, Loss_change:    0.00013
+Iter: 277, Energy:  -37.98061, Int:  -38.42262, Ext:   -0.44202, Loss_change:    0.00017
+Iter: 278, Energy:  -37.98076, Int:  -38.42272, Ext:   -0.44196, Loss_change:    0.00015
+Iter: 279, Energy:  -37.98090, Int:  -38.42285, Ext:   -0.44195, Loss_change:    0.00014
+Iter: 280, Energy:  -37.98097, Int:  -38.42288, Ext:   -0.44191, Loss_change:    0.00007
+Iter: 281, Energy:  -37.98115, Int:  -38.42302, Ext:   -0.44187, Loss_change:    0.00017
+Iter: 282, Energy:  -37.98130, Int:  -38.42317, Ext:   -0.44186, Loss_change:    0.00016
+Iter: 283, Energy:  -37.98150, Int:  -38.42335, Ext:   -0.44186, Loss_change:    0.00019
+Iter: 284, Energy:  -37.98163, Int:  -38.42345, Ext:   -0.44182, Loss_change:    0.00013
+Iter: 285, Energy:  -37.98173, Int:  -38.42357, Ext:   -0.44184, Loss_change:    0.00010
+Iter: 286, Energy:  -37.98183, Int:  -38.42362, Ext:   -0.44179, Loss_change:    0.00010
+Iter: 287, Energy:  -37.98196, Int:  -38.42369, Ext:   -0.44174, Loss_change:    0.00013
+Iter: 288, Energy:  -37.98202, Int:  -38.42375, Ext:   -0.44173, Loss_change:    0.00007
+Iter: 289, Energy:  -37.98215, Int:  -38.42384, Ext:   -0.44169, Loss_change:    0.00012
+Iter: 290, Energy:  -37.98224, Int:  -38.42387, Ext:   -0.44163, Loss_change:    0.00009
+Iter: 291, Energy:  -37.98237, Int:  -38.42400, Ext:   -0.44163, Loss_change:    0.00013
+Iter: 292, Energy:  -37.98251, Int:  -38.42409, Ext:   -0.44158, Loss_change:    0.00013
+Iter: 293, Energy:  -37.98257, Int:  -38.42415, Ext:   -0.44158, Loss_change:    0.00007
+Iter: 294, Energy:  -37.98267, Int:  -38.42423, Ext:   -0.44156, Loss_change:    0.00009
+Iter: 295, Energy:  -37.98277, Int:  -38.42431, Ext:   -0.44153, Loss_change:    0.00011
+Iter: 296, Energy:  -37.98289, Int:  -38.42439, Ext:   -0.44150, Loss_change:    0.00012
+Iter: 297, Energy:  -37.98302, Int:  -38.42449, Ext:   -0.44147, Loss_change:    0.00013
+Iter: 298, Energy:  -37.98314, Int:  -38.42457, Ext:   -0.44143, Loss_change:    0.00011
+Iter: 299, Energy:  -37.98325, Int:  -38.42462, Ext:   -0.44136, Loss_change:    0.00012
+Iter: 300, Energy:  -37.98332, Int:  -38.42471, Ext:   -0.44139, Loss_change:    0.00007
