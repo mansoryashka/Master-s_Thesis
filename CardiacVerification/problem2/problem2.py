@@ -290,19 +290,21 @@ if __name__ == '__main__':
                                                                        neumann,
                                                                        shape)
         
-        # model = MultiLayerNet(3, *[40]*4, 3)
-        model = MultiLayerNet(3, *[40]*4, 3)
-        # energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E3)
-        energy = GuccioneIncompressibleEnergyModel(C, bf, bt, bfs, kappa=1E3)
-        DemLV = DeepEnergyMethodLV(model, energy)
-        # DemLV.train_model(domain, dirichlet, neumann, 
-        #                   shape=shape, dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
-        #                   LHD=np.zeros(3), neu_axis=[0, 2], lr=0.1, epochs=300,
-        #                   fb=np.array([[0, 0, 0]]),  ventricle_geometry=True)
-        
-        # torch.save(DemLV.model.state_dict(), f'trained_models/run1/model_{N}x{M}')
-        DemLV.model.load_state_dict(torch.load(f'trained_models/run1/model_{N}x{M}'))
-        U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
+        for lr, nn, nl in zip([0.05], [50], [3]):
+            model = MultiLayerNet(3, *[nn]*nl, 3)
+            # energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E3)
+            energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E3)
+            DemLV = DeepEnergyMethodLV(model, energy)
+            DemLV.train_model(domain, dirichlet, neumann, 
+                              shape=shape, dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
+                              LHD=np.zeros(3), neu_axis=[0, 2], lr=lr, epochs=300,
+                              fb=np.array([[0, 0, 0]]),  ventricle_geometry=True)
+
+            torch.save(DemLV.model.state_dict(), f'trained_models/run1/model_lr{lr}_nn{nn}_nl{nl}')
+        # DemLV.model.load_state_dict(torch.load(f'trained_models/run1/model_{N}x{M}'))
+
+
+        # U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
         # write_vtk_LV(f'output/DemLV{N}x{M}', x_test, y_test, z_test, U_pred)
 
         # np.save(f'stored_arrays/DemLV{N}x{M}', np.asarray(U_pred))

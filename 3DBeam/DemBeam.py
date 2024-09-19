@@ -569,7 +569,6 @@ if __name__ == '__main__':
     shape = [120, 30, 30]
     LHD = [4, 1, 1]
     domain, dirichlet, neumann = define_domain(L, H, D, N=N)
-    # for lr, nl in zip([0.5, 0.1, 0.05, 0.05], [2, 3, 3, 4]):
     # for lr, nn, nl in zip([0.1, 0.5, 0.1, 0.05], 
     #                   [40, 40, 50, 50]
     #                   [5, 2, 3, 3]):

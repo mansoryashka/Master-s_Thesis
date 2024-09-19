@@ -147,63 +147,66 @@ if __name__ == '__main__':
     y_test = np.ascontiguousarray(test_domain[..., 1])
     z_test = np.ascontiguousarray(test_domain[..., 2])
     # N = 80; M = 5
-    N = 41; M = 3
+    N = 100; M = 9
     shape = [N, M, N]
 
-    domain, dirichlet, neumann = define_domain(N, M, n_cond=15, plot=False)
-    f0, s0, n0 = generate_fibers(N, M, alpha_endo=60, alpha_epi=-60)
+    for lr, nn, nl in zip([0.1], [50], [3]):
+        domain, dirichlet, neumann = define_domain(N, M, n_cond=15, plot=False)
+        f0, s0, n0 = generate_fibers(N, M, alpha_endo=90, alpha_epi=-90)
 
 
-    dX, dY, dZ, dX_neumann, dZ_neumann = generate_integration_line(domain, 
-                                                                    neumann,
-                                                                    shape)
+        dX, dY, dZ, dX_neumann, dZ_neumann = generate_integration_line(domain, 
+                                                                        neumann,
+                                                                        shape)
 
-    f0, s0, n0 = generate_fibers(N, M)
-    f0 = torch.tensor(f0).to(dev)
-    s0 = torch.tensor(s0).to(dev)
-    n0 = torch.tensor(n0).to(dev)
 
-    model = MultiLayerNet(3, *[60]*4, 3)
-    energy = GuccioneTransverseActiveEnergyModel(C, bf, bt, bfs, kappa=1E3, Ta=60, f0=f0, s0=s0, n0=n0)
-    DemLV = DeepEnergyMethodLV(model, energy)
-    # DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, 
-    #                   dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
-    #                   neu_axis=[0, 2], lr=.1, epochs=300, 
-    #                   fb=np.array([[0, 0, 0]]), ventricle_geometry=True)
-    # torch.save(DemLV.model.state_dict(), f'trained_models/run1/model11')
+        f0, s0, n0 = generate_fibers(N, M)
+        f0 = torch.tensor(f0).to(dev)
+        s0 = torch.tensor(s0).to(dev)
+        n0 = torch.tensor(n0).to(dev)
+
+        model = MultiLayerNet(3, *[nn]*nl, 3)
+        energy = GuccioneTransverseActiveEnergyModel(C, bf, bt, bfs, kappa=1E3, Ta=60, f0=f0, s0=s0, n0=n0)
+        DemLV = DeepEnergyMethodLV(model, energy)
+        DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, 
+                          dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
+                          neu_axis=[0, 2], lr=lr, epochs=300, 
+                          fb=np.array([[0, 0, 0]]), ventricle_geometry=True)
+        torch.save(DemLV.model.state_dict(), f'trained_models/model_{lr}_nn{nn}_nl{nl}')
+    
     # U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
     # np.save('stored_arrays/U_pred', np.asarray(U_pred))
     # write_vtk_LV('output/DemLV', x_test, y_test, z_test, U_pred)
     # U_pred = np.load('stored_arrays/U_pred2.npy')
-    DemLV.model.load_state_dict(torch.load('trained_models/run1/model1'))
-    U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
+    # DemLV.model.load_state_dict(torch.load('trained_models/run1/model1'))
+    # U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
 
-    X = np.copy(x_test)
-    Y = np.copy(y_test)
-    Z = np.copy(z_test)
-    X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
+    # X = np.copy(x_test)
+    # Y = np.copy(y_test)
+    # Z = np.copy(z_test)
+    # X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
 
-    # plt.style.use('seaborn-v0_8-darkgrid')
-    # fig2, ax = plt.subplots()
-    # fig = plt.figure()
-    # plt.style.use('seaborn-v0_8-darkgrid')
-    # ax1 = plt.subplot2grid((2,2), (0,0), colspan=1, rowspan=2)
-    # ax2 = plt.subplot2grid((2,2), (0,1))
-    # ax3 = plt.subplot2grid((2,2), (1,1))
+    # # plt.style.use('seaborn-v0_8-darkgrid')
+    # # fig2, ax = plt.subplots()
+    # # fig = plt.figure()
+    # # plt.style.use('seaborn-v0_8-darkgrid')
+    # # ax1 = plt.subplot2grid((2,2), (0,0), colspan=1, rowspan=2)
+    # # ax2 = plt.subplot2grid((2,2), (0,1))
+    # # ax3 = plt.subplot2grid((2,2), (1,1))
 
-    # plot_displacement(X, Z, X_cur, Z_cur, shape, [ax1, ax2, ax3], 'fig1')
+    # # plot_displacement(X, Z, X_cur, Z_cur, shape, [ax1, ax2, ax3], 'fig1')
 
-    k = int((N_test - 1) / 2)
-    # k=0
-    middle_layer = int(np.floor(M_test / 2))    
-    # get line in reference configuration
-    ref_x = X[k, middle_layer]
-    ref_y = Y[k, middle_layer]
-    # get line in current configuration
-    cur_x = X_cur[k, middle_layer]
-    cur_y = Y_cur[k, middle_layer]
+    # k = int((N_test - 1) / 2)
+    # # k=0
+    # middle_layer = int(np.floor(M_test / 2))    
+    # # get line in reference configuration
+    # ref_x = X[k, middle_layer]
+    # ref_y = Y[k, middle_layer]
+    # # get line in current configuration
+    # cur_x = X_cur[k, middle_layer]
+    # cur_y = Y_cur[k, middle_layer]
 
-    fig, ax = plt.subplots(figsize=(9, 3))
-    ax.plot(cur_x, cur_y)
-    ax.plot(ref_x, ref_y, linestyle='--')
-    plt.show()
+    # fig, ax = plt.subplots(figsize=(9, 3))
+    # ax.plot(cur_x, cur_y)
+    # ax.plot(ref_x, ref_y, linestyle='--')
+    # plt.show()
