@@ -53,10 +53,10 @@ if __name__ == '__main__':
 
     colors = ['C1', 'C2', 'C3', 'yellow']
 
-    for lr, nl, i in zip([0.5, 0.1, 0.05], [2, 3, 4], [1, 2, 3]):
-        model = MultiLayerNet(3, *[40]*nl, 3)
+    for lr, nn, nl, i in zip([0.5, 0.1, 0.05], [40, 40, 50], [2, 5, 3], [1, 2, 3]):
+        model = MultiLayerNet(3, *[nn]*nl, 3)
         Dem_strain = DeepEnergyMethodBeam(model, energy)
-        model_path = Path('trained_models') / f'model_lr{lr}_nl{nl}'
+        model_path = Path('trained_models') / f'model_lr{lr}_nn{nn}_nl{nl}'
         Dem_strain.model.load_state_dict(torch.load(model_path))
         U_pred = Dem_strain.evaluate_model(x_strain, y_strain, z_strain)
         # exit(np.asarray(U_pred).shape)

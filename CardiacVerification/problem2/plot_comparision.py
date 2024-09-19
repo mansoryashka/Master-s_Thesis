@@ -43,6 +43,7 @@ if __name__ == '__main__':
     X_fem, Y_fem, Z_fem = X + U_fem[1], Y + U_fem[2], Z + U_fem[0]
     fem_x, fem_z = X_fem[k, middle_test], Z_fem[k, middle_test]
     ax1.plot(fem_x, fem_z)
+    
     for N, M in zip([100], [9]):
         model = MultiLayerNet(3, *[40]*4, 3)
         # energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E3)

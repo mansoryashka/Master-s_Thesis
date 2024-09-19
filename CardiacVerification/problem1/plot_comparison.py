@@ -86,7 +86,7 @@ if __name__ == '__main__':
     ax[2].plot(strain_z_fem)
     # U_pred = np.load(f'stored_arrays/U_pred{N}.npy')
 
-    for lr, nn, nl in zip([0.05, 0.1, 0.1], [50, 50, 40], [3, 3, 2]):
+    for lr, nn, nl, j in zip([0.05, 0.1, 0.1], [50, 50, 40], [3, 3, 2], [1, 2, 3]):
         model = MultiLayerNet(3, *[nn]*nl, 3)
         energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
         DemBeam = DeepEnergyMethodBeam(model, energy)
@@ -121,13 +121,13 @@ if __name__ == '__main__':
                     / np.linalg.norm(pts_x - pts_z, axis=1)
                     - 1) * 100
 
-        ax[0].plot(strain_x, '--x', alpha=0.8, label=rf'$\eta$={lr}')
-        ax[1].plot(strain_y, '--x', alpha=0.8, label=rf'$\eta$={lr}')
-        ax[2].plot(strain_z, '--x', alpha=0.8, label=rf'$\eta$={lr}')
+        ax[0].plot(strain_x, '--x', alpha=0.8, label=rf'model{j}')
+        ax[1].plot(strain_y, '--x', alpha=0.8, label=rf'model{j}')
+        ax[2].plot(strain_z, '--x', alpha=0.8, label=rf'model{j}')
 
         ax11.plot(line_x_cur, line_z_cur,
                  linestyle='--', # linewidth=1.0, 
-                 alpha=0.8, label=rf'$\eta$={lr}')
+                 alpha=0.8, label=rf'model{j}')
         ax12.plot(line_x_cur[:p1], line_z_cur[:p1],
                  linestyle='--', # linewidth=1.0, 
                  alpha=0.8, label=rf'$\eta$={lr}')
@@ -153,12 +153,12 @@ if __name__ == '__main__':
     y1_fem = line_z_fem
     x1_fem = line_x_fem
 
-    ax11.set_xlabel('$x$ [m]')
-    ax11.set_ylabel('$z$-deflection [m]')
+    ax11.set_xlabel('$x$ [mm]')
+    ax11.set_ylabel('$z$-deflection [mm]')
     ax11.legend()
 
-    ax12.set_xlabel('$x$ [m]')
-    ax12.set_ylabel('$z$-deflection [m]')
+    ax12.set_xlabel('$x$ [mm]')
+    ax12.set_ylabel('$z$-deflection [mm]')
     ax12.set_ylim(top=y1_fem[p1-1])
     ax12.set_xlim(right=x1_fem[p1-1])
 
@@ -168,7 +168,7 @@ if __name__ == '__main__':
 
     ax13.set_ylim((y1_fem[middle-4], y1_fem[middle+2]))
     ax13.set_xlim((x1_fem[middle-2], x1_fem[middle+2]))
-    ax13.set_xlabel('$x$ [m]')
+    ax13.set_xlabel('$x$ [mm]')
 
     ticks1 = ax13.get_yticks()
     ax13.set_yticks([ticks1[0], ticks1[-1]])
@@ -176,7 +176,7 @@ if __name__ == '__main__':
 
     ax14.set_ylim(bottom=y1_fem[p2-5])
     ax14.set_xlim(left=x1_fem[p2])
-    ax14.set_xlabel('$x$ [m]')
+    ax14.set_xlabel('$x$ [mm]')
     
     ticks1 = ax14.get_yticks()
     ax14.set_yticks([ticks1[0], ticks1[-1]])
