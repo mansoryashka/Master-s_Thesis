@@ -561,7 +561,7 @@ if __name__ == '__main__':
     "______________________________________________"
 
     # run1()
-    run2()
+    # run2()
     # run3()
     # run4()
 
@@ -573,12 +573,12 @@ if __name__ == '__main__':
     # for lr, nn, nl in zip([0.1, 0.5, 0.1, 0.05], 
     #                   [40, 40, 50, 50]
     #                   [5, 2, 3, 3]):
-    for lr, nn, nl in zip([0.1], # 0.5, 0.1, 0.05], 
-                          [40], # 40, 50, 50]
-                          [5]
+    for lr, nn, nl in zip([0.05], # 0.5, 0.1, 0.05], 
+                          [50], # 40, 50, 50]
+                          [3]
                             ): #, 2, 3, 3]):
         model = MultiLayerNet(3, *[nn]*nl, 3)
         energy = NeoHookeanEnergyModel(lmbda, mu)
         DemBeam = DeepEnergyMethodBeam(model, energy)
-        DemBeam.train_model(domain, dirichlet, neumann, shape, neu_axis=[1, 2], LHD=LHD, epochs=300, f=np.array([[0, -5, 0]]))
+        DemBeam.train_model(domain, dirichlet, neumann, shape, neu_axis=[1, 2], LHD=LHD, epochs=300, fb=np.array([[0, -5, 0]]))
         torch.save(DemBeam.model.state_dict(), f'trained_models/model_lr{lr}_nl{nl}')

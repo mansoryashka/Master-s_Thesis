@@ -295,7 +295,7 @@ def run2():
     shape = [N, N, N]
     lrs = [.01, .05, .1, .5]
     num_neurons = [20, 30, 40, 50]
-    num_layers = 5
+    num_layers = 3
     num_expreriments = 10
     num_epochs = 100
     U_norms = 0
@@ -321,7 +321,7 @@ def run2():
     plot_heatmap(U_norms, num_neurons, lrs, 
                  rf'$L^2$ norm of error with N={N} and {num_layers} hidden layers', 
                  'Number of neurons in hidden layers', r'$\eta$', 
-                 'cube_heatmap_lrs_num_neurons')
+                 'cube_heatmap_lrs_num_neurons_nl3')
     np.save(arrays_path / 'losses_lrs_nn', losses)
 
 def run3():
@@ -369,15 +369,21 @@ if __name__ == '__main__':
 
     # run1()
     # run2()
-    run3()
+    # run3()
 
-    # N = 40
-    # shape = [N, N, N]
-    # LHD = [1, 1, 1]
-    # domain, dirichlet, neumann = define_domain(L, H, D, N=N)
+    N = 40
+    shape = [N, N, N]
+    LHD = [1, 1, 1]
+    domain, dirichlet, neumann = define_domain(L, H, D, N=N)
     # for nn, nl in zip([20, 30, 40], [5, 3, 4]):
-    #     model = MultiLayerNet(3, *[nn]*nl, 3)
-    #     energy = NeoHookeanActiveEnergyModel(mu, Ta=1.0)
-    #     DemBeam = DeepEnergyMethodCube(model, energy)
-    #     DemBeam.train_model(domain, dirichlet, neumann, shape, lr=1.0, neu_axis=[1, 2], LHD=LHD, epochs=300)
-    #     torch.save(DemBeam.model.state_dict(), f'trained_models/model_nn{nn}_nl{nl}_0')
+    # for lr, nn, nl in zip([0.1, 0.1, 0.1],
+    #                       [20, 30, 40], 
+    #                       [5, 3, 4]):
+    for lr, nn, nl in zip([0.1], #, 0.1, 0.1],
+                          [20], #, 30, 40], 
+                          [5]): #, 3, 4]):
+        model = MultiLayerNet(3, *[nn]*nl, 3)
+        energy = NeoHookeanActiveEnergyModel(mu, Ta=1.0)
+        DemBeam = DeepEnergyMethodCube(model, energy)
+        DemBeam.train_model(domain, dirichlet, neumann, shape, lr=0.1, neu_axis=[1, 2], LHD=LHD, epochs=100)
+        torch.save(DemBeam.model.state_dict(), f'trained_models/model_lr{lr}_nn{nn}_nl{nl}')
