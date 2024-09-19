@@ -63,34 +63,34 @@ if __name__ == '__main__':
 
     energy = NeoHookeanActiveEnergyModel(mu)
     # for nn, nl in zip([20, 30, 40], [5, 3, 4]):
-    for lr, i in zip([0.01, 0.05, 0.1, 0.5], [1, 3, 6, 4]):
-        # model = MultiLayerNet(3, *[nn]*nl, 3)
-        model = MultiLayerNet(3, *[20]*3, 3)
+    for lr, nn, nl, i in zip([0.1, 0.1, 0.1], [20, 30, 40], [5, 3, 4], [1, 2, 3]):
+        model = MultiLayerNet(3, *[nn]*nl, 3)
         Dem_strain = DeepEnergyMethodCube(model, energy)
 
         # model_path = models_path / f'model__nn{nn}_nl{nl}_{i}'
-        model_path = models_path / 'run4' / f'model_lr{lr}_nn20_nl3_N40_{i}'
+        model_path = models_path / f'model_lr{lr}_nn{nn}_nl{nl}'
         Dem_strain.model.load_state_dict(torch.load(model_path))
         U_pred = Dem_strain.evaluate_model(x_strain, y_strain, z_strain)
-        write_vtk_v2(f'output/U_{i}', x_strain, y_strain, z_strain, U_pred)
+        # write_vtk_v2(f'output/U_pred', x_strain, y_strain, z_strain, U_pred)
         # print(np.asarray(U_pred).shape); exit()
+
         x_cur = X_ref + U_pred[0]
         y_cur = Y_ref + U_pred[1]
         z_cur = Z_ref + U_pred[2]
         x = x_cur[c1]; y = y_cur[:, -1, 0]
 
         ax11.plot(x, y,
-                 linestyle='--', linewidth=1, 
-                 alpha=0.9, label=rf'$\eta$={lr}')
+                 linestyle='--', # linewidth=1, 
+                 alpha=0.8, label=rf'model{i}')
         ax12.plot(x[p1:], y[p1:],
-                 linestyle='--', linewidth=1, 
-                 alpha=0.9, label='model0')
+                 linestyle='--', # linewidth=1, 
+                 alpha=0.8, label='model0')
         ax13.plot(x[middle-2:middle+3], y[middle-2:middle+3],
-                 linestyle='--', linewidth=1, 
-                 alpha=0.9, label='model0')
+                 linestyle='--', # linewidth=1, 
+                 alpha=0.8, label='model0')
         ax14.plot(x[:p2], y[:p2],
-                 linestyle='--', linewidth=1, 
-                 alpha=0.9, label='model0')
+                 linestyle='--', # linewidth=1, 
+                 alpha=0.8, label='model0')
 
 
     ax11.set_xlabel('$x$-deflection [m]')
@@ -102,8 +102,10 @@ if __name__ == '__main__':
     ax12.set_ylim(bottom=y_fem[p1+1])
     ax12.set_xlim(left=x_fem[p1])
 
+    patch1_limx = ax11.get_xlim()
     ax13.set_ylim((y_fem[middle-2], y_fem[middle+2]))
-    ax13.set_xlim((x_fem[middle], x_fem[middle-2]))
+    # ax13.set_xlim((x_fem[middle], x_fem[middle-2]))
+    ax13.set_xlim((x_fem[middle-2]-0.0005, x_fem[middle-3]-2e-4))
     # ax13.set_xlabel('$x$-deflection [m]')
     ax13.set_ylabel('$y$ [m]')
 
@@ -153,41 +155,41 @@ if __name__ == '__main__':
     ax11.add_patch(Rectangle([patch1_limx[0], patch1_limy[0]], 
                              patch1_limx[1] - patch1_limx[0], 
                              patch1_limy[1] - patch1_limy[0],
-                             facecolor='None', edgecolor='blue',
+                             facecolor='None', edgecolor='navy',
                              linestyle='--'
                              ))
     ax12.add_patch(Rectangle([patch1_limx[0], patch1_limy[0]], 
                              patch1_limx[1] - patch1_limx[0], 
                              patch1_limy[1] - patch1_limy[0],
-                             facecolor='None', edgecolor='blue',
-                             linestyle='--', linewidth=3
+                             facecolor='None', edgecolor='navy',
+                             linestyle='--', linewidth=5, alpha=0.5
                              ))
     
     ax11.add_patch(Rectangle([patch2_limx[0], patch2_limy[0]], 
                              patch2_limx[1] - patch2_limx[0], 
                              patch2_limy[1] - patch2_limy[0],
-                             facecolor='None', edgecolor='green',
+                             facecolor='None', edgecolor='forestgreen',
                              linestyle='--'
                              ))
     ax13.add_patch(Rectangle([patch2_limx[0], patch2_limy[0]], 
                              patch2_limx[1] - patch2_limx[0], 
                              patch2_limy[1] - patch2_limy[0],
-                             facecolor='None', edgecolor='green',
-                             linestyle='--', linewidth=3
+                             facecolor='None', edgecolor='forestgreen',
+                             linestyle='--', linewidth=5, alpha=0.5
                              ))
 
     ax11.add_patch(Rectangle([patch3_limx[0], patch3_limy[0]], 
                              patch3_limx[1] - patch3_limx[0], 
                              patch3_limy[1] - patch3_limy[0],
-                             facecolor='None', edgecolor='red',
+                             facecolor='None', edgecolor='firebrick',
                              linestyle='--'
                              ))
     ax14.add_patch(Rectangle([patch3_limx[0], patch3_limy[0]], 
                              patch3_limx[1] - patch3_limx[0], 
                              patch3_limy[1] - patch3_limy[0],
-                             facecolor='None', edgecolor='red',
-                             linestyle='--', linewidth=3
+                             facecolor='None', edgecolor='firebrick',
+                             linestyle='--', linewidth=5, alpha=0.5
                              ))
     fig.tight_layout()
     fig.savefig('figures/line_plot.pdf')
-    # plt.show()
+    plt.show()

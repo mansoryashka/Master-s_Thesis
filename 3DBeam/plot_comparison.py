@@ -52,8 +52,8 @@ if __name__ == '__main__':
     ax14.plot(x1_fem[p2:], y1_fem[p2:], label='FEM')
 
     colors = ['C1', 'C2', 'C3', 'yellow']
-    i = 0
-    for lr, nl in zip([0.5, 0.1, 0.05], [2, 3, 4]):
+
+    for lr, nl, i in zip([0.5, 0.1, 0.05], [2, 3, 4], [1, 2, 3]):
         model = MultiLayerNet(3, *[40]*nl, 3)
         Dem_strain = DeepEnergyMethodBeam(model, energy)
         model_path = Path('trained_models') / f'model_lr{lr}_nl{nl}'
@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
         ax11.plot(x_cur, y_cur, #c=colors[i],
                  linestyle='--', linewidth=1.0, 
-                 alpha=0.9, label=f'model{1}')
+                 alpha=0.9, label=f'model{i}')
         ax12.plot(x_cur[:p1], y_cur[:p1], #c=colors[i],
                  linestyle='--', linewidth=1.0, 
                  alpha=0.9, label=f'model{2}')
@@ -134,43 +134,43 @@ if __name__ == '__main__':
     ax11.add_patch(Rectangle([patch1_limx[0], patch1_limy[0]], 
                              patch1_limx[1] - patch1_limx[0], 
                              patch1_limy[1] - patch1_limy[0],
-                             facecolor='None', edgecolor='blue',
+                             facecolor='None', edgecolor='navy',
                              linestyle='--'
                              ))
     ax12.add_patch(Rectangle([patch1_limx[0], patch1_limy[0]], 
                              patch1_limx[1] - patch1_limx[0], 
                              patch1_limy[1] - patch1_limy[0],
-                             facecolor='None', edgecolor='blue',
-                             linestyle='--', linewidth=3
+                             facecolor='None', edgecolor='navy',
+                             linestyle='--', linewidth=5, alpha=0.7
                              ))
     
     ax11.add_patch(Rectangle([patch2_limx[0], patch2_limy[0]], 
                              patch2_limx[1] - patch2_limx[0], 
                              patch2_limy[1] - patch2_limy[0],
-                             facecolor='None', edgecolor='green',
+                             facecolor='None', edgecolor='forestgreen',
                              linestyle='--'
                              ))
     ax13.add_patch(Rectangle([patch2_limx[0], patch2_limy[0]], 
                              patch2_limx[1] - patch2_limx[0], 
                              patch2_limy[1] - patch2_limy[0],
-                             facecolor='None', edgecolor='green',
-                             linestyle='--', linewidth=3
+                             facecolor='None', edgecolor='forestgreen',
+                             linestyle='--', linewidth=5, alpha=0.7
                              ))
 
     ax11.add_patch(Rectangle([patch3_limx[0], patch3_limy[0]], 
                              patch3_limx[1] - patch3_limx[0], 
                              patch3_limy[1] - patch3_limy[0],
-                             facecolor='None', edgecolor='red',
+                             facecolor='None', edgecolor='firebrick',
                              linestyle='--'
                              ))
     ax14.add_patch(Rectangle([patch3_limx[0], patch3_limy[0]], 
                              patch3_limx[1] - patch3_limx[0], 
                              patch3_limy[1] - patch3_limy[0],
-                             facecolor='None', edgecolor='red',
-                             linestyle='--', linewidth=3
+                             facecolor='None', edgecolor='firebrick',
+                             linestyle='--', linewidth=5, alpha=0.7
                              ))
     fig.savefig('figures/line_plot.pdf')
-    # plt.show()
+    plt.show()
     # plot linjeendring
     # plot enring i toppunkt
     # hent tilsvarende resultater fra FEM
