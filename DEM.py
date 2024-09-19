@@ -111,9 +111,8 @@ class DeepEnergyMethod:
                 # neumann loss
                 neu_pred = self(self.model, neuBC_coords)
                 bc_neu = torch.bmm((neu_pred + neuBC_coords).unsqueeze(1), neuBC_values.unsqueeze(2))
-                neu_loss = simps2D(bc_neu, dx=dxdydz[1], dy=dxdydz[2], shape=[shape[1], shape[2]])
 
-                # neu_loss = integral2D(bc_neu, dx=dxdydz_neu[0], dy=dxdydz_neu[1], shape=[shape[neu_axis[1]], shape[neu_axis[0]]])
+                neu_loss = integral2D(bc_neu, dx=dxdydz_neu[0], dy=dxdydz_neu[1], shape=[shape[neu_axis[1]], shape[neu_axis[0]]])
 
                 # external loss
                 body_f = torch.matmul(u_pred.unsqueeze(1), fb.unsqueeze(2))
