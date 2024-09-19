@@ -284,7 +284,7 @@ def run1():
     plot_heatmap(U_norms, num_neurons, num_layers, 
                  rf'$L^2$ norm of error with N={N} and $\eta$ = {lr}', 
                  'Number of hidden neurons', 'Number of hidden layers', 
-                 'cube_heatmap_num_neurons_layers120')
+                 'cube_heatmap_num_neurons_layers')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
@@ -321,7 +321,7 @@ def run2():
     plot_heatmap(U_norms, num_neurons, lrs, 
                  rf'$L^2$ norm of error with N={N} and {num_layers} hidden layers', 
                  'Number of neurons in hidden layers', r'$\eta$', 
-                 'cube_heatmap_lrs_num_neurons1')
+                 'cube_heatmap_lrs_num_neurons')
     np.save(arrays_path / 'losses_lrs_nn', losses)
 
 def run3():
