@@ -110,13 +110,9 @@ if __name__ == '__main__':
     domain, dirichlet, neumann = define_domain(L, H, D, N=N)
     energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
     
-    # for lr, nn, nl in zip([0.05, 0.1, 0.1, 0.5], 
-    #                       [50, 50, 40, 40],
-    #                       [3, 3, 2, 5]):
-    for lr, nn, nl in zip([0.1, 0.5], 
-                          [40, 40],
-                          [2, 5]):
-
+    for lr, nn, nl in zip([0.05, 0.1, 0.1, 0.5], 
+                          [50, 50, 40, 40],
+                          [3, 3, 2, 5]):
         model = MultiLayerNet(3, *[nn]*nl, 3)
         DemBeam = DeepEnergyMethodBeam(model, energy)
         DemBeam.train_model(domain, dirichlet, neumann,
