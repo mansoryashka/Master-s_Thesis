@@ -110,14 +110,18 @@ if __name__ == '__main__':
     domain, dirichlet, neumann = define_domain(L, H, D, N=N)
     energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
     
-    for lr, nn, nl in zip([0.05, 0.1, 0.1, 0.5], 
-                          [50, 50, 40, 40],
-                          [3, 3, 2, 5]):
+    # for lr, nn, nl in zip([0.05, 0.1, 0.1, 0.5], 
+    #                       [50, 50, 40, 40],
+    #                       [3, 3, 2, 5]):
+    for lr, nn, nl in zip([0.05, 0.1, 0.1], 
+                          [50, 50, 40],
+                          [3, 3, 2]):
         model = MultiLayerNet(3, *[nn]*nl, 3)
         DemBeam = DeepEnergyMethodBeam(model, energy)
-        DemBeam.train_model(domain, dirichlet, neumann,
-                            shape, LHD, neu_axis=[0, 1], 
-                            lr=lr, epochs=300)
+        # DemBeam.train_model(domain, dirichlet, neumann,
+        #                     shape, LHD, neu_axis=[0, 1], 
+        #                     lr=lr, epochs=300)
+        DemBeam.model.load_state_dict(torch.load(Path('trained_models') / f'model_lr{lr}_nn{nn}_nl{nl}'))
         U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
-        torch.save(DemBeam.model.state_dict(), Path('trained_models') / f'model_lr{lr}_nn{nn}_nl{nl}')
-    
+        # torch.save(DemBeam.model.state_dict(), Path('trained_models') / f'model_lr{lr}_nn{nn}_nl{nl}')
+        write_vtk_v2(f'U_lr{lr}_nn{nn}_nl{nl}', x_test, y_test, z_test, U_pred)
