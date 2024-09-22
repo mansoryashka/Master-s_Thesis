@@ -63,7 +63,7 @@ if __name__ == '__main__':
 
     energy = NeoHookeanActiveEnergyModel(mu)
     # for nn, nl in zip([20, 30, 40], [5, 3, 4]):
-    for lr, nn, nl, i in zip([0.1, 0.1, 0.1], [20, 30, 40], [5, 3, 4], [1, 2, 3]):
+    for lr, nn, nl, i in zip([0.1, 0.1, 0.5], [20, 30, 40], [4, 3, 3], [1, 2, 3]):
         model = MultiLayerNet(3, *[nn]*nl, 3)
         Dem_strain = DeepEnergyMethodCube(model, energy)
 
