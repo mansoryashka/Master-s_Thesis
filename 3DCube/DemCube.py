@@ -327,7 +327,7 @@ def run2():
 def run3():
     Ns = [20, 30, 40, 50]
     lrs = [0.01, 0.05, 0.1, 0.5]
-    num_neurons = 20
+    num_neurons = 30
     num_layers = 3
     num_expreriments = 10
     num_epochs = 100
@@ -348,7 +348,7 @@ def run3():
     np.save(arrays_path / 'losses_lrs_N', losses)
     plot_heatmap(U_norms, Ns, lrs, 
                  rf'$L^2$ norm of error with {num_neurons} hidden neurons and {num_layers} hidden layers', 
-                 'N', r'$\eta$', 'cube_heatmap_lrs_N')
+                 'N', r'$\eta$', 'cube_heatmap_lrs_N_nl3')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
@@ -375,13 +375,13 @@ if __name__ == '__main__':
     shape = [N, N, N]
     LHD = [1, 1, 1]
     domain, dirichlet, neumann = define_domain(L, H, D, N=N)
-    # for nn, nl in zip([20, 30, 40], [5, 3, 4]):
-    # for lr, nn, nl in zip([0.1, 0.1, 0.1],
-    #                       [20, 30, 40], 
-    #                       [5, 3, 4]):
-    for lr, nn, nl in zip([0.1], #, 0.1, 0.1],
-                          [20], #, 30, 40], 
-                          [5]): #, 3, 4]):
+    # # for nn, nl in zip([20, 30, 40], [5, 3, 4]):
+    for lr, nn, nl in zip([0.1, 0.1, 0.5],
+                          [20, 30, 40], 
+                          [4, 3, 3]):
+    # for lr, nn, nl in zip([0.1], #, 0.1, 0.1],
+    #                       [20], #, 30, 40], 
+    #                       [5]): #, 3, 4]):
         model = MultiLayerNet(3, *[nn]*nl, 3)
         energy = NeoHookeanActiveEnergyModel(mu, Ta=1.0)
         DemBeam = DeepEnergyMethodCube(model, energy)
