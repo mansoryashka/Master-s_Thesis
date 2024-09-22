@@ -86,7 +86,7 @@ def define_domain(N=13, M=3,
     # plot domain
     if plot:
         fig = plt.figure()
-        plt.style.use('default')
+        # plt.style.use('default')
         ax = fig.add_subplot(projection='3d')
         ax.set_aspect('equal')
         ax.set_xlabel('$x$')
@@ -272,13 +272,13 @@ if __name__ == '__main__':
     y_test = np.ascontiguousarray(test_domain[..., 1])
     z_test = np.ascontiguousarray(test_domain[..., 2])
 
-    plt.style.use('seaborn-v0_8-darkgrid')
-    fig2, ax = plt.subplots()
-    fig = plt.figure()
-    plt.style.use('seaborn-v0_8-darkgrid')
-    ax1 = plt.subplot2grid((2,2), (0,0), colspan=1, rowspan=2)
-    ax2 = plt.subplot2grid((2,2), (0,1))
-    ax3 = plt.subplot2grid((2,2), (1,1))
+    # plt.style.use('seaborn-v0_8-darkgrid')
+    # fig2, ax = plt.subplots()
+    # fig = plt.figure()
+    # plt.style.use('seaborn-v0_8-darkgrid')
+    # ax1 = plt.subplot2grid((2,2), (0,0), colspan=1, rowspan=2)
+    # ax2 = plt.subplot2grid((2,2), (0,1))
+    # ax3 = plt.subplot2grid((2,2), (1,1))
     # for N, M in zip([30, 40, 40, 50, 60, 60, 80], [3, 3, 5, 5, 5, 9, 9]):
     for N, M in zip([100], [9]):
         middle_layer = int(np.floor(M/2))

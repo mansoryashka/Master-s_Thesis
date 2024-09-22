@@ -14,7 +14,7 @@ from DEM import MultiLayerNet, dev
 from EnergyModels import GuccioneTransverseActiveEnergyModel
 
 print(dev)
-plt.style.use('default')
+# plt.style.use('default')
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 200
 
