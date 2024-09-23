@@ -105,7 +105,7 @@ if __name__ == '__main__':
     patch1_limx = ax11.get_xlim()
     ax13.set_ylim((y_fem[middle-2], y_fem[middle+2]))
     # ax13.set_xlim((x_fem[middle], x_fem[middle-2]))
-    ax13.set_xlim((x_fem[middle-2]-0.0005, x_fem[middle-3]-2e-4))
+    ax13.set_xlim((x_fem[middle-2]-0.0007, x_fem[middle-3]-3e-4))
     # ax13.set_xlabel('$x$-deflection [m]')
     ax13.set_ylabel('$y$ [m]')
 
