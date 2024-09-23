@@ -327,7 +327,7 @@ def run2():
 def run3():
     Ns = [20, 30, 40, 50]
     lrs = [0.01, 0.05, 0.1, 0.5]
-    num_neurons = 30
+    num_neurons = 40
     num_layers = 3
     num_expreriments = 10
     num_epochs = 100
@@ -348,7 +348,7 @@ def run3():
     np.save(arrays_path / 'losses_lrs_N', losses)
     plot_heatmap(U_norms, Ns, lrs, 
                  rf'$L^2$ norm of error with {num_neurons} hidden neurons and {num_layers} hidden layers', 
-                 'N', r'$\eta$', 'cube_heatmap_lrs_N_nl3')
+                 'N', r'$\eta$', 'cube_heatmap_lrs_N40')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
