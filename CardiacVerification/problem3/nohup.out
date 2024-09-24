@@ -951,3 +951,261 @@ Iter: 297, Energy: -117417.60737, Int: -878.72778, Ext: 116538.87959, Loss_chang
 Iter: 298, Energy: -117417.94446, Int: -872.91708, Ext: 116545.02738, Loss_change:    0.33710
 Iter: 299, Energy: -117418.09486, Int: -870.69202, Ext: 116547.40284, Loss_change:    0.15040
 Iter: 300, Energy: -117418.50226, Int: -868.96907, Ext: 116549.53319, Loss_change:    0.40739
+Running on GPU
+Traceback (most recent call last):
+  File "/itf-fi-ml/home/mansurd/Master/CardiacVerification/problem3/problem3.py", line 12, in <module>
+    from problem2 import DeepEnergyMethodLV, write_vtk_LV, define_domain, generate_integration_line
+  File "/itf-fi-ml/home/mansurd/Master/CardiacVerification/problem3/../problem2/problem2.py", line 7, in <module>
+    from DEM import DeepEnergyMethod, MultiLayerNet, dev, write_vtk_LV
+  File "/itf-fi-ml/home/mansurd/Master/CardiacVerification/problem3/../../DEM.py", line 29, in <module>
+    assert models_path.exists(), msg
+AssertionError: You have to run the files from their respective folders!
+/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/autograd/__init__.py:173: UserWarning: Error detected in MulBackward0. Traceback of forward call that caused the error:
+  File "/itf-fi-ml/home/mansurd/Master/CardiacVerification/problem3/problem3.py", line 169, in <module>
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None,
+  File "/itf-fi-ml/home/mansurd/Master/CardiacVerification/problem3/../../DEM.py", line 136, in train_model
+    optimizer.step(closure)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/optim/optimizer.py", line 109, in wrapper
+    return func(*args, **kwargs)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/autograd/grad_mode.py", line 27, in decorate_context
+    return func(*args, **kwargs)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/optim/lbfgs.py", line 437, in step
+    loss = float(closure())
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/autograd/grad_mode.py", line 27, in decorate_context
+    return func(*args, **kwargs)
+  File "/itf-fi-ml/home/mansurd/Master/CardiacVerification/problem3/../../DEM.py", line 103, in closure
+    IntEnergy = self.energy(u_pred, self.x)
+  File "/itf-fi-ml/home/mansurd/Master/CardiacVerification/problem3/../../EnergyModels.py", line 273, in __call__
+    detF, Q, I4f0 = self._get_invariants(u, x)
+  File "/itf-fi-ml/home/mansurd/Master/CardiacVerification/problem3/../../EnergyModels.py", line 260, in _get_invariants
+    detF, Q = super()._get_invariants(u, x)
+  File "/itf-fi-ml/home/mansurd/Master/CardiacVerification/problem3/../../EnergyModels.py", line 203, in _get_invariants
+    detF, _ = super()._get_invariants(u, x)
+  File "/itf-fi-ml/home/mansurd/Master/CardiacVerification/problem3/../../EnergyModels.py", line 165, in _get_invariants
+    Ezz = 0.5*(Czz - 1)
+ (Triggered internally at  /dev/shm/PyTorch/1.12.0/foss-2022a-CUDA-11.7.0/pytorch/torch/csrc/autograd/python_anomaly_mode.cpp:102.)
+  Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+Running on GPU
+cuda
+Iter:   1, Energy: 256270.39604, Int: 360471.11774, Ext: 104200.72169, Loss_change: 256270.39062
+Iter:   2, Energy: 6688.05172, Int: 110820.71143, Ext: 104132.65971, Loss_change: 249582.34433
+Iter:   3, Energy: -49210.38137, Int: 55915.50385, Ext: 105125.88523, Loss_change: 55898.43309
+Iter:   4, Energy: -101371.17514, Int: 7982.63845, Ext: 109353.81358, Loss_change: 52160.79377
+Iter:   5, Energy: -109394.25239, Int:  700.63442, Ext: 110094.88681, Loss_change: 8023.07725
+Iter:   6, Energy: -110217.83287, Int: -205.68407, Ext: 110012.14880, Loss_change:  823.58048
+Iter:   7, Energy: -110451.75621, Int: -372.82742, Ext: 110078.92879, Loss_change:  233.92334
+Iter:   8, Energy: -110582.83943, Int: -290.38523, Ext: 110292.45420, Loss_change:  131.08322
+Iter:   9, Energy: -110728.61361, Int: -278.36710, Ext: 110450.24652, Loss_change:  145.77418
+Iter:  10, Energy: -110972.78762, Int: -667.51700, Ext: 110305.27062, Loss_change:  244.17400
+Iter:  11, Energy: -111345.15347, Int: -1372.20634, Ext: 109972.94713, Loss_change:  372.36585
+Iter:  12, Energy: -111834.72681, Int: -2489.25764, Ext: 109345.46917, Loss_change:  489.57334
+Iter:  13, Energy: -112137.14879, Int: -2932.03246, Ext: 109205.11632, Loss_change:  302.42197
+Iter:  14, Energy: -112350.81262, Int: -3476.79787, Ext: 108874.01476, Loss_change:  213.66384
+Iter:  15, Energy: -112577.39303, Int: -4079.10510, Ext: 108498.28793, Loss_change:  226.58041
+Iter:  16, Energy: -112713.64954, Int: -4382.93843, Ext: 108330.71111, Loss_change:  136.25651
+Iter:  17, Energy: -112835.65770, Int: -4601.81965, Ext: 108233.83805, Loss_change:  122.00816
+Iter:  18, Energy: -112986.04420, Int: -4741.51956, Ext: 108244.52464, Loss_change:  150.38650
+Iter:  19, Energy: -113131.83055, Int: -4854.03144, Ext: 108277.79911, Loss_change:  145.78636
+Iter:  20, Energy: -113216.94325, Int: -5037.61911, Ext: 108179.32415, Loss_change:   85.11270
+Iter:  21, Energy: -113337.71608, Int: -5271.81811, Ext: 108065.89796, Loss_change:  120.77282
+Iter:  22, Energy: -113479.80392, Int: -5305.23110, Ext: 108174.57281, Loss_change:  142.08784
+Iter:  23, Energy: -113637.88277, Int: -5294.93479, Ext: 108342.94798, Loss_change:  158.07885
+Iter:  24, Energy: -113771.95123, Int: -5672.55135, Ext: 108099.39989, Loss_change:  134.06846
+Iter:  25, Energy: -114004.00851, Int: -6030.29491, Ext: 107973.71361, Loss_change:  232.05728
+Iter:  26, Energy: -114111.12331, Int: -6081.87416, Ext: 108029.24916, Loss_change:  107.11480
+Iter:  27, Energy: -114225.64148, Int: -6221.88000, Ext: 108003.76148, Loss_change:  114.51817
+Iter:  28, Energy: -114333.00714, Int: -6447.28894, Ext: 107885.71820, Loss_change:  107.36566
+Iter:  29, Energy: -114425.19419, Int: -6654.25631, Ext: 107770.93788, Loss_change:   92.18705
+Iter:  30, Energy: -114489.89814, Int: -6699.70245, Ext: 107790.19570, Loss_change:   64.70396
+Iter:  31, Energy: -114576.59003, Int: -6589.50886, Ext: 107987.08117, Loss_change:   86.69189
+Iter:  32, Energy: -114681.40689, Int: -6576.89795, Ext: 108104.50894, Loss_change:  104.81686
+Iter:  33, Energy: -114770.97674, Int: -6667.88527, Ext: 108103.09147, Loss_change:   89.56985
+Iter:  34, Energy: -114847.35670, Int: -6722.09736, Ext: 108125.25933, Loss_change:   76.37996
+Iter:  35, Energy: -114909.81635, Int: -6847.35079, Ext: 108062.46556, Loss_change:   62.45965
+Iter:  36, Energy: -114981.30296, Int: -7010.55771, Ext: 107970.74525, Loss_change:   71.48662
+Iter:  37, Energy: -115044.00728, Int: -7037.26783, Ext: 108006.73944, Loss_change:   62.70432
+Iter:  38, Energy: -115126.93183, Int: -6792.13935, Ext: 108334.79248, Loss_change:   82.92455
+Iter:  39, Energy: -115203.99861, Int: -6791.33304, Ext: 108412.66557, Loss_change:   77.06678
+Iter:  40, Energy: -115274.28501, Int: -6970.16804, Ext: 108304.11697, Loss_change:   70.28640
+Iter:  41, Energy: -115335.81683, Int: -6905.14556, Ext: 108430.67126, Loss_change:   61.53182
+Iter:  42, Energy: -115393.87004, Int: -7009.75253, Ext: 108384.11751, Loss_change:   58.05321
+Iter:  43, Energy: -115465.34663, Int: -7174.45975, Ext: 108290.88687, Loss_change:   71.47659
+Iter:  44, Energy: -115519.73663, Int: -7020.90321, Ext: 108498.83341, Loss_change:   54.39000
+Iter:  45, Energy: -115556.20804, Int: -6850.98229, Ext: 108705.22574, Loss_change:   36.47141
+Iter:  46, Energy: -115614.03419, Int: -6712.50258, Ext: 108901.53161, Loss_change:   57.82615
+Iter:  47, Energy: -115667.22977, Int: -6522.64136, Ext: 109144.58842, Loss_change:   53.19558
+Iter:  48, Energy: -115734.96348, Int: -6386.85652, Ext: 109348.10695, Loss_change:   67.73370
+Iter:  49, Energy: -115773.66089, Int: -6267.20866, Ext: 109506.45223, Loss_change:   38.69742
+Iter:  50, Energy: -115826.95248, Int: -6150.62980, Ext: 109676.32269, Loss_change:   53.29159
+Iter:  51, Energy: -115875.28081, Int: -6023.58814, Ext: 109851.69267, Loss_change:   48.32833
+Iter:  52, Energy: -115934.08492, Int: -5795.06927, Ext: 110139.01566, Loss_change:   58.80412
+Iter:  53, Energy: -115981.14033, Int: -5686.15886, Ext: 110294.98147, Loss_change:   47.05540
+Iter:  54, Energy: -116040.16405, Int: -5439.33025, Ext: 110600.83380, Loss_change:   59.02372
+Iter:  55, Energy: -116096.11078, Int: -5070.55854, Ext: 111025.55224, Loss_change:   55.94673
+Iter:  56, Energy: -116155.56452, Int: -4926.56410, Ext: 111229.00042, Loss_change:   59.45373
+Iter:  57, Energy: -116213.09585, Int: -4854.54264, Ext: 111358.55321, Loss_change:   57.53134
+Iter:  58, Energy: -116261.40512, Int: -4689.38939, Ext: 111572.01573, Loss_change:   48.30926
+Iter:  59, Energy: -116320.44197, Int: -4608.94176, Ext: 111711.50022, Loss_change:   59.03686
+Iter:  60, Energy: -116364.47503, Int: -4699.84322, Ext: 111664.63180, Loss_change:   44.03305
+Iter:  61, Energy: -116396.42388, Int: -4508.13223, Ext: 111888.29166, Loss_change:   31.94886
+Iter:  62, Energy: -116421.02954, Int: -4315.92248, Ext: 112105.10705, Loss_change:   24.60565
+Iter:  63, Energy: -116446.90825, Int: -4249.95570, Ext: 112196.95255, Loss_change:   25.87872
+Iter:  64, Energy: -116484.24095, Int: -4047.35838, Ext: 112436.88256, Loss_change:   37.33269
+Iter:  65, Energy: -116507.84510, Int: -3830.87292, Ext: 112676.97218, Loss_change:   23.60415
+Iter:  66, Energy: -116531.98403, Int: -3701.86661, Ext: 112830.11742, Loss_change:   24.13893
+Iter:  67, Energy: -116563.26437, Int: -3602.70923, Ext: 112960.55513, Loss_change:   31.28034
+Iter:  68, Energy: -116585.48675, Int: -3550.55571, Ext: 113034.93104, Loss_change:   22.22238
+Iter:  69, Energy: -116608.33469, Int: -3424.48836, Ext: 113183.84633, Loss_change:   22.84794
+Iter:  70, Energy: -116627.11033, Int: -3285.61639, Ext: 113341.49393, Loss_change:   18.77564
+Iter:  71, Energy: -116645.76171, Int: -3131.84761, Ext: 113513.91411, Loss_change:   18.65139
+Iter:  72, Energy: -116666.74460, Int: -2919.18408, Ext: 113747.56052, Loss_change:   20.98289
+Iter:  73, Energy: -116684.63339, Int: -2694.98020, Ext: 113989.65319, Loss_change:   17.88879
+Iter:  74, Energy: -116706.93362, Int: -2487.26210, Ext: 114219.67152, Loss_change:   22.30023
+Iter:  75, Energy: -116726.85691, Int: -2374.02571, Ext: 114352.83120, Loss_change:   19.92329
+Iter:  76, Energy: -116745.73437, Int: -2177.95593, Ext: 114567.77844, Loss_change:   18.87746
+Iter:  77, Energy: -116757.77644, Int: -2134.85142, Ext: 114622.92502, Loss_change:   12.04206
+Iter:  78, Energy: -116770.42155, Int: -2149.23616, Ext: 114621.18539, Loss_change:   12.64511
+Iter:  79, Energy: -116777.39638, Int: -2035.40649, Ext: 114741.98989, Loss_change:    6.97483
+Iter:  80, Energy: -116792.92851, Int: -1790.64772, Ext: 115002.28079, Loss_change:   15.53213
+Iter:  81, Energy: -116806.43321, Int: -1903.16741, Ext: 114903.26580, Loss_change:   13.50470
+Iter:  82, Energy: -116824.56010, Int: -2045.71234, Ext: 114778.84775, Loss_change:   18.12689
+Iter:  83, Energy: -116837.62329, Int: -1900.51265, Ext: 114937.11065, Loss_change:   13.06319
+Iter:  84, Energy: -116853.50540, Int: -1733.23755, Ext: 115120.26785, Loss_change:   15.88211
+Iter:  85, Energy: -116862.86294, Int: -1754.26367, Ext: 115108.59927, Loss_change:    9.35754
+Iter:  86, Energy: -116876.23507, Int: -1893.39387, Ext: 114982.84121, Loss_change:   13.37213
+Iter:  87, Energy: -116881.44723, Int: -1946.69494, Ext: 114934.75229, Loss_change:    5.21215
+Iter:  88, Energy: -116890.90509, Int: -1869.08011, Ext: 115021.82497, Loss_change:    9.45786
+Iter:  89, Energy: -116901.82044, Int: -1703.53308, Ext: 115198.28735, Loss_change:   10.91535
+Iter:  90, Energy: -116906.54938, Int: -1671.30374, Ext: 115235.24564, Loss_change:    4.72895
+Iter:  91, Energy: -116915.87082, Int: -1543.94361, Ext: 115371.92721, Loss_change:    9.32144
+Iter:  92, Energy: -116923.81076, Int: -1519.38214, Ext: 115404.42863, Loss_change:    7.93994
+Iter:  93, Energy: -116931.25660, Int: -1481.74813, Ext: 115449.50848, Loss_change:    7.44584
+Iter:  94, Energy: -116938.56838, Int: -1417.64051, Ext: 115520.92788, Loss_change:    7.31178
+Iter:  95, Energy: -116945.14024, Int: -1438.64368, Ext: 115506.49656, Loss_change:    6.57186
+Iter:  96, Energy: -116950.64956, Int: -1493.89795, Ext: 115456.75161, Loss_change:    5.50932
+Iter:  97, Energy: -116957.24413, Int: -1418.15262, Ext: 115539.09151, Loss_change:    6.59456
+Iter:  98, Energy: -116962.97605, Int: -1289.94448, Ext: 115673.03158, Loss_change:    5.73193
+Iter:  99, Energy: -116970.34201, Int: -1296.88254, Ext: 115673.45947, Loss_change:    7.36596
+Iter: 100, Energy: -116974.85165, Int: -1427.05840, Ext: 115547.79325, Loss_change:    4.50964
+Iter:   1, Energy: -52526.30157, Int: 51794.48911, Ext: 104320.79068, Loss_change: 52526.30078
+Iter:   2, Energy: -106608.71070, Int: 3086.90690, Ext: 109695.61760, Loss_change: 54082.40913
+Iter:   3, Energy: -110148.63792, Int:   94.23230, Ext: 110242.87022, Loss_change: 3539.92722
+Iter:   4, Energy: -110771.13241, Int: -512.98385, Ext: 110258.14856, Loss_change:  622.49449
+Iter:   5, Energy: -111215.70438, Int: -1414.63336, Ext: 109801.07102, Loss_change:  444.57197
+Iter:   6, Energy: -111726.25704, Int: -2753.72167, Ext: 108972.53537, Loss_change:  510.55266
+Iter:   7, Energy: -112280.58151, Int: -4170.71911, Ext: 108109.86240, Loss_change:  554.32447
+Iter:   8, Energy: -112744.21355, Int: -4958.01974, Ext: 107786.19381, Loss_change:  463.63203
+Iter:   9, Energy: -113146.06529, Int: -5831.90609, Ext: 107314.15919, Loss_change:  401.85174
+Iter:  10, Energy: -113460.88821, Int: -6743.25710, Ext: 106717.63111, Loss_change:  314.82292
+Iter:  11, Energy: -113808.55810, Int: -7161.57844, Ext: 106646.97965, Loss_change:  347.66989
+Iter:  12, Energy: -114102.89146, Int: -7202.74354, Ext: 106900.14792, Loss_change:  294.33336
+Iter:  13, Energy: -114381.28798, Int: -7537.68687, Ext: 106843.60111, Loss_change:  278.39652
+Iter:  14, Energy: -114586.35331, Int: -7805.74562, Ext: 106780.60768, Loss_change:  205.06533
+Iter:  15, Energy: -114751.77736, Int: -7645.03535, Ext: 107106.74201, Loss_change:  165.42406
+Iter:  16, Energy: -114897.14802, Int: -7699.51835, Ext: 107197.62967, Loss_change:  145.37066
+Iter:  17, Energy: -115044.00526, Int: -7856.69669, Ext: 107187.30857, Loss_change:  146.85724
+Iter:  18, Energy: -115150.73089, Int: -7756.77001, Ext: 107393.96088, Loss_change:  106.72563
+Iter:  19, Energy: -115256.12470, Int: -7568.16538, Ext: 107687.95932, Loss_change:  105.39381
+Iter:  20, Energy: -115325.90741, Int: -7404.99989, Ext: 107920.90752, Loss_change:   69.78271
+Iter:  21, Energy: -115401.23287, Int: -7195.22060, Ext: 108206.01227, Loss_change:   75.32546
+Iter:  22, Energy: -115475.32414, Int: -6968.56150, Ext: 108506.76264, Loss_change:   74.09127
+Iter:  23, Energy: -115566.51452, Int: -6646.14410, Ext: 108920.37042, Loss_change:   91.19038
+Iter:  24, Energy: -115631.52777, Int: -6415.05987, Ext: 109216.46790, Loss_change:   65.01325
+Iter:  25, Energy: -115691.94686, Int: -6312.88542, Ext: 109379.06144, Loss_change:   60.41909
+Iter:  26, Energy: -115763.03383, Int: -6099.22729, Ext: 109663.80654, Loss_change:   71.08697
+Iter:  27, Energy: -115848.50488, Int: -5862.30219, Ext: 109986.20269, Loss_change:   85.47105
+Iter:  28, Energy: -115907.04597, Int: -5604.17576, Ext: 110302.87020, Loss_change:   58.54109
+Iter:  29, Energy: -115973.91881, Int: -5271.97175, Ext: 110701.94707, Loss_change:   66.87285
+Iter:  30, Energy: -116046.40108, Int: -5144.85934, Ext: 110901.54174, Loss_change:   72.48227
+Iter:  31, Energy: -116113.05718, Int: -5146.03275, Ext: 110967.02443, Loss_change:   66.65610
+Iter:  32, Energy: -116180.42422, Int: -4856.16444, Ext: 111324.25977, Loss_change:   67.36704
+Iter:  33, Energy: -116251.05886, Int: -4565.13508, Ext: 111685.92378, Loss_change:   70.63464
+Iter:  34, Energy: -116309.69114, Int: -4450.94294, Ext: 111858.74820, Loss_change:   58.63228
+Iter:  35, Energy: -116359.78212, Int: -4207.32543, Ext: 112152.45669, Loss_change:   50.09098
+Iter:  36, Energy: -116425.20716, Int: -3899.90513, Ext: 112525.30203, Loss_change:   65.42504
+Iter:  37, Energy: -116481.10171, Int: -3582.46256, Ext: 112898.63915, Loss_change:   55.89455
+Iter:  38, Energy: -116534.19728, Int: -3097.81008, Ext: 113436.38719, Loss_change:   53.09557
+Iter:  39, Energy: -116569.64489, Int: -2900.52288, Ext: 113669.12201, Loss_change:   35.44761
+Iter:  40, Energy: -116599.95856, Int: -2777.46026, Ext: 113822.49830, Loss_change:   30.31367
+Iter:  41, Energy: -116641.40220, Int: -2612.70997, Ext: 114028.69223, Loss_change:   41.44364
+Iter:  42, Energy: -116673.79786, Int: -2511.00586, Ext: 114162.79200, Loss_change:   32.39565
+Iter:  43, Energy: -116699.07043, Int: -2424.25902, Ext: 114274.81141, Loss_change:   25.27257
+Iter:  44, Energy: -116731.28779, Int: -2464.30200, Ext: 114266.98580, Loss_change:   32.21736
+Iter:  45, Energy: -116760.28341, Int: -2435.47321, Ext: 114324.81020, Loss_change:   28.99562
+Iter:  46, Energy: -116786.46331, Int: -2274.53447, Ext: 114511.92884, Loss_change:   26.17989
+Iter:  47, Energy: -116809.96757, Int: -2119.48874, Ext: 114690.47883, Loss_change:   23.50426
+Iter:  48, Energy: -116833.63197, Int: -1999.28797, Ext: 114834.34400, Loss_change:   23.66440
+Iter:  49, Energy: -116856.21797, Int: -1949.21611, Ext: 114907.00187, Loss_change:   22.58600
+Iter:  50, Energy: -116880.17567, Int: -1933.46848, Ext: 114946.70718, Loss_change:   23.95769
+Iter:  51, Energy: -116907.87613, Int: -1892.60950, Ext: 115015.26663, Loss_change:   27.70047
+Iter:  52, Energy: -116930.31371, Int: -1999.57265, Ext: 114930.74106, Loss_change:   22.43757
+Iter:  53, Energy: -116952.20449, Int: -1934.54663, Ext: 115017.65786, Loss_change:   21.89078
+Iter:  54, Energy: -116964.55745, Int: -1787.75428, Ext: 115176.80317, Loss_change:   12.35296
+Iter:  55, Energy: -116975.34801, Int: -1722.67592, Ext: 115252.67210, Loss_change:   10.79056
+Iter:  56, Energy: -116986.49324, Int: -1711.57322, Ext: 115274.92002, Loss_change:   11.14523
+Iter:  57, Energy: -116997.43519, Int: -1679.35337, Ext: 115318.08181, Loss_change:   10.94195
+Iter:  58, Energy: -117012.50669, Int: -1604.39553, Ext: 115408.11116, Loss_change:   15.07150
+Iter:  59, Energy: -117027.90688, Int: -1637.37326, Ext: 115390.53361, Loss_change:   15.40019
+Iter:  60, Energy: -117037.79548, Int: -1697.46510, Ext: 115340.33039, Loss_change:    9.88861
+Iter:  61, Energy: -117047.98590, Int: -1585.56695, Ext: 115462.41895, Loss_change:   10.19042
+Iter:  62, Energy: -117058.36389, Int: -1491.64883, Ext: 115566.71506, Loss_change:   10.37798
+Iter:  63, Energy: -117067.27528, Int: -1560.38230, Ext: 115506.89297, Loss_change:    8.91139
+Iter:  64, Energy: -117074.52443, Int: -1508.94772, Ext: 115565.57670, Loss_change:    7.24915
+Iter:  65, Energy: -117080.08985, Int: -1388.86058, Ext: 115691.22927, Loss_change:    5.56543
+Iter:  66, Energy: -117086.56913, Int: -1375.60974, Ext: 115710.95939, Loss_change:    6.47928
+Iter:  67, Energy: -117094.32688, Int: -1367.82962, Ext: 115726.49727, Loss_change:    7.75775
+Iter:  68, Energy: -117101.27223, Int: -1320.19765, Ext: 115781.07459, Loss_change:    6.94535
+Iter:  69, Energy: -117108.39262, Int: -1309.18571, Ext: 115799.20692, Loss_change:    7.12039
+Iter:  70, Energy: -117115.69963, Int: -1298.62924, Ext: 115817.07039, Loss_change:    7.30700
+Iter:  71, Energy: -117121.17607, Int: -1252.20740, Ext: 115868.96867, Loss_change:    5.47644
+Iter:  72, Energy: -117126.51673, Int: -1172.00795, Ext: 115954.50877, Loss_change:    5.34066
+Iter:  73, Energy: -117132.50862, Int: -1223.90527, Ext: 115908.60335, Loss_change:    5.99189
+Iter:  74, Energy: -117138.82065, Int: -1306.16009, Ext: 115832.66057, Loss_change:    6.31204
+Iter:  75, Energy: -117144.55150, Int: -1325.58559, Ext: 115818.96591, Loss_change:    5.73085
+Iter:  76, Energy: -117151.45092, Int: -1346.18079, Ext: 115805.27012, Loss_change:    6.89941
+Iter:  77, Energy: -117155.38983, Int: -1349.54408, Ext: 115805.84574, Loss_change:    3.93891
+Iter:  78, Energy: -117159.95349, Int: -1329.02702, Ext: 115830.92647, Loss_change:    4.56366
+Iter:  79, Energy: -117164.74431, Int: -1292.23129, Ext: 115872.51302, Loss_change:    4.79082
+Iter:  80, Energy: -117168.61496, Int: -1270.29366, Ext: 115898.32130, Loss_change:    3.87065
+Iter:  81, Energy: -117171.89776, Int: -1211.45046, Ext: 115960.44730, Loss_change:    3.28280
+Iter:  82, Energy: -117174.83039, Int: -1190.48765, Ext: 115984.34274, Loss_change:    2.93263
+Iter:  83, Energy: -117178.57847, Int: -1129.30520, Ext: 116049.27327, Loss_change:    3.74808
+Iter:  84, Energy: -117181.78406, Int: -1103.91064, Ext: 116077.87342, Loss_change:    3.20559
+Iter:  85, Energy: -117185.26500, Int: -1139.38650, Ext: 116045.87850, Loss_change:    3.48094
+Iter:  86, Energy: -117188.63755, Int: -1165.79592, Ext: 116022.84162, Loss_change:    3.37255
+Iter:  87, Energy: -117193.68425, Int: -1176.89471, Ext: 116016.78954, Loss_change:    5.04670
+Iter:  88, Energy: -117196.89450, Int: -1184.96980, Ext: 116011.92470, Loss_change:    3.21025
+Iter:  89, Energy: -117199.18315, Int: -1185.37104, Ext: 116013.81212, Loss_change:    2.28865
+Iter:  90, Energy: -117202.49401, Int: -1216.24620, Ext: 115986.24781, Loss_change:    3.31086
+Iter:  91, Energy: -117205.14617, Int: -1267.06283, Ext: 115938.08334, Loss_change:    2.65216
+Iter:  92, Energy: -117207.46454, Int: -1252.05457, Ext: 115955.40997, Loss_change:    2.31837
+Iter:  93, Energy: -117209.81351, Int: -1190.89240, Ext: 116018.92111, Loss_change:    2.34897
+Iter:  94, Energy: -117213.33542, Int: -1168.33367, Ext: 116045.00175, Loss_change:    3.52191
+Iter:  95, Energy: -117215.10338, Int: -1162.11231, Ext: 116052.99107, Loss_change:    1.76796
+Iter:  96, Energy: -117218.07867, Int: -1120.86013, Ext: 116097.21855, Loss_change:    2.97530
+Iter:  97, Energy: -117220.43260, Int: -1106.86052, Ext: 116113.57208, Loss_change:    2.35392
+Iter:  98, Energy: -117222.95962, Int: -1105.17834, Ext: 116117.78128, Loss_change:    2.52702
+Iter:  99, Energy: -117225.26966, Int: -1089.27476, Ext: 116135.99489, Loss_change:    2.31004
+Iter: 100, Energy: -117227.42371, Int: -1085.94905, Ext: 116141.47466, Loss_change:    2.15406
+Iter:   1, Energy: 123484810417.29849, Int: 123484932481.33914, Ext: 122064.04065, Loss_change: 123484807168.00000
+Iter:   2, Energy: 43571302.88646, Int: 43692957.86835, Ext: 121654.98189, Loss_change: 123441239114.41203
+Traceback (most recent call last):
+  File "/itf-fi-ml/home/mansurd/Master/CardiacVerification/problem3/problem3.py", line 169, in <module>
+    DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, 
+  File "/itf-fi-ml/home/mansurd/Master/CardiacVerification/problem3/../../DEM.py", line 136, in train_model
+    optimizer.step(closure)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/optim/optimizer.py", line 109, in wrapper
+    return func(*args, **kwargs)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/autograd/grad_mode.py", line 27, in decorate_context
+    return func(*args, **kwargs)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/optim/lbfgs.py", line 437, in step
+    loss = float(closure())
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/autograd/grad_mode.py", line 27, in decorate_context
+    return func(*args, **kwargs)
+  File "/itf-fi-ml/home/mansurd/Master/CardiacVerification/problem3/../../DEM.py", line 126, in closure
+    loss.backward()
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/_tensor.py", line 396, in backward
+    torch.autograd.backward(self, gradient, retain_graph, create_graph, inputs=inputs)
+  File "/storage/software/PyTorch/1.12.0-foss-2022a-CUDA-11.7.0/lib/python3.10/site-packages/torch/autograd/__init__.py", line 173, in backward
+    Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+RuntimeError: Function 'MulBackward0' returned nan values in its 0th output.

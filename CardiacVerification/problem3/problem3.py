@@ -150,15 +150,13 @@ if __name__ == '__main__':
     N = 100; M = 9
     shape = [N, M, N]
 
-    for lr, nn, nl in zip([0.1], [50], [3]):
+    for lr, nn, nl in zip([0.1, 0.1, 0.5], [20, 30, 40], [4, 3, 3]):
         domain, dirichlet, neumann = define_domain(N, M, n_cond=15, plot=False)
         f0, s0, n0 = generate_fibers(N, M, alpha_endo=90, alpha_epi=-90)
-
 
         dX, dY, dZ, dX_neumann, dZ_neumann = generate_integration_line(domain, 
                                                                         neumann,
                                                                         shape)
-
 
         f0, s0, n0 = generate_fibers(N, M)
         f0 = torch.tensor(f0).to(dev)
@@ -170,9 +168,9 @@ if __name__ == '__main__':
         DemLV = DeepEnergyMethodLV(model, energy)
         DemLV.train_model(domain, dirichlet, neumann, shape=shape, LHD=None, 
                           dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
-                          neu_axis=[0, 2], lr=lr, epochs=300, 
+                          neu_axis=[0, 2], lr=lr, epochs=100, 
                           fb=np.array([[0, 0, 0]]), ventricle_geometry=True)
-        torch.save(DemLV.model.state_dict(), f'trained_models/model_{lr}_nn{nn}_nl{nl}')
+        torch.save(DemLV.model.state_dict(), f'trained_models/model_{lr}_nn{nn}_nl{nl}_100')
     
     # U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
     # np.save('stored_arrays/U_pred', np.asarray(U_pred))
