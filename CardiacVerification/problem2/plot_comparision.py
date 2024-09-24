@@ -52,12 +52,14 @@ if __name__ == '__main__':
     ax3.plot(fem_x[:6], fem_z[:6])
 
     N = 100; M = 9
-    for lr, nn, nl, i in zip([0.1, 0.1, 0.05], [40, 50, 50], [5, 3, 3], [1, 2, 3]):
+#     for lr, nn, nl, i in zip([0.1, 0.1, 0.05], [40, 50, 50], [5, 3, 3], [1, 2, 3]):
+
+    for lr, nn, nl, i in zip([0.1, 0.1, 0.5], [20, 30, 40], [4, 3, 3], [1, 2, 3]):
         model = MultiLayerNet(3, *[nn]*nl, 3)
         # energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E3)
         energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E3)
         DemLV = DeepEnergyMethodLV(model, energy)
-        DemLV.model.load_state_dict(torch.load(f'trained_models/model_lr{lr}_nn{nn}_nl{nl}'))
+        DemLV.model.load_state_dict(torch.load(f'trained_models/model_lr{lr}_nn{nn}_nl{nl}_100'))
         U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
 
         # np.save(f'stored_arrays/DemLV{N}x{M}', np.asarray(U_pred))
@@ -153,5 +155,5 @@ if __name__ == '__main__':
                              ))
 
 
-    fig.savefig('figures/line_plot.pdf')
+    fig.savefig('figures/line_plot_100.pdf')
     plt.show()

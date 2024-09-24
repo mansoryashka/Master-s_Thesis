@@ -77,7 +77,7 @@ if __name__ == '__main__':
         # print(f'N: {N}, L2norm = {L2norm(us, u_ex)}')
         norms[N] = L2norm(us, u_ex, dx)
     
-    np.save('u_fem', us)
+    # np.save('u_fem', us)
 
     ax.set_xlabel('$X$')
     ax.set_ylabel('Absolute error')
@@ -106,14 +106,14 @@ if __name__ == '__main__':
         print(L2norm(us, u_ex, dx))
         print(e[i])
 
-    print(np.log(e[1:]/e[:-1])/np.log(Ns[1:]/Ns[:-1]))
+    print(np.log(e[1:]/e[:-1])/np.log((1/Ns[1:])/(1/Ns[:-1])))
 
     fig3, ax3 = plt.subplots()
     ax3.loglog(Ns, e, '--o')
     ax3.set_ylabel('Relative error of derformation')
     ax3.set_xlabel('N')
-    fig3.savefig('figures/convergence.pdf')
-    # plt.show()
+    # fig3.savefig('figures/convergence.pdf')
+    plt.show()
     ### et forsøk  på å regne ut konvergensrate? ###
     # prev_key=1
     # prev_val=1
