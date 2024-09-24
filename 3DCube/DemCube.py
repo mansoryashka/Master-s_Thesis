@@ -327,7 +327,7 @@ def run2():
 def run3():
     Ns = [20, 30, 40, 50]
     lrs = [0.01, 0.05, 0.1, 0.5]
-    num_neurons = 30
+    num_neurons = 40
     num_layers = 3
     num_expreriments = 10
     num_epochs = 100
@@ -348,7 +348,7 @@ def run3():
     np.save(arrays_path / 'losses_lrs_N', losses)
     plot_heatmap(U_norms, Ns, lrs, 
                  rf'$L^2$ norm of error with {num_neurons} hidden neurons and {num_layers} hidden layers', 
-                 'N', r'$\eta$', 'cube_heatmap_lrs_N_nl3')
+                 'N', r'$\eta$', 'cube_heatmap_lrs_N40')
     tid = time.time() - start
     print(f'tid: {tid:.2f}s')
     print(f'tid: {tid/60:.2f}m')
@@ -369,21 +369,21 @@ if __name__ == '__main__':
 
     # run1()
     # run2()
-    # run3()
+    run3()
 
-    N = 40
-    shape = [N, N, N]
-    LHD = [1, 1, 1]
-    domain, dirichlet, neumann = define_domain(L, H, D, N=N)
-    # # for nn, nl in zip([20, 30, 40], [5, 3, 4]):
-    for lr, nn, nl in zip([0.1, 0.1, 0.5],
-                          [20, 30, 40], 
-                          [4, 3, 3]):
-    # for lr, nn, nl in zip([0.1], #, 0.1, 0.1],
-    #                       [20], #, 30, 40], 
-    #                       [5]): #, 3, 4]):
-        model = MultiLayerNet(3, *[nn]*nl, 3)
-        energy = NeoHookeanActiveEnergyModel(mu, Ta=1.0)
-        DemBeam = DeepEnergyMethodCube(model, energy)
-        DemBeam.train_model(domain, dirichlet, neumann, shape, lr=lr, neu_axis=[1, 2], LHD=LHD, epochs=100)
-        torch.save(DemBeam.model.state_dict(), f'trained_models/model_lr{lr}_nn{nn}_nl{nl}')
+    # N = 40
+    # shape = [N, N, N]
+    # LHD = [1, 1, 1]
+    # domain, dirichlet, neumann = define_domain(L, H, D, N=N)
+    # # # for nn, nl in zip([20, 30, 40], [5, 3, 4]):
+    # for lr, nn, nl in zip([0.1, 0.1, 0.5],
+    #                       [20, 30, 40], 
+    #                       [4, 3, 3]):
+    # # for lr, nn, nl in zip([0.1], #, 0.1, 0.1],
+    # #                       [20], #, 30, 40], 
+    # #                       [5]): #, 3, 4]):
+    #     model = MultiLayerNet(3, *[nn]*nl, 3)
+    #     energy = NeoHookeanActiveEnergyModel(mu, Ta=1.0)
+    #     DemBeam = DeepEnergyMethodCube(model, energy)
+    #     DemBeam.train_model(domain, dirichlet, neumann, shape, lr=lr, neu_axis=[1, 2], LHD=LHD, epochs=100)
+    #     torch.save(DemBeam.model.state_dict(), f'trained_models/model_lr{lr}_nn{nn}_nl{nl}')
