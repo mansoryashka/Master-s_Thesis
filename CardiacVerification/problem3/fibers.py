@@ -2,12 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 
-import matplotlib
-matplotlib.rcParams['figure.dpi'] = 150
 
 
 import sys
 from problem3 import generate_fibers, define_domain
+import matplotlib
+matplotlib.rcParams['figure.dpi'] = 150
 
 if __name__ == '__main__':
     N = 41; M = 9
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     endocardium = plot_domain[:, 0]
     epicardium = plot_domain[:, -1]
     print(epicardium.shape)
-    fig = plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=(15, 9))
     ax1 = fig.add_subplot(1, 2, 1, projection='3d')
     ax2 = fig.add_subplot(1, 2, 2, projection='3d')
     # ax3 = fig.add_subplot(1, 3, 3, projection='3d')
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     ax2.axis('off')
     ax2.set_aspect('equal')
     ax2.view_init(elev=0, azim=85)
-    fig2 = plt.figure(figsize=(4, 4))
+    fig2 = plt.figure(figsize=(8, 8))
     ax3 = fig2.add_subplot(projection='3d')
 
     ax3.set_box_aspect((2, 2, 1))
@@ -63,23 +63,23 @@ if __name__ == '__main__':
     # plt.show()
     # exit()
 
-    ax1.plot_surface(epicardium[..., 0], epicardium[..., 1],  epicardium[..., 2], cmap='autumn', alpha=0.7)
+    ax1.plot_surface(epicardium[..., 0], epicardium[..., 1],  epicardium[..., 2], cmap='autumn', alpha=0.3)
     ax1.quiver(plot_domain[0:n1:dn1, -1, 2::dn2, 0],
                plot_domain[0:n1:dn1, -1, 2::dn2, 1],
                plot_domain[0:n1:dn1, -1, 2::dn2, 2],
                 plot_f0[0, 0:n1:dn1, -1, 2::dn2],
                 plot_f0[1, 0:n1:dn1, -1, 2::dn2], 
-                plot_f0[2, 0:n1:dn1, -1, 2::dn2], alpha=0.5)
+                plot_f0[2, 0:n1:dn1, -1, 2::dn2], alpha=0.8)
     
 
-    ax2.plot_surface(endocardium[..., 0], endocardium[..., 1],  endocardium[..., 2], cmap='autumn', alpha=0.7)
+    ax2.plot_surface(endocardium[..., 0], endocardium[..., 1],  endocardium[..., 2], cmap='autumn', alpha=0.3)
     ax2.plot_surface(epicardium[..., 0], epicardium[..., 1],  epicardium[..., 2], cmap='autumn', alpha=0.05)
     ax2.quiver(plot_domain[0:n1:dn1, 0, 2:-1:dn2, 0], 
                plot_domain[0:n1:dn1, 0, 2:-1:dn2, 1], 
                plot_domain[0:n1:dn1, 0, 2:-1:dn2, 2], 
                 plot_f0[0, 0:n1:dn1, 0, 2:-1:dn2], 
                 plot_f0[1, 0:n1:dn1, 0, 2:-1:dn2], 
-                plot_f0[2, 0:n1:dn1, 0, 2:-1:dn2], alpha=0.5)
+                plot_f0[2, 0:n1:dn1, 0, 2:-1:dn2], alpha=0.8)
 
     
     plot_f0 = plot_f0/6
@@ -93,10 +93,10 @@ if __name__ == '__main__':
                       epicardium[n2-2:n2+1:dn1, n3-1:, 2] + 0.4, cmap='autumn', alpha=0.10)
     ax3.text(endocardium[5, n3-1, 0], 
              endocardium[5, n3-1, 1] - 1.2,  
-             endocardium[5, n3-1, 2] + 0.2, 'Endocardium').set_rotation('horizontal')
+             endocardium[5, n3-1, 2] + 0.2, 'Endocardium', fontdict={'size': 22})
     ax3.text(epicardium[4, n3-1, 0], 
              epicardium[4, n3-1, 1],  
-             epicardium[4, n3-1, 2] + 0.2, 'Epicardium')
+             epicardium[4, n3-1, 2] + 0.2, 'Epicardium', fontdict={'size': 22})
     
     ax3.quiver(plot_domain[n2-1:n2:dn1, :, n3:, 0], 
                plot_domain[n2-1:n2:dn1, :, n3:, 1], 

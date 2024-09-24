@@ -29,7 +29,7 @@ if __name__ == '__main__':
     y_endo = endocardium[..., 1]
     z_endo = endocardium[..., 2]
 
-    fig1 = plt.figure(figsize=(18, 6))
+    fig1 = plt.figure(figsize=(21, 9))
     # plt.style.use('default')
     ax1 = fig1.add_subplot(1, 3, 1, projection='3d')
     ax1.set_aspect('equal')
@@ -45,8 +45,8 @@ if __name__ == '__main__':
     ax3.view_init(elev=0, azim=75)
 
     # plot endocardial surface
-    ax1.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
-    # ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
+    ax1.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=0.3)
+    # ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=0.3)
     ax2.quiver(x_endo[:half_domain, :],
                y_endo[:half_domain, :],
                z_endo[:half_domain, :],
@@ -54,14 +54,14 @@ if __name__ == '__main__':
                y_perp[:half_domain, :],
                z_perp[:half_domain, :], alpha=1)
 
-    ax2.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
+    ax2.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=0.3)
     ax1.quiver(x_endo, 
                y_endo, 
                z_endo, 
                x_perp, 
                y_perp, 
                z_perp, alpha=1)
-    ax3.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
+    ax3.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=0.3)
     ax3.quiver(x_endo[:half_domain, :], 
                y_endo[:half_domain, :], 
                z_endo[:half_domain, :], 
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     fig1.tight_layout()
 
 
-    fig2 = plt.figure(figsize=(14, 8))
+    fig2 = plt.figure(figsize=(15, 9))
     # plt.style.use('default')
     ax3 = fig2.add_subplot(1, 2, 1, projection='3d')
     ax3.set_aspect('equal')
@@ -84,16 +84,16 @@ if __name__ == '__main__':
     ax4.view_init(elev=0, azim=75)
 
     # plot endocardial surface
-    ax3.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
-    # ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
+    ax3.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=0.3)
+    # ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=0.3)
     ax3.quiver(x_endo[:half_domain, :], 
                y_endo[:half_domain, :], 
                z_endo[:half_domain, :], 
                x_perp[:half_domain, :],
                y_perp[:half_domain, :], 
                z_perp[:half_domain, :], alpha=1)
-    ax4.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=.1)
-    # ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=.1)
+    ax4.plot_surface(x_endo, y_endo, z_endo, cmap='autumn', alpha=0.3)
+    # ax.plot_surface(x_epi, y_epi, z_epi, cmap='autumn', alpha=0.3)
     ax4.quiver(x_endo[:half_domain, :], 
                y_endo[:half_domain, :], 
                z_endo[:half_domain, :], 
