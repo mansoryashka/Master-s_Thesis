@@ -272,14 +272,6 @@ if __name__ == '__main__':
     y_test = np.ascontiguousarray(test_domain[..., 1])
     z_test = np.ascontiguousarray(test_domain[..., 2])
 
-    # plt.style.use('seaborn-v0_8-darkgrid')
-    # fig2, ax = plt.subplots()
-    # fig = plt.figure()
-    # plt.style.use('seaborn-v0_8-darkgrid')
-    # ax1 = plt.subplot2grid((2,2), (0,0), colspan=1, rowspan=2)
-    # ax2 = plt.subplot2grid((2,2), (0,1))
-    # ax3 = plt.subplot2grid((2,2), (1,1))
-    # for N, M in zip([30, 40, 40, 50, 60, 60, 80], [3, 3, 5, 5, 5, 9, 9]):
     for N, M in zip([100], [9]):
         middle_layer = int(np.floor(M/2))
 
@@ -290,21 +282,14 @@ if __name__ == '__main__':
                                                                        neumann,
                                                                        shape)
         
-        for lr, nn, nl in zip([0.05], [50], [3]):
+        for lr, nn, nl in zip([0.1, 0.1, 0.5], [20, 30, 40], [4, 3, 3]):
             model = MultiLayerNet(3, *[nn]*nl, 3)
             # energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E3)
             energy = GuccioneEnergyModel(C, bf, bt, bfs, kappa=1E3)
             DemLV = DeepEnergyMethodLV(model, energy)
             DemLV.train_model(domain, dirichlet, neumann, 
                               shape=shape, dxdydz=[dX, dY, dZ, dX_neumann, dZ_neumann], 
-                              LHD=np.zeros(3), neu_axis=[0, 2], lr=lr, epochs=300,
+                              LHD=np.zeros(3), neu_axis=[0, 2], lr=lr, epochs=100,
                               fb=np.array([[0, 0, 0]]),  ventricle_geometry=True)
 
-            torch.save(DemLV.model.state_dict(), f'trained_models/run1/model_lr{lr}_nn{nn}_nl{nl}')
-        # DemLV.model.load_state_dict(torch.load(f'trained_models/run1/model_{N}x{M}'))
-
-
-        # U_pred = DemLV.evaluate_model(x_test, y_test, z_test)
-        # write_vtk_LV(f'output/DemLV{N}x{M}', x_test, y_test, z_test, U_pred)
-
-        # np.save(f'stored_arrays/DemLV{N}x{M}', np.asarray(U_pred))
+            torch.save(DemLV.model.state_dict(), f'trained_models/model_lr{lr}_nn{nn}_nl{nl}_100')
