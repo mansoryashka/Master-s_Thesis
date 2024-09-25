@@ -86,11 +86,12 @@ if __name__ == '__main__':
     ax[2].plot(strain_z_fem)
     # U_pred = np.load(f'stored_arrays/U_pred{N}.npy')
 
-    for lr, nn, nl, j in zip([0.05, 0.1, 0.1], [50, 50, 40], [3, 3, 2], [1, 2, 3]):
+    # for lr, nn, nl, j in zip([0.05, 0.1, 0.1], [50, 50, 40], [3, 3, 2], [1, 2, 3]):
+    for lr, nn, nl, j in zip([0.1, 0.1, 0.5], [20, 30, 40], [4, 3, 3], [1, 2, 3]):
         model = MultiLayerNet(3, *[nn]*nl, 3)
         energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
         DemBeam = DeepEnergyMethodBeam(model, energy)
-        DemBeam.model.load_state_dict(torch.load(Path('trained_models') / f'model_lr{lr}_nn{nn}_nl{nl}'))
+        DemBeam.model.load_state_dict(torch.load(Path('trained_models') / f'model_lr{lr}_nn{nn}_nl{nl}_100'))
         U_pred = DemBeam.evaluate_model(x_test, y_test, z_test)
         X_cur, Y_cur, Z_cur = X + U_pred[0], Y + U_pred[1], Z + U_pred[2]
 
@@ -131,10 +132,10 @@ if __name__ == '__main__':
         ax12.plot(line_x_cur[:p1], line_z_cur[:p1],
                  linestyle='--', # linewidth=1.0, 
                  alpha=0.8, label=rf'$\eta$={lr}')
-        ax13.plot(line_x_cur[middle-2:middle+3], line_z_cur[middle-2:middle+3],
+        ax13.plot(line_x_cur[middle-3:middle+3], line_z_cur[middle-3:middle+3],
                  linestyle='--', # linewidth=1.0, 
                  alpha=0.8, label=rf'$\eta$={lr}')
-        ax14.plot(line_x_cur[p2:], line_z_cur[p2:],
+        ax14.plot(line_x_cur[p2-3:], line_z_cur[p2-3:],
                  linestyle='--', # linewidth=1.0, 
                  alpha=0.8, label=rf'$\eta$={lr}')
         
@@ -166,7 +167,7 @@ if __name__ == '__main__':
     ax12.set_yticks([ticks1[0], ticks1[-1]])
     ax12.set_yticklabels([f'{x:.3f}' for x in [ticks1[0], ticks1[-1]]])
 
-    ax13.set_ylim((y1_fem[middle-4], y1_fem[middle+2]))
+    ax13.set_ylim((y1_fem[middle-8], y1_fem[middle+2]))
     ax13.set_xlim((x1_fem[middle-2], x1_fem[middle+2]))
     ax13.set_xlabel('$x$ [mm]')
 
@@ -174,7 +175,7 @@ if __name__ == '__main__':
     ax13.set_yticks([ticks1[0], ticks1[-1]])
     ax13.set_yticklabels([f'{x:.3f}' for x in [ticks1[0], ticks1[-1]]])
 
-    ax14.set_ylim(bottom=y1_fem[p2-5])
+    ax14.set_ylim(bottom=y1_fem[p2-14])
     ax14.set_xlim(left=x1_fem[p2])
     ax14.set_xlabel('$x$ [mm]')
     
@@ -230,8 +231,8 @@ if __name__ == '__main__':
                              linestyle='--', linewidth=5, alpha=0.5
                              ))
 
-    fig1.savefig(f'figures/strain_plot.pdf')
-    fig.savefig(f'figures/line_plot.pdf')
+    fig1.savefig(f'figures/strain_plot_100.pdf')
+    fig.savefig(f'figures/line_plot_100.pdf')
         # ax11.set_xlabel('$x$ [mm]')
         # ax11.set_ylabel('$z$ [mm]')
     plt.show()
