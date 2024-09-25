@@ -1,6 +1,7 @@
 import dolfin
 import ufl
 import numpy as np
+import time
 
 l = 4
 h = 1 
@@ -39,10 +40,9 @@ def FEM_3D(N):
     ffun = dolfin.MeshFunction("size_t", mesh, 2)
     ffun.set_all(0)
     left.mark(ffun, 1)
-    with dolfin.XDMFFile("output/ffun.xdmf") as ffun_file:
-        ffun_file.write(ffun)
+    # with dolfin.XDMFFile("output/ffun.xdmf") as ffun_file:
+    #     ffun_file.write(ffun)
 
-    exit()
     F = dolfin.grad(u) + dolfin.Identity(3)
     J = dolfin.det(F)
     C = F.T * F
@@ -104,18 +104,20 @@ def FEM_3D(N):
 
 
 
-    np.save(f'stored_arrays/u_strain', u_strain)
+    # np.save(f'stored_arrays/u_strain', u_strain)
     # np.save(f'stored_arrays/u_fem_N{N}', u_fem)
+    # print(dolfin.assemble(psi*dolfin.dx))               # 6.924290983627352
+    # print(dolfin.assemble(dolfin.dot(f, u)*dolfin.dx))      # 14.651664345327262
     return u
 
-    print(dolfin.assemble(psi*dolfin.dx))               # 6.924290983627352
-    print(dolfin.assemble(dolfin.dot(f, u)*dolfin.dx))      # 14.651664345327262
 
     # print(dolfin.assemble(psi*dolfin.dx))               # 2.873653069727217
     # print(dolfin.assemble(dolfin.dot(f, u)*ds(1)))      # 5.996554979767974
 
 if __name__ == '__main__':
-    # for N in [5, 10, 15, 20, 25, 30]:
-    for N in [5]:
+    for N in [5, 10, 15, 20, 25, 30]:
+    # for N in [5]:
         print('N = ', N)
+        start = time.time()
         FEM_3D(N)
+        print(time.time() - start)
