@@ -140,91 +140,6 @@ class DeepEnergyMethodBeam(DeepEnergyMethod):
             return U, u_pred_torch, xyz_tensor
         return U
 
-def VonMises_stress(u, x):
-    Nx = 4*N_test; Ny = N_test; Nz = N_test
-    duxdxyz = grad(u[:, 0].unsqueeze(1), x, 
-                    torch.ones(x.shape[0], 1, device=dev), 
-                    create_graph=True, retain_graph=True)[0]
-    duydxyz = grad(u[:, 1].unsqueeze(1), x, 
-                    torch.ones(x.shape[0], 1, device=dev), 
-                    create_graph=True, retain_graph=True)[0]
-    duzdxyz = grad(u[:, 2].unsqueeze(1), x, 
-                    torch.ones(x.shape[0], 1, device=dev), 
-                    create_graph=True, retain_graph=True)[0]
-
-    Fxx = duxdxyz[:, 0].unsqueeze(1) + 1
-    Fxy = duxdxyz[:, 1].unsqueeze(1) + 0
-    Fxz = duxdxyz[:, 2].unsqueeze(1) + 0
-    Fyx = duydxyz[:, 0].unsqueeze(1) + 0
-    Fyy = duydxyz[:, 1].unsqueeze(1) + 1
-    Fyz = duydxyz[:, 2].unsqueeze(1) + 0
-    Fzx = duzdxyz[:, 0].unsqueeze(1) + 0
-    Fzy = duzdxyz[:, 1].unsqueeze(1) + 0
-    Fzz = duzdxyz[:, 2].unsqueeze(1) + 1
-
-    detF = (Fxx * (Fyy * Fzz - Fyz * Fzy) 
-          - Fxy * (Fyx * Fzz - Fyz * Fzx) 
-          + Fxz * (Fyx * Fzy - Fyy * Fzx))
-    
-    invF11 =  (Fyy * Fzz - Fyz * Fzy) / detF
-    invF12 = -(Fxy * Fzz - Fxz * Fzy) / detF
-    invF13 =  (Fxy * Fyz - Fxz * Fyy) / detF
-    invF21 = -(Fyx * Fzz - Fyz * Fzx) / detF
-    invF22 =  (Fxx * Fzz - Fxz * Fzy) / detF
-    invF23 = -(Fxx * Fyz - Fxz * Fyx) / detF
-    invF31 =  (Fyx * Fzy - Fyy * Fzy) / detF
-    invF32 = -(Fxx * Fzy - Fxy * Fzx) / detF
-    invF33 =  (Fxx * Fyy - Fxy * Fyx) / detF
-
-    P11 = mu * Fxx + (lmbda * torch.log(detF) - mu) * invF11
-    P12 = mu * Fxy + (lmbda * torch.log(detF) - mu) * invF21
-    P13 = mu * Fxz + (lmbda * torch.log(detF) - mu) * invF31
-    P21 = mu * Fyx + (lmbda * torch.log(detF) - mu) * invF12
-    P22 = mu * Fyy + (lmbda * torch.log(detF) - mu) * invF22
-    P23 = mu * Fyz + (lmbda * torch.log(detF) - mu) * invF32
-    P31 = mu * Fzx + (lmbda * torch.log(detF) - mu) * invF13
-    P32 = mu * Fzy + (lmbda * torch.log(detF) - mu) * invF23
-    P33 = mu * Fzz + (lmbda * torch.log(detF) - mu) * invF33
-    
-    S11 = invF11 * P11 + invF12 * P21 + invF13 * P31
-    S12 = invF11 * P12 + invF12 * P22 + invF13 * P32
-    S13 = invF11 * P13 + invF12 * P23 + invF13 * P33
-    S21 = invF21 * P11 + invF22 * P21 + invF23 * P31
-    S22 = invF21 * P12 + invF22 * P22 + invF23 * P32
-    S23 = invF21 * P13 + invF22 * P23 + invF23 * P33
-    S31 = invF31 * P11 + invF32 * P21 + invF33 * P31
-    S32 = invF31 * P12 + invF32 * P22 + invF33 * P32
-    S33 = invF31 * P13 + invF32 * P23 + invF33 * P33
-    
-    S11_pred = S11.detach().cpu().numpy()
-    S12_pred = S12.detach().cpu().numpy()
-    S13_pred = S13.detach().cpu().numpy()
-    S21_pred = S21.detach().cpu().numpy()
-    S22_pred = S22.detach().cpu().numpy()
-    S23_pred = S23.detach().cpu().numpy()
-    S31_pred = S31.detach().cpu().numpy()
-    S32_pred = S32.detach().cpu().numpy()
-    S33_pred = S33.detach().cpu().numpy()
-    
-    surS11 = S11_pred.reshape(Ny, Nx, Nz)
-    surS12 = S12_pred.reshape(Ny, Nx, Nz)
-    surS13 = S13_pred.reshape(Ny, Nx, Nz)
-    surS21 = S21_pred.reshape(Ny, Nx, Nz)
-    surS22 = S22_pred.reshape(Ny, Nx, Nz)
-    surS23 = S23_pred.reshape(Ny, Nx, Nz)
-    surS31 = S31_pred.reshape(Ny, Nx, Nz)
-    surS32 = S32_pred.reshape(Ny, Nx, Nz)
-    surS33 = S33_pred.reshape(Ny, Nx, Nz)
-
-    SVonMises = np.float64(np.sqrt(0.5 * 
-                             ((surS11 - surS22) ** 2 
-                            + (surS22 - surS33) ** 2 
-                            + (surS33 - surS11) ** 2 
-                    + 6 * (surS12 ** 2 + surS23 ** 2 
-                           + surS31 ** 2)))
-                )
-    return SVonMises
-
 ### Skrive blokkene til en egen funksjon? Kalles på helt likt inne i loopene ###
 def train_and_evaluate(Ns=20, lrs=0.1, num_neurons=20, num_layers=2, num_epochs=40, shape=[20, 20, 20]):
     # if eval_data:
@@ -565,19 +480,33 @@ if __name__ == '__main__':
     # run3()
     # run4()
 
-    N = 30
-    shape = [120, 30, 30]
-    LHD = [4, 1, 1]
-    domain, dirichlet, neumann = define_domain(L, H, D, N=N)
-    # for lr, nn, nl in zip([0.1, 0.5, 0.1, 0.05], 
-    #                   [40, 40, 50, 50]
-    #                   [5, 2, 3, 3]):
-    for lr, nn, nl in zip([0.05], # 0.5, 0.1, 0.05], 
-                          [50], # 40, 50, 50]
-                          [3]
-                            ): #, 2, 3, 3]):
-        model = MultiLayerNet(3, *[nn]*nl, 3)
-        energy = NeoHookeanEnergyModel(lmbda, mu)
-        DemBeam = DeepEnergyMethodBeam(model, energy)
-        DemBeam.train_model(domain, dirichlet, neumann, shape, neu_axis=[1, 2], LHD=LHD, epochs=300, fb=np.array([[0, -5, 0]]))
-        torch.save(DemBeam.model.state_dict(), f'trained_models/model_lr{lr}_nl{nl}')
+    # N = 30
+    # shape = [120, 30, 30]
+    LHD = [L, H, D]
+    lr = 0.1; nn = 40; nl = 5
+    exps = 5
+    timing = time.time()
+    for N in [50]:
+        tot_tt = 0
+        tot_et = 0
+        shape = [4*N, N, N]
+        domain, dirichlet, neumann = define_domain(L, H, D, N=N)
+        for i in range(exps):
+            # i = 3
+            # for lr, nn, nl in zip([0.1, 0.1, 0.05], [40, 50, 50], [5, 3, 3]):
+            # for lr, nn, nl in zip([0.1], [40], [5]):
+                # i += 1
+            model = MultiLayerNet(3, *[nn]*nl, 3)
+            energy = NeoHookeanEnergyModel(lmbda, mu)
+            DemBeam = DeepEnergyMethodBeam(model, energy)
+            start = time.time()
+            DemBeam.train_model(domain, dirichlet, neumann, shape, neu_axis=[1, 2], LHD=LHD, epochs=300, fb=np.array([[0, -5, 0]]))
+            train_time = time.time() - start
+            tot_tt += train_time
+            DemBeam.evaluate_model(x, y, z)
+            eval_time = time.time() - start - train_time
+            tot_et += eval_time
+            print(f'N: {N:2d}, exp: {i}: training time: {train_time:8.2f}, evaluation time: {eval_time:8.2f}')
+                # torch.save(DemBeam.model.state_dict(), f'trained_models/model_lr{lr}_nl{nl}')
+        print(f'N: {N:2d}, mean trainig time: {tot_tt/exps:.2f}, mean eval time: {tot_et/exps:.2f}')
+    print(f'tid: {time.time() - timing:.2f}')

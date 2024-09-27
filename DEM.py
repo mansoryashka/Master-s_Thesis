@@ -165,11 +165,11 @@ class DeepEnergyMethod:
             #     print(f'Iter: {i:3d}, Energy: {self.energy_loss.item():10.5f}, Int: {self.internal_loss:10.5f}, Ext: {self.external_loss:10.5f}, Eval loss: {self.eval_loss:10.5f}, Loss_change: {loss_change.item():8.5f}')
             #     self.losses.append([self.current_loss.detach().cpu(), self.eval_loss.detach().cpu()])
             # else:
-            print(f'Iter: {i+1:3d}, ' +
-                  f'Energy: {self.energy_loss.item():10.5f}, ' +
-                  f'Int: {self.internal_loss:10.5f}, ' +
-                  f'Ext: {self.external_loss:10.5f}, ' +
-                  f'Loss_change: {loss_change.item():10.5f}')
+            # print(f'Iter: {i+1:3d}, ' +
+            #       f'Energy: {self.energy_loss.item():10.5f}, ' +
+            #       f'Int: {self.internal_loss:10.5f}, ' +
+            #       f'Ext: {self.external_loss:10.5f}, ' +
+            #       f'Loss_change: {loss_change.item():10.5f}')
             self.losses[i] = self.current_loss
 
         # print(f'Model at epoch {best_epoch:3d} stored with energy change: {lowest_change:8.5f}, ')
