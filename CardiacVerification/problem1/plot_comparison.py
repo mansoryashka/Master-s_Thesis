@@ -86,8 +86,8 @@ if __name__ == '__main__':
     ax[2].plot(strain_z_fem)
     # U_pred = np.load(f'stored_arrays/U_pred{N}.npy')
 
-    # for lr, nn, nl, j in zip([0.05, 0.1, 0.1], [50, 50, 40], [3, 3, 2], [1, 2, 3]):
-    for lr, nn, nl, j in zip([0.1, 0.1, 0.5], [20, 30, 40], [4, 3, 3], [1, 2, 3]):
+    for lr, nn, nl, j in zip([0.1, 0.1, 0.05], [40, 50, 50], [5, 3, 3], [1, 2, 3]):
+    # for lr, nn, nl, j in zip([0.1, 0.1, 0.5], [20, 30, 40], [4, 3, 3], [1, 2, 3]):
         model = MultiLayerNet(3, *[nn]*nl, 3)
         energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
         DemBeam = DeepEnergyMethodBeam(model, energy)

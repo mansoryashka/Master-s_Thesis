@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import torch
 from pathlib import Path
 
-import seaborn as sns
-sns.set()
+# import seaborn as sns
+# sns.set()
 
 from matplotlib.patches import Rectangle
 
@@ -16,6 +16,7 @@ from DemBeam import DeepEnergyMethodBeam, lmbda, mu, L, H, D
 
 import matplotlib
 matplotlib.rcParams['figure.dpi'] = 150
+# matplotlib.rcParams['font.size'] = 11
 
 if __name__ == '__main__':
     energy = NeoHookeanEnergyModel(lmbda, mu)
@@ -53,7 +54,8 @@ if __name__ == '__main__':
 
     colors = ['C1', 'C2', 'C3', 'yellow']
 
-    for lr, nn, nl, i in zip([0.5, 0.1, 0.05], [40, 40, 50], [2, 5, 3], [1, 2, 3]):
+    for lr, nn, nl, i in zip([0.1, 0.1, 0.05], [40, 50, 50], [5, 3, 3], [1, 2, 3]):
+    # for lr, nn, nl, i in zip([0.1, 0.1,], [40, 50,], [5, 3], [1, 2]):
         model = MultiLayerNet(3, *[nn]*nl, 3)
         Dem_strain = DeepEnergyMethodBeam(model, energy)
         model_path = Path('trained_models') / f'model_lr{lr}_nn{nn}_nl{nl}'

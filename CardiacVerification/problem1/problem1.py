@@ -110,10 +110,11 @@ if __name__ == '__main__':
     domain, dirichlet, neumann = define_domain(L, H, D, N=N)
     energy = GuccioneTransverseEnergyModel(C, bf, bt, bfs)
     
-    for lr, nn, nl in zip([0.1, 0.1, 0.5], [20, 30, 40], [4, 3, 3]):
+    # for lr, nn, nl in zip([0.1, 0.1, 0.05], [40, 50, 50], [5, 3, 3]):
+    for lr, nn, nl in zip([0.1], [40], [5]):
         model = MultiLayerNet(3, *[nn]*nl, 3)
         DemBeam = DeepEnergyMethodBeam(model, energy)
         DemBeam.train_model(domain, dirichlet, neumann,
                             shape, LHD, neu_axis=[0, 1], 
-                            lr=lr, epochs=100)
-        torch.save(DemBeam.model.state_dict(), Path('trained_models') / f'model_lr{lr}_nn{nn}_nl{nl}_100')
+                            lr=lr, epochs=300)
+        torch.save(DemBeam.model.state_dict(), Path('trained_models') / f'model_lr{lr}_nn{nn}_nl{nl}')

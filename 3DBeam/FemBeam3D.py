@@ -63,7 +63,6 @@ def FEM_3D(N):
                                     # 'absolute_tolerance': 1e-6,
                                     'linear_solver': 'mumps'}})
 
-
     P = mu * F + (lmbd * dolfin.ln(dolfin.det(F)) - mu) * dolfin.inv(F).T
     secondPiola = dolfin.inv(F) * P
     Sdev = secondPiola - (1./3)*dolfin.tr(secondPiola)*dolfin.Identity(3) # deviatoric stress
@@ -115,9 +114,10 @@ def FEM_3D(N):
     # print(dolfin.assemble(dolfin.dot(f, u)*ds(1)))      # 5.996554979767974
 
 if __name__ == '__main__':
-    for N in [5, 10, 15, 20, 25, 30]:
-    # for N in [5]:
+    # for N in [5, 10, 15, 20]:#, 25, 30]:
+    for N in [30]:
         print('N = ', N)
-        start = time.time()
-        FEM_3D(N)
-        print(time.time() - start)
+        for _ in range(4):
+            start = time.time()
+            FEM_3D(N)
+            print(time.time()-start)
