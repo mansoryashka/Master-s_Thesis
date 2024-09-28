@@ -158,12 +158,12 @@ if __name__ == '__main__':
     fig1.savefig('figures/error_u_dem.pdf')
 
     ax2.set_xlabel('$X$')
-    ax2.set_ylabel('$u$')
+    ax2.set_ylabel('Displacement')
     ax2.legend(loc='lower right')
     fig2.savefig('figures/u.pdf')
 
     ax3.set_xlabel('$X$')
-    ax3.set_ylabel('du/dX')
+    ax3.set_ylabel('Displacement gradient')
     ax3.legend(loc='upper right')
     fig3.savefig('figures/du.pdf')
 
